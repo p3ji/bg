@@ -2,28 +2,50 @@ import { Game, BorrowRequest } from '@/types';
 import seedData from '@/data/seedGames.json';
 import { DEFAULT_FRIENDS } from '@/data/friends';
 
-const GAMES_STORAGE_KEY = 'bg_share_games_v1';
-const REQUESTS_STORAGE_KEY = 'bg_share_requests_v1';
-const FRIENDS_STORAGE_KEY = 'bg_share_friends_v1';
+const GAMES_STORAGE_KEY = 'bg_share_games_v2';
+const REQUESTS_STORAGE_KEY = 'bg_share_requests_v2';
+const FRIENDS_STORAGE_KEY = 'bg_share_friends_v2';
 const BGG_TOKEN_KEY = 'bg_share_bgg_token_v1';
 
 export function getInitialGames(): Game[] {
+  const seedList = seedData as unknown as Game[];
   if (typeof window === 'undefined') {
-    return seedData as unknown as Game[];
+    return seedList;
   }
   try {
-    const stored = localStorage.getItem(GAMES_STORAGE_KEY);
+    const stored = localStorage.getItem(GAMES_STORAGE_KEY) || localStorage.getItem('bg_share_games_v1');
     if (stored) {
       const parsed = JSON.parse(stored);
       if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed;
+        // Merge in images from seedList if missing
+        const seedMap = new Map(seedList.map((g) => [g.title.toLowerCase(), g]));
+        const merged = parsed.map((game: Game) => {
+          if (!game.image || !game.thumbnail) {
+            const seed = seedMap.get(game.title.toLowerCase());
+            if (seed) {
+              return {
+                ...game,
+                image: game.image || seed.image,
+                thumbnail: game.thumbnail || seed.thumbnail,
+                bggId: game.bggId || seed.bggId,
+                bggRating: game.bggRating || seed.bggRating,
+                bggRank: game.bggRank || seed.bggRank,
+                weight: game.weight || seed.weight,
+              };
+            }
+          }
+          return game;
+        });
+        localStorage.setItem(GAMES_STORAGE_KEY, JSON.stringify(merged));
+        return merged;
       }
     }
   } catch (err) {
     console.error('Failed to read games from localStorage:', err);
   }
   // Fallback to seed data
-  return seedData as unknown as Game[];
+  localStorage.setItem(GAMES_STORAGE_KEY, JSON.stringify(seedList));
+  return seedList;
 }
 
 export function saveGames(games: Game[]): void {
