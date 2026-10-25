@@ -8,12 +8,11 @@ import {
   Clock, 
   Star, 
   Gauge, 
-  ExternalLink, 
   Hand, 
   RotateCcw, 
   SendHorizontal, 
   Info,
-  Calendar
+  Sparkles
 } from 'lucide-react';
 
 interface GameCardProps {
@@ -22,6 +21,7 @@ interface GameCardProps {
   onBorrow: (game: Game) => void;
   onReturn: (game: Game) => void;
   onRequestBorrow: (game: Game) => void;
+  onEdit?: (game: Game) => void;
 }
 
 export const GameCard: React.FC<GameCardProps> = ({
@@ -30,6 +30,7 @@ export const GameCard: React.FC<GameCardProps> = ({
   onBorrow,
   onReturn,
   onRequestBorrow,
+  onEdit,
 }) => {
   const isAvailable = game.status === 'available';
   const hasPendingRequest = (game.borrowRequests || []).some((r) => r.status === 'pending');
@@ -194,6 +195,21 @@ export const GameCard: React.FC<GameCardProps> = ({
                 Request
               </button>
             </>
+          )}
+
+          {/* Edit / Link BGG button */}
+          {onEdit && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit(game);
+              }}
+              className="p-1.5 text-zinc-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors"
+              title="Edit Game & Link BGG Cover"
+            >
+              <Sparkles className="w-4 h-4" />
+            </button>
           )}
 
           <button

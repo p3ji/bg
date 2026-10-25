@@ -14,6 +14,7 @@ interface BookshelfViewProps {
   onRequestBorrow: (game: Game) => void;
   onResetFilters: () => void;
   onAddForHousehold?: (household: string) => void;
+  onEdit?: (game: Game) => void;
 }
 
 export const BookshelfView: React.FC<BookshelfViewProps> = ({
@@ -25,6 +26,7 @@ export const BookshelfView: React.FC<BookshelfViewProps> = ({
   onRequestBorrow,
   onResetFilters,
   onAddForHousehold,
+  onEdit,
 }) => {
   if (games.length === 0) {
     return (
@@ -100,6 +102,7 @@ export const BookshelfView: React.FC<BookshelfViewProps> = ({
             onBorrow={onBorrow}
             onReturn={onReturn}
             onRequestBorrow={onRequestBorrow}
+            onEdit={onEdit}
           />
         ))}
       </div>

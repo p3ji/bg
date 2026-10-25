@@ -22,6 +22,7 @@ import { RequestBorrowModal } from '@/components/RequestBorrowModal';
 import { NotificationsModal } from '@/components/NotificationsModal';
 import { BggSyncModal } from '@/components/BggSyncModal';
 import { SettingsModal } from '@/components/SettingsModal';
+import { EditGameModal } from '@/components/EditGameModal';
 
 const initialFilters: FilterState = {
   search: '',
@@ -52,6 +53,7 @@ export default function HomePage() {
   const [isBggSyncOpen, setIsBggSyncOpen] = useState(false);
   const [selectedHouseholdForAdd, setSelectedHouseholdForAdd] = useState<string | undefined>(undefined);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [editingGame, setEditingGame] = useState<Game | null>(null);
 
   // Initialize data on mount
   useEffect(() => {
@@ -339,6 +341,15 @@ export default function HomePage() {
     setIsBggSyncOpen(true);
   };
 
+  const handleSaveEditedGame = (updatedGame: Game) => {
+    const nextGames = games.map((g) => (g.id === updatedGame.id ? updatedGame : g));
+    setGames(nextGames);
+    saveGames(nextGames);
+    if (selectedGame && selectedGame.id === updatedGame.id) {
+      setSelectedGame(updatedGame);
+    }
+  };
+
   if (!mounted) {
     return (
       <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex items-center justify-center">
@@ -384,6 +395,7 @@ export default function HomePage() {
             onRequestBorrow={setRequestingGame}
             onResetFilters={() => setFilters(initialFilters)}
             onAddForHousehold={handleOpenAddForHousehold}
+            onEdit={setEditingGame}
           />
         ) : (
           <TableView
@@ -395,6 +407,7 @@ export default function HomePage() {
             onRequestBorrow={setRequestingGame}
             onResetFilters={() => setFilters(initialFilters)}
             onAddForHousehold={handleOpenAddForHousehold}
+            onEdit={setEditingGame}
           />
         )}
       </main>
@@ -407,6 +420,7 @@ export default function HomePage() {
         onBorrow={setBorrowingGame}
         onReturn={setReturningGame}
         onRequestBorrow={setRequestingGame}
+        onEdit={setEditingGame}
       />
 
       <BorrowModal
@@ -460,6 +474,13 @@ export default function HomePage() {
         onClose={() => setIsSettingsOpen(false)}
         onUpdateFriends={handleUpdateFriends}
         onResetLibrary={handleResetLibrary}
+      />
+
+      <EditGameModal
+        game={editingGame}
+        isOpen={Boolean(editingGame)}
+        onClose={() => setEditingGame(null)}
+        onSave={handleSaveEditedGame}
       />
 
     </div>

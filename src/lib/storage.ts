@@ -2,7 +2,7 @@ import { Game, BorrowRequest } from '@/types';
 import seedData from '@/data/seedGames.json';
 import { DEFAULT_FRIENDS } from '@/data/friends';
 
-const GAMES_STORAGE_KEY = 'bg_share_games_v3';
+const GAMES_STORAGE_KEY = 'bg_share_games_v4';
 const REQUESTS_STORAGE_KEY = 'bg_share_requests_v3';
 const FRIENDS_STORAGE_KEY = 'bg_share_households_v1';
 const BGG_TOKEN_KEY = 'bg_share_bgg_token_v1';
@@ -13,29 +13,35 @@ export function getInitialGames(): Game[] {
     return seedList;
   }
   try {
-    const stored = localStorage.getItem(GAMES_STORAGE_KEY) || localStorage.getItem('bg_share_games_v1');
+    const stored =
+      localStorage.getItem(GAMES_STORAGE_KEY) ||
+      localStorage.getItem('bg_share_games_v3') ||
+      localStorage.getItem('bg_share_games_v1');
+
     if (stored) {
       const parsed = JSON.parse(stored);
       if (Array.isArray(parsed) && parsed.length > 0) {
-        // Merge in images from seedList if missing
-        const seedMap = new Map(seedList.map((g) => [g.title.toLowerCase(), g]));
+        // Build seed map for image & bggId enrichment
+        const seedMap = new Map(seedList.map((g) => [g.title.toLowerCase().trim(), g]));
         const merged = parsed.map((game: Game) => {
-          if (!game.image || !game.thumbnail) {
-            const seed = seedMap.get(game.title.toLowerCase());
-            if (seed) {
-              return {
-                ...game,
-                image: game.image || seed.image,
-                thumbnail: game.thumbnail || seed.thumbnail,
-                bggId: game.bggId || seed.bggId,
-                bggRating: game.bggRating || seed.bggRating,
-                bggRank: game.bggRank || seed.bggRank,
-                weight: game.weight || seed.weight,
-              };
-            }
+          const seed = seedMap.get((game.title || '').toLowerCase().trim());
+          const isWikimedia = (game.image || '').includes('wikimedia.org');
+          const isMissingImage = !game.image && !game.thumbnail;
+          
+          if (seed && (isWikimedia || isMissingImage || !game.bggId)) {
+            return {
+              ...game,
+              image: isWikimedia || isMissingImage ? seed.image : game.image,
+              thumbnail: isWikimedia || isMissingImage ? seed.thumbnail : game.thumbnail,
+              bggId: game.bggId || seed.bggId,
+              bggRating: game.bggRating || seed.bggRating,
+              bggRank: game.bggRank || seed.bggRank,
+              weight: game.weight || seed.weight,
+            };
           }
           return game;
         });
+
         localStorage.setItem(GAMES_STORAGE_KEY, JSON.stringify(merged));
         return merged;
       }
@@ -43,7 +49,8 @@ export function getInitialGames(): Game[] {
   } catch (err) {
     console.error('Failed to read games from localStorage:', err);
   }
-  // Fallback to seed data
+
+  // Fallback to fresh seed data
   localStorage.setItem(GAMES_STORAGE_KEY, JSON.stringify(seedList));
   return seedList;
 }
@@ -58,33 +65,31 @@ export function saveGames(games: Game[]): void {
   }
 }
 
-export function getInitialRequests(): BorrowRequest[] {
-  if (typeof window === 'undefined') {
-    return [];
+export function updateGame(updatedGame: Game): void {
+  if (typeof window === 'undefined') return;
+  try {
+    const currentGames = getInitialGames();
+    const index = currentGames.findIndex((g) => g.id === updatedGame.id);
+    if (index !== -1) {
+      currentGames[index] = updatedGame;
+      saveGames(currentGames);
+    }
+  } catch (err) {
+    console.error('Failed to update game in localStorage:', err);
   }
+}
+
+export function getInitialRequests(): BorrowRequest[] {
+  if (typeof window === 'undefined') return [];
   try {
     const stored = localStorage.getItem(REQUESTS_STORAGE_KEY);
     if (stored) {
-      const parsed = JSON.parse(stored);
-      if (Array.isArray(parsed)) {
-        return parsed;
-      }
+      return JSON.parse(stored);
     }
   } catch (err) {
     console.error('Failed to read requests from localStorage:', err);
   }
-  return [
-    {
-      id: 'req-sample-1',
-      gameId: 'game-1',
-      gameTitle: 'Harry Potter Stupefy',
-      requesterName: 'Angel & Peter',
-      holderName: 'Carissa & Brandon',
-      requestedAt: new Date(Date.now() - 3600000 * 4).toISOString(),
-      status: 'pending',
-      note: 'Need it for game night this weekend!'
-    }
-  ];
+  return [];
 }
 
 export function saveRequests(requests: BorrowRequest[]): void {
@@ -97,47 +102,57 @@ export function saveRequests(requests: BorrowRequest[]): void {
   }
 }
 
-export function getInitialFriends(): string[] {
-  if (typeof window === 'undefined') {
-    return DEFAULT_FRIENDS;
-  }
+export function getStoredFriends(): string[] {
+  if (typeof window === 'undefined') return DEFAULT_FRIENDS;
   try {
     const stored = localStorage.getItem(FRIENDS_STORAGE_KEY);
     if (stored) {
       const parsed = JSON.parse(stored);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed;
-      }
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
     }
   } catch (err) {
-    console.error('Failed to read friends from localStorage:', err);
+    console.error('Failed to load friends from localStorage:', err);
   }
   return DEFAULT_FRIENDS;
 }
 
-export function saveFriends(friends: string[]): void {
+export function saveStoredFriends(friends: string[]): void {
   if (typeof window === 'undefined') return;
   try {
     localStorage.setItem(FRIENDS_STORAGE_KEY, JSON.stringify(friends));
-    window.dispatchEvent(new Event('bg_friends_updated'));
   } catch (err) {
     console.error('Failed to save friends to localStorage:', err);
   }
 }
 
-export function getBggToken(): string {
-  if (typeof window === 'undefined') return '';
-  return localStorage.getItem(BGG_TOKEN_KEY) || '';
+export function getBggToken(): string | null {
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem(BGG_TOKEN_KEY);
 }
 
-export function saveBggToken(token: string): void {
+export function saveBggToken(token: string | null): void {
   if (typeof window === 'undefined') return;
-  localStorage.setItem(BGG_TOKEN_KEY, token.trim());
+  if (!token) {
+    localStorage.removeItem(BGG_TOKEN_KEY);
+  } else {
+    localStorage.setItem(BGG_TOKEN_KEY, token);
+  }
 }
 
-export function resetToSeedData(): Game[] {
-  if (typeof window === 'undefined') return seedData as unknown as Game[];
-  localStorage.setItem(GAMES_STORAGE_KEY, JSON.stringify(seedData));
+export function resetLibrary(): Game[] {
+  const seedList = seedData as unknown as Game[];
+  if (typeof window === 'undefined') return seedList;
+  localStorage.removeItem(GAMES_STORAGE_KEY);
+  localStorage.removeItem(REQUESTS_STORAGE_KEY);
+  localStorage.removeItem('bg_share_games_v3');
+  localStorage.removeItem('bg_share_games_v1');
+  localStorage.setItem(GAMES_STORAGE_KEY, JSON.stringify(seedList));
   window.dispatchEvent(new Event('bg_games_updated'));
-  return seedData as unknown as Game[];
+  window.dispatchEvent(new Event('bg_requests_updated'));
+  return seedList;
 }
+
+export const getInitialFriends = getStoredFriends;
+export const saveFriends = saveStoredFriends;
+export const resetToSeedData = resetLibrary;
+

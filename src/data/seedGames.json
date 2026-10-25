@@ -14,12 +14,12 @@
     "currentBorrower": "Carissa & Brandon",
     "borrowDate": "2026-10-18T14:30:00.000Z",
     "expectedReturnDate": "2026-11-01T00:00:00.000Z",
-    "bggId": 362402,
+    "bggId": 369519,
     "bggRating": 6.5,
     "bggRank": 2400,
     "weight": 1.15,
-    "image": "https://upload.wikimedia.org/wikipedia/en/2/25/Harry_Potter_Stupefy_box.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/2/25/Harry_Potter_Stupefy_box.jpg",
+    "image": "https://cf.geekdo-images.com/raSkI6SUnt5UOonjxrid1Q__original/img/JayW73LCcYUi_4aEQSM0sI2NdWs=/0x0/filters:format(png)/pic7035688.png",
+    "thumbnail": "https://cf.geekdo-images.com/raSkI6SUnt5UOonjxrid1Q__previewthumb/img/4PkdGQzbRP4LJytef42w-1a9ud0=/fit-in/300x320/filters:strip_icc()/pic7035688.png",
     "description": "",
     "history": [
       {
@@ -29,7 +29,8 @@
         "returnDate": "2026-09-16T18:00:00.000Z",
         "notes": "Played at game night!"
       }
-    ]
+    ],
+    "year": 2022
   },
   {
     "id": "game-2",
@@ -50,10 +51,11 @@
     "bggRating": 7.41,
     "bggRank": 220,
     "weight": 1.9,
-    "image": "https://upload.wikimedia.org/wikipedia/en/5/5e/Carcassonne-game.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/5/5e/Carcassonne-game.jpg",
+    "image": "https://cf.geekdo-images.com/peUgu3A20LRmAXAMyDQfpQ__original/img/bP18m_PYjyFOv1IBGgMOteQUneA=/0x0/filters:format(jpeg)/pic8621446.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/peUgu3A20LRmAXAMyDQfpQ__previewthumb/img/CNYO9XZt0eqN5fu_wc6VptdWwIE=/fit-in/300x320/filters:strip_icc()/pic8621446.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2000
   },
   {
     "id": "game-3",
@@ -74,10 +76,11 @@
     "bggRating": 6.2,
     "bggRank": 3200,
     "weight": 1.42,
-    "image": "https://upload.wikimedia.org/wikipedia/en/5/53/Unstable_Unicorns_cover.png",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/5/53/Unstable_Unicorns_cover.png",
+    "image": "https://cf.geekdo-images.com/8_5xvpsrrX5JVzO7eBLSgw__original/img/XkKaT-quh8xGl2uHD5zULSWTpuM=/0x0/filters:format(jpeg)/pic3912914.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/8_5xvpsrrX5JVzO7eBLSgw__previewthumb/img/AfoxbFItOK8LeLTt2EKY5LyNCZ0=/fit-in/300x320/filters:strip_icc()/pic3912914.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2017
   },
   {
     "id": "game-4",
@@ -98,10 +101,11 @@
     "bggRating": 7.42,
     "bggRank": 310,
     "weight": 1.15,
-    "image": "https://upload.wikimedia.org/wikipedia/en/d/da/Wavelength_game_box.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/d/da/Wavelength_game_box.jpg",
+    "image": "https://cf.geekdo-images.com/z4fbPdmJg_5yphJEvql4ZA__original/img/bP1gM8RC-o5iz20_WazBaBNDHnU=/0x0/filters:format(png)/pic4552862.png",
+    "thumbnail": "https://cf.geekdo-images.com/z4fbPdmJg_5yphJEvql4ZA__previewthumb/img/lpGQJSaLEF1wj1ytCzg-IMgUcp4=/fit-in/300x320/filters:strip_icc()/pic4552862.png",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2019
   },
   {
     "id": "game-5",
@@ -122,10 +126,11 @@
     "bggRating": 7.42,
     "bggRank": 205,
     "weight": 1.78,
-    "image": "https://upload.wikimedia.org/wikipedia/en/2/2e/BoardGameSplendorLogoFairUse.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/2/2e/BoardGameSplendorLogoFairUse.jpg",
+    "image": "https://cf.geekdo-images.com/vNFe4JkhKAERzi4T0Ntwpw__original/img/rqcUdtu_N4v-SpI96XVmpYHnJww=/0x0/filters:format(png)/pic8234167.png",
+    "thumbnail": "https://cf.geekdo-images.com/vNFe4JkhKAERzi4T0Ntwpw__previewthumb/img/UpYSCLFjM_oFFxqgCFP3ymfqZGk=/fit-in/300x320/filters:strip_icc()/pic8234167.png",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2014
   },
   {
     "id": "game-6",
@@ -142,14 +147,15 @@
     "currentBorrower": null,
     "borrowDate": null,
     "expectedReturnDate": null,
-    "bggId": 70512,
+    "bggId": 70323,
     "bggRating": 7.14,
     "bggRank": 490,
     "weight": 1.48,
-    "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2c/Descent_first_edition_board_game_box.jpg/440px-Descent_first_edition_board_game_box.jpg",
-    "thumbnail": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2c/Descent_first_edition_board_game_box.jpg/440px-Descent_first_edition_board_game_box.jpg",
+    "image": "https://cf.geekdo-images.com/m_RzXpHURC0_xLkvRSR_sw__original/img/hSvWgiRYJCTTuoLOWTW3c8sYtl8=/0x0/filters:format(jpeg)/pic3043734.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/m_RzXpHURC0_xLkvRSR_sw__previewthumb/img/QSlVpVg11D4_b8uXcADhP8iSoYc=/fit-in/300x320/filters:strip_icc()/pic3043734.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2011
   },
   {
     "id": "game-7",
@@ -170,10 +176,11 @@
     "bggRating": 6.92,
     "bggRank": 780,
     "weight": 1.76,
-    "image": "https://upload.wikimedia.org/wikipedia/en/a/a8/Blokus_board_game.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/a/a8/Blokus_board_game.jpg",
+    "image": "https://cf.geekdo-images.com/96YA5wUJDxtPkmPxemr5Qg__original/img/sdX6o0TZpXjsDMw071k2P80wpYw=/0x0/filters:format(jpeg)/pic2197702.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/96YA5wUJDxtPkmPxemr5Qg__previewthumb/img/a6t32G9Whtz3WIKIGpnKITRMkBQ=/fit-in/300x320/filters:strip_icc()/pic2197702.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2000
   },
   {
     "id": "game-8",
@@ -190,14 +197,15 @@
     "currentBorrower": null,
     "borrowDate": null,
     "expectedReturnDate": null,
-    "bggId": null,
+    "bggId": 338573,
     "bggRating": null,
     "bggRank": null,
     "weight": null,
-    "image": "https://upload.wikimedia.org/wikipedia/en/9/94/Exploding_Kittens_box.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/9/94/Exploding_Kittens_box.jpg",
+    "image": "https://cf.geekdo-images.com/N2Q6ALz_LhOErUmkTukL5w__original/img/dnLcQbJtrA4Xxymmq7bX_mSSlk4=/0x0/filters:format(png)/pic6167953.png",
+    "thumbnail": "https://cf.geekdo-images.com/N2Q6ALz_LhOErUmkTukL5w__previewthumb/img/GbEUmhTfxBIqgK66JETLDaEZOmY=/fit-in/300x320/filters:strip_icc()/pic6167953.png",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2021
   },
   {
     "id": "game-9",
@@ -214,14 +222,15 @@
     "currentBorrower": null,
     "borrowDate": null,
     "expectedReturnDate": null,
-    "bggId": null,
+    "bggId": 2389,
     "bggRating": null,
     "bggRank": null,
     "weight": null,
-    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/20/Othello-Standard-Board.jpg/640px-Othello-Standard-Board.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/20/Othello-Standard-Board.jpg/640px-Othello-Standard-Board.jpg",
+    "image": "https://cf.geekdo-images.com/EofS3EhloTaqeC_OYQu_UA__original/img/qk2Kmd-LtGT81AyYBmYaRJ1Akck=/0x0/filters:format(jpeg)/pic6568627.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/EofS3EhloTaqeC_OYQu_UA__previewthumb/img/CPn24MJmuPmMJqYu001aUqL0eQA=/fit-in/300x320/filters:strip_icc()/pic6568627.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 1883
   },
   {
     "id": "game-10",
@@ -242,10 +251,11 @@
     "bggRating": 7.55,
     "bggRank": 180,
     "weight": 1.05,
-    "image": "https://upload.wikimedia.org/wikipedia/en/6/61/Just_One_box.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/6/61/Just_One_box.jpg",
+    "image": "https://cf.geekdo-images.com/74haNunMBn85beBi-yIKwA__original/img/hA22qL6nZxchA8FMTIfhLMcI53I=/0x0/filters:format(png)/pic8669313.png",
+    "thumbnail": "https://cf.geekdo-images.com/74haNunMBn85beBi-yIKwA__previewthumb/img/VfbFVVMiYA5DMYqdGDQjLbzAB2Q=/fit-in/300x320/filters:strip_icc()/pic8669313.png",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2018
   },
   {
     "id": "game-11",
@@ -266,10 +276,11 @@
     "bggRating": 5.7,
     "bggRank": 12000,
     "weight": 1.67,
-    "image": "https://upload.wikimedia.org/wikipedia/en/1/18/Cluedo_box_art.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/1/18/Cluedo_box_art.jpg",
+    "image": "https://cf.geekdo-images.com/wNcbhLJGGjakYjjm1gV_kQ__original/img/Ji1MKh8gogtczoDecOi5D5yo9hQ=/0x0/filters:format(png)/pic7563466.png",
+    "thumbnail": "https://cf.geekdo-images.com/wNcbhLJGGjakYjjm1gV_kQ__previewthumb/img/sZwgRJmw2NC49mHugn9Z1vj9eYI=/fit-in/300x320/filters:strip_icc()/pic7563466.png",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 1949
   },
   {
     "id": "game-12",
@@ -286,14 +297,15 @@
     "currentBorrower": null,
     "borrowDate": null,
     "expectedReturnDate": null,
-    "bggId": null,
+    "bggId": 789,
     "bggRating": null,
     "bggRank": null,
     "weight": null,
-    "image": "https://upload.wikimedia.org/wikipedia/en/1/14/Rush_Hour_game.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/1/14/Rush_Hour_game.jpg",
+    "image": "https://cf.geekdo-images.com/7pDn8gNMqq2dcsU3jjr25A__original/img/l9IdQb0PQene8X3gu-xYzkJFduE=/0x0/filters:format(jpeg)/pic125970.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/7pDn8gNMqq2dcsU3jjr25A__previewthumb/img/QQjiY0nLsMlLoGFEciKyhZLVyEo=/fit-in/300x320/filters:strip_icc()/pic125970.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 1963
   },
   {
     "id": "game-13",
@@ -314,10 +326,11 @@
     "bggRating": 7.6,
     "bggRank": 125,
     "weight": 1.61,
-    "image": "https://upload.wikimedia.org/wikipedia/en/2/2f/Patchwork_board_game_box.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/2/2f/Patchwork_board_game_box.jpg",
+    "image": "https://cf.geekdo-images.com/xNSaIHCKr_cc7Q2rQSSJPQ__original/img/HJJdVosBV35kj8pQ6wmQMiJRhVA=/0x0/filters:format(jpeg)/pic9273518.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/xNSaIHCKr_cc7Q2rQSSJPQ__previewthumb/img/Lhfw7rB12x397S41CiNx8zdyKUc=/fit-in/300x320/filters:strip_icc()/pic9273518.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2014
   },
   {
     "id": "game-14",
@@ -338,10 +351,11 @@
     "bggRating": 7.55,
     "bggRank": 140,
     "weight": 2.4,
-    "image": "https://upload.wikimedia.org/wikipedia/en/8/86/Pandemic_Rapid_Response.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/8/86/Pandemic_Rapid_Response.jpg",
+    "image": "https://cf.geekdo-images.com/S3ybV1LAp-8SnHIXLLjVqA__original/img/IsrvRLpUV1TEyZsO5rC-btXaPz0=/0x0/filters:format(jpeg)/pic1534148.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/S3ybV1LAp-8SnHIXLLjVqA__previewthumb/img/89tAMBmsLsaHj5LKFmyXWxQxiZs=/fit-in/300x320/filters:strip_icc()/pic1534148.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2008
   },
   {
     "id": "game-15",
@@ -362,10 +376,11 @@
     "bggRating": 8.12,
     "bggRank": 17,
     "weight": 2.99,
-    "image": "https://upload.wikimedia.org/wikipedia/en/1/12/Castles_of_burgundy.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/1/12/Castles_of_burgundy.jpg",
+    "image": "https://cf.geekdo-images.com/sH2YTQ10dHj1ibfS-KKtGA__original/img/L_gsMsuhbAe0kyq1QLAmyeKOeSs=/0x0/filters:format(jpeg)/pic8745814.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/sH2YTQ10dHj1ibfS-KKtGA__previewthumb/img/eFgG2gnFIKXvHlBnijOx8Q-IFMU=/fit-in/300x320/filters:strip_icc()/pic8745814.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2011
   },
   {
     "id": "game-16",
@@ -382,14 +397,15 @@
     "currentBorrower": null,
     "borrowDate": null,
     "expectedReturnDate": null,
-    "bggId": 283263,
+    "bggId": 312318,
     "bggRating": 7.62,
     "bggRank": 450,
     "weight": 2.2,
-    "image": "https://upload.wikimedia.org/wikipedia/en/9/9e/Century_Golem_Edition_box.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/9/9e/Century_Golem_Edition_box.jpg",
+    "image": "https://cf.geekdo-images.com/HHXTK32_i5GmsKmkgKt_0g__original/img/xZ9sF20QrPAgBJnd1ujt0H7Vc0Y=/0x0/filters:format(jpeg)/pic5509104.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/HHXTK32_i5GmsKmkgKt_0g__previewthumb/img/mZL8nmJmf-djjYMEHtQ1Z2SM_xs=/fit-in/300x320/filters:strip_icc()/pic5509104.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2020
   },
   {
     "id": "game-17",
@@ -406,14 +422,15 @@
     "currentBorrower": null,
     "borrowDate": null,
     "expectedReturnDate": null,
-    "bggId": 232836,
+    "bggId": 232832,
     "bggRating": 7.68,
     "bggRank": 210,
     "weight": 1.7,
-    "image": "https://upload.wikimedia.org/wikipedia/en/9/9e/Century_Golem_Edition_box.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/9/9e/Century_Golem_Edition_box.jpg",
+    "image": "https://cf.geekdo-images.com/1bihoShOuqaCuZJXB3Q2gQ__original/img/fvGzpqyud6Oz1BWOe4gItWWb8P0=/0x0/filters:format(jpeg)/pic3936124.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/1bihoShOuqaCuZJXB3Q2gQ__previewthumb/img/sHmDtygI5Ft6tZIKRjGLThVLtSY=/fit-in/300x320/filters:strip_icc()/pic3936124.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2017
   },
   {
     "id": "game-18",
@@ -430,14 +447,15 @@
     "currentBorrower": null,
     "borrowDate": null,
     "expectedReturnDate": null,
-    "bggId": null,
+    "bggId": 226522,
     "bggRating": null,
     "bggRank": null,
     "weight": null,
-    "image": "https://upload.wikimedia.org/wikipedia/en/7/77/Exit_The_Game_box.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/7/77/Exit_The_Game_box.jpg",
+    "image": "https://cf.geekdo-images.com/atCG4ujYJ-L5LKID3ouz8g__original/img/aNnKLFIAKO-A5yJYA2KzcfjmPWw=/0x0/filters:format(jpeg)/pic5320930.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/atCG4ujYJ-L5LKID3ouz8g__previewthumb/img/bPsTUQ2sL44vLXY5DmuYNIq4AKQ=/fit-in/300x320/filters:strip_icc()/pic5320930.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2017
   },
   {
     "id": "game-19",
@@ -454,14 +472,15 @@
     "currentBorrower": null,
     "borrowDate": null,
     "expectedReturnDate": null,
-    "bggId": null,
+    "bggId": 203416,
     "bggRating": null,
     "bggRank": null,
     "weight": null,
-    "image": "https://upload.wikimedia.org/wikipedia/en/7/77/Exit_The_Game_box.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/7/77/Exit_The_Game_box.jpg",
+    "image": "https://cf.geekdo-images.com/fGO2BYF3whgNaSBZMVSO9g__original/img/rSb6fWP88631gEAuYcZX-4pRpLk=/0x0/filters:format(jpeg)/pic3332423.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/fGO2BYF3whgNaSBZMVSO9g__previewthumb/img/DRNL7WYcFi2fVG58pJr1HBQGJMs=/fit-in/300x320/filters:strip_icc()/pic3332423.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2016
   },
   {
     "id": "game-20",
@@ -478,14 +497,15 @@
     "currentBorrower": null,
     "borrowDate": null,
     "expectedReturnDate": null,
-    "bggId": 42637,
+    "bggId": 36218,
     "bggRating": 7.68,
     "bggRank": 150,
     "weight": 2.42,
-    "image": "https://upload.wikimedia.org/wikipedia/en/b/b5/Dominion_game.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/b/b5/Dominion_game.jpg",
+    "image": "https://cf.geekdo-images.com/j6iQpZ4XkemZP07HNCODBA__original/img/96COuakNiLRrjDLc1sM4Zxsw4WE=/0x0/filters:format(jpeg)/pic394356.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/j6iQpZ4XkemZP07HNCODBA__previewthumb/img/J6yPBpSnA3LlFqtmNnyVnu0oSyQ=/fit-in/300x320/filters:strip_icc()/pic394356.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2008
   },
   {
     "id": "game-21",
@@ -506,10 +526,11 @@
     "bggRating": 7.59,
     "bggRank": 115,
     "weight": 2.35,
-    "image": "https://upload.wikimedia.org/wikipedia/en/b/b5/Dominion_game.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/b/b5/Dominion_game.jpg",
+    "image": "https://cf.geekdo-images.com/j6iQpZ4XkemZP07HNCODBA__original/img/96COuakNiLRrjDLc1sM4Zxsw4WE=/0x0/filters:format(jpeg)/pic394356.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/j6iQpZ4XkemZP07HNCODBA__previewthumb/img/J6yPBpSnA3LlFqtmNnyVnu0oSyQ=/fit-in/300x320/filters:strip_icc()/pic394356.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2008
   },
   {
     "id": "game-22",
@@ -526,14 +547,15 @@
     "currentBorrower": null,
     "borrowDate": null,
     "expectedReturnDate": null,
-    "bggId": null,
+    "bggId": 213460,
     "bggRating": null,
     "bggRank": null,
     "weight": null,
-    "image": "https://upload.wikimedia.org/wikipedia/en/1/18/Unlock_Escape_Adventures.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/1/18/Unlock_Escape_Adventures.jpg",
+    "image": "https://cf.geekdo-images.com/h8K_nTemD6bmydT0akChZw__original/img/WSCTLAMnqYM_IEEO-EAVsOjkmAI=/0x0/filters:format(jpeg)/pic3348790.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/h8K_nTemD6bmydT0akChZw__previewthumb/img/NfBV9GNc5KIwkhrOLb-o2jjkhFE=/fit-in/300x320/filters:strip_icc()/pic3348790.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2017
   },
   {
     "id": "game-23",
@@ -550,14 +572,15 @@
     "currentBorrower": null,
     "borrowDate": null,
     "expectedReturnDate": null,
-    "bggId": null,
+    "bggId": 314486,
     "bggRating": null,
     "bggRank": null,
     "weight": null,
-    "image": "https://upload.wikimedia.org/wikipedia/en/5/5a/Last_Defense_board_game.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/5/5a/Last_Defense_board_game.jpg",
+    "image": "https://cf.geekdo-images.com/pwOTQK_qZsAnCQXGAllQdA__original/img/bmEUHXakai5lYEusddYNS7Hp7Fg=/0x0/filters:format(png)/pic5534072.png",
+    "thumbnail": "https://cf.geekdo-images.com/pwOTQK_qZsAnCQXGAllQdA__previewthumb/img/-SCRuhpzL7qCEI_7RpcXFg8vEms=/fit-in/300x320/filters:strip_icc()/pic5534072.png",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2020
   },
   {
     "id": "game-24",
@@ -578,10 +601,11 @@
     "bggRating": 7.55,
     "bggRank": 145,
     "weight": 1.27,
-    "image": "https://upload.wikimedia.org/wikipedia/en/0/09/Codenames_game_cover.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/0/09/Codenames_game_cover.jpg",
+    "image": "https://cf.geekdo-images.com/nC6ifPCDnAItwoKSKXVrnw__original/img/Id-jjIer_61ZbvI2_RVRCeBZFY4=/0x0/filters:format(jpeg)/pic8907965.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/nC6ifPCDnAItwoKSKXVrnw__previewthumb/img/o4iHvfVWCLwbHRz9QJNz579a2_s=/fit-in/300x320/filters:strip_icc()/pic8907965.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2015
   },
   {
     "id": "game-25",
@@ -602,10 +626,11 @@
     "bggRating": 7.55,
     "bggRank": 145,
     "weight": 1.27,
-    "image": "https://upload.wikimedia.org/wikipedia/en/0/09/Codenames_game_cover.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/0/09/Codenames_game_cover.jpg",
+    "image": "https://cf.geekdo-images.com/nC6ifPCDnAItwoKSKXVrnw__original/img/Id-jjIer_61ZbvI2_RVRCeBZFY4=/0x0/filters:format(jpeg)/pic8907965.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/nC6ifPCDnAItwoKSKXVrnw__previewthumb/img/o4iHvfVWCLwbHRz9QJNz579a2_s=/fit-in/300x320/filters:strip_icc()/pic8907965.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2015
   },
   {
     "id": "game-26",
@@ -622,14 +647,15 @@
     "currentBorrower": null,
     "borrowDate": null,
     "expectedReturnDate": null,
-    "bggId": null,
+    "bggId": 1927,
     "bggRating": null,
     "bggRank": null,
     "weight": null,
-    "image": "https://upload.wikimedia.org/wikipedia/en/c/c5/Munchkin_Deluxe_box.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/c/c5/Munchkin_Deluxe_box.jpg",
+    "image": "https://cf.geekdo-images.com/J-ts3MW0UhDzs621TR6cog__original/img/FbqPPCilgZKND2xmhWJgkfjZiYE=/0x0/filters:format(jpeg)/pic1871016.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/J-ts3MW0UhDzs621TR6cog__previewthumb/img/71WevVby7wM-YPR5W01RTtEUVmE=/fit-in/300x320/filters:strip_icc()/pic1871016.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2001
   },
   {
     "id": "game-27",
@@ -650,10 +676,11 @@
     "bggRating": 7.12,
     "bggRank": 520,
     "weight": 2.3,
-    "image": "https://upload.wikimedia.org/wikipedia/en/a/a3/Catan-2015-boxart.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/a/a3/Catan-2015-boxart.jpg",
+    "image": "https://cf.geekdo-images.com/0XODRpReiZBFUffEcqT5-Q__original/img/oRc0AomWA9ZtFqQDZiZbIyKE1j0=/0x0/filters:format(png)/pic9156909.png",
+    "thumbnail": "https://cf.geekdo-images.com/0XODRpReiZBFUffEcqT5-Q__previewthumb/img/6DsnQZpWcdOSo8O18m-QhvgclKY=/fit-in/300x320/filters:strip_icc()/pic9156909.png",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 1995
   },
   {
     "id": "game-28",
@@ -674,10 +701,11 @@
     "bggRating": 7.96,
     "bggRank": 48,
     "weight": 1.84,
-    "image": "https://upload.wikimedia.org/wikipedia/en/f/fc/Cascadia_board_game_box_cover.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/f/fc/Cascadia_board_game_box_cover.jpg",
+    "image": "https://cf.geekdo-images.com/MjeJZfulbsM1DSV3DrGJYA__original/img/B374C04Eip7fmQBGJzgiOTp-jyQ=/0x0/filters:format(jpeg)/pic5100691.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/MjeJZfulbsM1DSV3DrGJYA__previewthumb/img/z9ZxaoEx4iVzO2nhExNSdvmmoy4=/fit-in/300x320/filters:strip_icc()/pic5100691.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2021
   },
   {
     "id": "game-29",
@@ -694,14 +722,15 @@
     "currentBorrower": null,
     "borrowDate": null,
     "expectedReturnDate": null,
-    "bggId": null,
+    "bggId": 411369,
     "bggRating": null,
     "bggRank": null,
     "weight": null,
-    "image": "https://upload.wikimedia.org/wikipedia/en/7/7f/Chronicles_of_Light_box.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/7/7f/Chronicles_of_Light_box.jpg",
+    "image": "https://cf.geekdo-images.com/xOyPKyPSqhJWOIQKU6Sa9A__original/img/Oq3UIBlm5E8_Z9lOJCsSoMqXDOM=/0x0/filters:format(png)/pic7958361.png",
+    "thumbnail": "https://cf.geekdo-images.com/xOyPKyPSqhJWOIQKU6Sa9A__previewthumb/img/PboL1nbId4Vf757iAvp8aoJMXRo=/fit-in/300x320/filters:strip_icc()/pic7958361.png",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2024
   },
   {
     "id": "game-30",
@@ -722,10 +751,11 @@
     "bggRating": 7.4,
     "bggRank": 240,
     "weight": 1.83,
-    "image": "https://upload.wikimedia.org/wikipedia/en/9/92/Ticket_to_Ride_Board_Game_Box_Cover.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/9/92/Ticket_to_Ride_Board_Game_Box_Cover.jpg",
+    "image": "https://cf.geekdo-images.com/kdWYkW-7AqG63HhqPL6ekA__original/img/rWF8r4JXXCQQ7QhiWHhmT-rQ3Pc=/0x0/filters:format(jpeg)/pic8937637.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/kdWYkW-7AqG63HhqPL6ekA__previewthumb/img/32owvagSnqmny6qXaUjGN06WL98=/fit-in/300x320/filters:strip_icc()/pic8937637.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2004
   },
   {
     "id": "game-31",
@@ -742,14 +772,15 @@
     "currentBorrower": null,
     "borrowDate": null,
     "expectedReturnDate": null,
-    "bggId": 332808,
+    "bggId": 340420,
     "bggRating": 6.35,
     "bggRank": 3100,
     "weight": 1.05,
-    "image": "https://upload.wikimedia.org/wikipedia/en/5/5c/Throw_Throw_Avocado.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/5/5c/Throw_Throw_Avocado.jpg",
+    "image": "https://cf.geekdo-images.com/_mGtR5kr2eMU1sIzauuLfw__original/img/rN-2_xDMxvJApCWsMmB7uhEjbNE=/0x0/filters:format(jpeg)/pic7073069.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/_mGtR5kr2eMU1sIzauuLfw__previewthumb/img/803rvKC2xVj_XcRTA4yr2okV4YY=/fit-in/300x320/filters:strip_icc()/pic7073069.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2021
   },
   {
     "id": "game-32",
@@ -766,12 +797,12 @@
     "currentBorrower": null,
     "borrowDate": null,
     "expectedReturnDate": null,
-    "bggId": null,
+    "bggId": 204387,
     "bggRating": null,
     "bggRank": null,
     "weight": null,
-    "image": "https://upload.wikimedia.org/wikipedia/en/2/28/Rise_of_Tribes_box.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/2/28/Rise_of_Tribes_box.jpg",
+    "image": "https://cf.geekdo-images.com/48HTXTxq8fwo0XGBjokDLw__original/img/HCD8-VuWpS6gk_poQkUdGrpWGXI=/0x0/filters:format(png)/pic3161302.png",
+    "thumbnail": "https://cf.geekdo-images.com/48HTXTxq8fwo0XGBjokDLw__previewthumb/img/9LjTC3DuukUpMwK4h98JQj0lJUw=/fit-in/300x320/filters:strip_icc()/pic3161302.png",
     "description": "",
     "history": []
   },
@@ -794,10 +825,11 @@
     "bggRating": 6.95,
     "bggRank": 820,
     "weight": 1.04,
-    "image": "https://upload.wikimedia.org/wikipedia/en/2/25/Rhino_Hero_box.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/2/25/Rhino_Hero_box.jpg",
+    "image": "https://cf.geekdo-images.com/UO37-aWZkmCl_Aj2M53OtA__original/img/NMW_gUgcOpug3W6_7Zpqm60Xhzo=/0x0/filters:format(png)/pic9267030.png",
+    "thumbnail": "https://cf.geekdo-images.com/UO37-aWZkmCl_Aj2M53OtA__previewthumb/img/MlpEoJn8sX6zGkh4HhBtOBCauoY=/fit-in/300x320/filters:strip_icc()/pic9267030.png",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2011
   },
   {
     "id": "game-34",
@@ -814,14 +846,15 @@
     "currentBorrower": null,
     "borrowDate": null,
     "expectedReturnDate": null,
-    "bggId": null,
+    "bggId": 23645,
     "bggRating": null,
     "bggRank": null,
     "weight": null,
-    "image": "https://upload.wikimedia.org/wikipedia/en/6/60/Qwirkle_box.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/6/60/Qwirkle_box.jpg",
+    "image": "https://cf.geekdo-images.com/Cc2BpMGYX8TPew2wSZTVDQ__original/img/_-vnnTv_wzS671brxW_hJQrvWrI=/0x0/filters:format(jpeg)/pic126402.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/Cc2BpMGYX8TPew2wSZTVDQ__previewthumb/img/yrQnyELLGq9wOnwWCJNWoUTMuSg=/fit-in/300x320/filters:strip_icc()/pic126402.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 1995
   },
   {
     "id": "game-35",
@@ -842,10 +875,11 @@
     "bggRating": 7.76,
     "bggRank": 70,
     "weight": 1.76,
-    "image": "https://upload.wikimedia.org/wikipedia/en/2/23/Picture_of_Azul_game_box.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/2/23/Picture_of_Azul_game_box.jpg",
+    "image": "https://cf.geekdo-images.com/aPSHJO0d0XOpQR5X-wJonw__original/img/AkbtYVc6xXJF3c9EUrakklcclKw=/0x0/filters:format(png)/pic6973671.png",
+    "thumbnail": "https://cf.geekdo-images.com/aPSHJO0d0XOpQR5X-wJonw__previewthumb/img/qLCJBbjkXD_hN7ftt-5DLpC1xTw=/fit-in/300x320/filters:strip_icc()/pic6973671.png",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2017
   },
   {
     "id": "game-36",
@@ -862,14 +896,15 @@
     "currentBorrower": null,
     "borrowDate": null,
     "expectedReturnDate": null,
-    "bggId": 300189,
+    "bggId": 300010,
     "bggRating": 7.02,
     "bggRank": 780,
     "weight": 1.12,
-    "image": "https://upload.wikimedia.org/wikipedia/en/b/b3/Dragomino_box.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/b/b3/Dragomino_box.jpg",
+    "image": "https://cf.geekdo-images.com/S_Cpk3j3Z3ceNJBPNg4l7w__original/img/2g1g35Rp3u1tF_8fX3YLpmjIPj8=/0x0/filters:format(png)/pic5212561.png",
+    "thumbnail": "https://cf.geekdo-images.com/S_Cpk3j3Z3ceNJBPNg4l7w__previewthumb/img/xCv-a7KsGvECYT6oeAtRUbroX1A=/fit-in/300x320/filters:strip_icc()/pic5212561.png",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2020
   },
   {
     "id": "game-37",
@@ -886,14 +921,15 @@
     "currentBorrower": null,
     "borrowDate": null,
     "expectedReturnDate": null,
-    "bggId": null,
+    "bggId": 181958,
     "bggRating": null,
     "bggRank": null,
     "weight": null,
-    "image": "https://upload.wikimedia.org/wikipedia/en/f/f6/Code_Master_game.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/f/f6/Code_Master_game.jpg",
+    "image": "https://cf.geekdo-images.com/DpBkxsPoO5ZwJJKqDODDiQ__original/img/LSn1mzBRkrpY83aqgzvJrC-IE5E=/0x0/filters:format(jpeg)/pic2620908.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/DpBkxsPoO5ZwJJKqDODDiQ__previewthumb/img/ZXKr3MyGkH15zq-GFSXPXtwSeK4=/fit-in/300x320/filters:strip_icc()/pic2620908.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2015
   },
   {
     "id": "game-38",
@@ -914,10 +950,11 @@
     "bggRating": 6.78,
     "bggRank": 1100,
     "weight": 1.72,
-    "image": "https://upload.wikimedia.org/wikipedia/en/8/88/Forbidden_Island_cover.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/8/88/Forbidden_Island_cover.jpg",
+    "image": "https://cf.geekdo-images.com/JgAkEBUaiHOsOS94iRMs2w__original/img/H5d4I5z_HSpPEu7EAl0DqLt9_pM=/0x0/filters:format(jpeg)/pic646458.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/JgAkEBUaiHOsOS94iRMs2w__previewthumb/img/cnrzbu16Tq8rEqYq5DRGEi9E-vY=/fit-in/300x320/filters:strip_icc()/pic646458.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2010
   },
   {
     "id": "game-39",
@@ -934,14 +971,15 @@
     "currentBorrower": null,
     "borrowDate": null,
     "expectedReturnDate": null,
-    "bggId": null,
+    "bggId": 40388,
     "bggRating": null,
     "bggRank": null,
     "weight": null,
-    "image": "https://upload.wikimedia.org/wikipedia/en/9/9c/Tenzi_dice_game.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/9/9c/Tenzi_dice_game.jpg",
+    "image": "https://cf.geekdo-images.com/0-ugRMnDbKuk_3KrFgZ6YQ__original/img/U4v4ovp8M9Y_cjIYMG5eFNIwnC8=/0x0/filters:format(jpeg)/pic422804.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/0-ugRMnDbKuk_3KrFgZ6YQ__previewthumb/img/uVvZtbbKIvbO8yInmmJ6ZSVVg0U=/fit-in/300x320/filters:strip_icc()/pic422804.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2005
   },
   {
     "id": "game-40",
@@ -962,10 +1000,11 @@
     "bggRating": 7.05,
     "bggRank": 650,
     "weight": 2.22,
-    "image": "https://upload.wikimedia.org/wikipedia/en/4/4c/Jaws_board_game.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/4/4c/Jaws_board_game.jpg",
+    "image": "https://cf.geekdo-images.com/UDv2zsY1rdWVOXyUl8faYg__original/img/XwsKpy2zpnujG6zXd959_Ts5hKE=/0x0/filters:format(jpeg)/pic4581181.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/UDv2zsY1rdWVOXyUl8faYg__previewthumb/img/HLrGnOvSmGSArk2xTFfQ6BHI2nA=/fit-in/300x320/filters:strip_icc()/pic4581181.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2019
   },
   {
     "id": "game-41",
@@ -986,10 +1025,11 @@
     "bggRating": 7.3,
     "bggRank": 360,
     "weight": 2.34,
-    "image": "https://upload.wikimedia.org/wikipedia/en/6/67/Hive_box_art.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/6/67/Hive_box_art.jpg",
+    "image": "https://cf.geekdo-images.com/fQe85tsBZoH6ibPnm1k1UA__original/img/eqUVrCJKcMBGBhw4Gfc9_9JabYE=/0x0/filters:format(jpeg)/pic791151.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/fQe85tsBZoH6ibPnm1k1UA__previewthumb/img/Cmv6nR0C7KejmZGX0B1YYjCzndo=/fit-in/300x320/filters:strip_icc()/pic791151.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2001
   },
   {
     "id": "game-42",
@@ -1010,10 +1050,11 @@
     "bggRating": 5.7,
     "bggRank": 12000,
     "weight": 1.67,
-    "image": "https://upload.wikimedia.org/wikipedia/en/1/18/Cluedo_box_art.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/1/18/Cluedo_box_art.jpg",
+    "image": "https://cf.geekdo-images.com/wNcbhLJGGjakYjjm1gV_kQ__original/img/Ji1MKh8gogtczoDecOi5D5yo9hQ=/0x0/filters:format(png)/pic7563466.png",
+    "thumbnail": "https://cf.geekdo-images.com/wNcbhLJGGjakYjjm1gV_kQ__previewthumb/img/sZwgRJmw2NC49mHugn9Z1vj9eYI=/fit-in/300x320/filters:strip_icc()/pic7563466.png",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 1949
   },
   {
     "id": "game-43",
@@ -1030,12 +1071,12 @@
     "currentBorrower": null,
     "borrowDate": null,
     "expectedReturnDate": null,
-    "bggId": 298729,
+    "bggId": 298045,
     "bggRating": 7.4,
     "bggRank": 380,
     "weight": 1.95,
-    "image": "https://upload.wikimedia.org/wikipedia/en/c/c5/Marvel_United_box.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/c/c5/Marvel_United_box.jpg",
+    "image": "https://cf.geekdo-images.com/zxVVmggfpHJpmnJY9j-k1w__original/img/eBeOyAv08r-qFkQmVKhtBg_netU=/0x0/filters:format(jpeg)/pic1657689.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/zxVVmggfpHJpmnJY9j-k1w__previewthumb/img/7kn_r9OwMSpWvdCjyx_J0kF29o0=/fit-in/300x320/filters:strip_icc()/pic1657689.jpg",
     "description": "",
     "history": []
   },
@@ -1058,10 +1099,11 @@
     "bggRating": 7.95,
     "bggRank": 180,
     "weight": 2.46,
-    "image": "https://upload.wikimedia.org/wikipedia/en/b/b5/Dominion_game.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/b/b5/Dominion_game.jpg",
+    "image": "https://cf.geekdo-images.com/n1_bOankhLYghTFscRAG8A__original/img/Ubjei_-JstZdPfaj542hkxeoHDk=/0x0/filters:format(jpeg)/pic543471.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/n1_bOankhLYghTFscRAG8A__previewthumb/img/aGdvhWEpqcBPrmfuVd6OTCujsks=/fit-in/300x320/filters:strip_icc()/pic543471.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2009
   },
   {
     "id": "game-45",
@@ -1082,10 +1124,11 @@
     "bggRating": 8.12,
     "bggRank": 25,
     "weight": 3.55,
-    "image": "https://upload.wikimedia.org/wikipedia/en/0/05/Arkham_Horror_The_Card_Game_box.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/0/05/Arkham_Horror_The_Card_Game_box.jpg",
+    "image": "https://cf.geekdo-images.com/B5F5ulz0UivNgrI9Ky0euA__original/img/guEKCewM_2e5ugltSN3dTSwdZJI=/0x0/filters:format(jpeg)/pic3122349.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/B5F5ulz0UivNgrI9Ky0euA__previewthumb/img/pqrW_DRlQiztPg4Yu9_k4WFiuxk=/fit-in/300x320/filters:strip_icc()/pic3122349.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2016
   },
   {
     "id": "game-46",
@@ -1106,10 +1149,11 @@
     "bggRating": 8.52,
     "bggRank": 4,
     "weight": 3.75,
-    "image": "https://upload.wikimedia.org/wikipedia/en/e/e0/Ark_Nova_board_game_box.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/e/e0/Ark_Nova_board_game_box.jpg",
+    "image": "https://cf.geekdo-images.com/SoU8p28Sk1s8MSvoM4N8pQ__original/img/g4S18szTdrXCdIwVKzMKrZrYAcM=/0x0/filters:format(jpeg)/pic6293412.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/SoU8p28Sk1s8MSvoM4N8pQ__previewthumb/img/vJS50Sdz48YBUXhkMbOKvFCpyuE=/fit-in/300x320/filters:strip_icc()/pic6293412.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2021
   },
   {
     "id": "game-47",
@@ -1130,10 +1174,11 @@
     "bggRating": 7.18,
     "bggRank": 410,
     "weight": 1.48,
-    "image": "https://upload.wikimedia.org/wikipedia/en/9/93/Lostcities250.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/9/93/Lostcities250.jpg",
+    "image": "https://cf.geekdo-images.com/AL5D-dXabY-Lk3PqIFk_0g__original/img/PdGBQ7xc0GA9ndKnnInx_sQwvl4=/0x0/filters:format(jpeg)/pic4597095.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/AL5D-dXabY-Lk3PqIFk_0g__previewthumb/img/fennWwegsqpu-WyMH4pBrGOCD98=/fit-in/300x320/filters:strip_icc()/pic4597095.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 1999
   },
   {
     "id": "game-48",
@@ -1150,14 +1195,15 @@
     "currentBorrower": null,
     "borrowDate": null,
     "expectedReturnDate": null,
-    "bggId": null,
+    "bggId": 384074,
     "bggRating": null,
     "bggRank": null,
     "weight": null,
-    "image": "https://upload.wikimedia.org/wikipedia/en/1/14/Lord_of_the_Rings_Adventure_Book_Game.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/1/14/Lord_of_the_Rings_Adventure_Book_Game.jpg",
+    "image": "https://cf.geekdo-images.com/j28IzODHKhsrtJU_sYnozw__original/img/c08Nh9H0Zajgo-FqD2DBCGYKq-U=/0x0/filters:format(png)/pic7462989.png",
+    "thumbnail": "https://cf.geekdo-images.com/j28IzODHKhsrtJU_sYnozw__previewthumb/img/ES-YKyzesO3EFAXmYKGlWKqAE3o=/fit-in/300x320/filters:strip_icc()/pic7462989.png",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2022
   },
   {
     "id": "game-49",
@@ -1178,10 +1224,11 @@
     "bggRating": 7.82,
     "bggRank": 65,
     "weight": 3.25,
-    "image": "https://upload.wikimedia.org/wikipedia/en/f/f0/PGbox_cover_c.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/f/f0/PGbox_cover_c.jpg",
+    "image": "https://cf.geekdo-images.com/yd6LuatytHRhcFCxCf-EEg__original/img/OS13C6W4i1XW__wWVVVaqF7BV0c=/0x0/filters:format(jpeg)/pic4459753.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/yd6LuatytHRhcFCxCf-EEg__previewthumb/img/b_S80QrgDeZ9rb0PX_TeAqXfeR0=/fit-in/300x320/filters:strip_icc()/pic4459753.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2004
   },
   {
     "id": "game-50",
@@ -1202,10 +1249,11 @@
     "bggRating": 8.36,
     "bggRank": 7,
     "weight": 3.26,
-    "image": "https://upload.wikimedia.org/wikipedia/en/0/07/Terraforming_mars.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/0/07/Terraforming_mars.jpg",
+    "image": "https://cf.geekdo-images.com/wg9oOLcsKvDesSUdZQ4rxw__original/img/thIqWDnH9utKuoKVEUqveDixprI=/0x0/filters:format(jpeg)/pic3536616.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/wg9oOLcsKvDesSUdZQ4rxw__previewthumb/img/lsfgQWp_sp8fECx1Tty3Hd36brI=/fit-in/300x320/filters:strip_icc()/pic3536616.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2016
   },
   {
     "id": "game-51",
@@ -1222,14 +1270,15 @@
     "currentBorrower": null,
     "borrowDate": null,
     "expectedReturnDate": null,
-    "bggId": null,
+    "bggId": 356394,
     "bggRating": null,
     "bggRank": null,
     "weight": null,
-    "image": "https://upload.wikimedia.org/wikipedia/en/c/cc/Star_Wars_Villainous_box.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/c/cc/Star_Wars_Villainous_box.jpg",
+    "image": "https://cf.geekdo-images.com/RZcM3K4lgt-HIykNc9_lLw__original/img/TtlFt_h-J_NnBefmXwmTziT3-a0=/0x0/filters:format(jpeg)/pic6667359.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/RZcM3K4lgt-HIykNc9_lLw__previewthumb/img/bSoklZd1kXhAC9gajpRw_XD4DWw=/fit-in/300x320/filters:strip_icc()/pic6667359.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2004
   },
   {
     "id": "game-52",
@@ -1246,14 +1295,15 @@
     "currentBorrower": null,
     "borrowDate": null,
     "expectedReturnDate": null,
-    "bggId": null,
+    "bggId": 147209,
     "bggRating": null,
     "bggRank": null,
     "weight": null,
-    "image": "https://upload.wikimedia.org/wikipedia/en/3/3b/Train_Heist_game.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/3/3b/Train_Heist_game.jpg",
+    "image": "https://cf.geekdo-images.com/zRSkp9ns94L0P3_v9v7AXQ__original/img/Wv30elQNVGkT-_6i7RvXdLOhQnw=/0x0/filters:format(jpeg)/pic2486914.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/zRSkp9ns94L0P3_v9v7AXQ__previewthumb/img/AmsRFr5WPZAxhWXc4e_AH_9GdaY=/fit-in/300x320/filters:strip_icc()/pic2486914.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2013
   },
   {
     "id": "game-53",
@@ -1270,14 +1320,15 @@
     "currentBorrower": null,
     "borrowDate": null,
     "expectedReturnDate": null,
-    "bggId": null,
+    "bggId": 124742,
     "bggRating": null,
     "bggRank": null,
     "weight": null,
-    "image": "https://upload.wikimedia.org/wikipedia/en/e/e0/Android_Netrunner_box.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/e/e0/Android_Netrunner_box.jpg",
+    "image": "https://cf.geekdo-images.com/2ewHIIG_TRq8bYlqk0jIMw__original/img/cassW39WF2QrPImJF59efADAmM0=/0x0/filters:format(jpeg)/pic3738560.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/2ewHIIG_TRq8bYlqk0jIMw__previewthumb/img/vU4r-ALJGwVjDk0DwqjK5GQvP5c=/fit-in/300x320/filters:strip_icc()/pic3738560.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2012
   },
   {
     "id": "game-54",
@@ -1294,14 +1345,15 @@
     "currentBorrower": null,
     "borrowDate": null,
     "expectedReturnDate": null,
-    "bggId": null,
+    "bggId": 338573,
     "bggRating": null,
     "bggRank": null,
     "weight": null,
-    "image": "https://upload.wikimedia.org/wikipedia/en/9/94/Exploding_Kittens_box.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/9/94/Exploding_Kittens_box.jpg",
+    "image": "https://cf.geekdo-images.com/N2Q6ALz_LhOErUmkTukL5w__original/img/dnLcQbJtrA4Xxymmq7bX_mSSlk4=/0x0/filters:format(png)/pic6167953.png",
+    "thumbnail": "https://cf.geekdo-images.com/N2Q6ALz_LhOErUmkTukL5w__previewthumb/img/GbEUmhTfxBIqgK66JETLDaEZOmY=/fit-in/300x320/filters:strip_icc()/pic6167953.png",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2021
   },
   {
     "id": "game-55",
@@ -1322,10 +1374,11 @@
     "bggRating": 7.15,
     "bggRank": 510,
     "weight": 2.1,
-    "image": "https://upload.wikimedia.org/wikipedia/en/2/23/Imhotep_board_game.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/2/23/Imhotep_board_game.jpg",
+    "image": "https://cf.geekdo-images.com/HkAt5n4R8XM0vNozl7fftA__original/img/934t5i7J90wlw6mb6p2m_3u98i0=/0x0/filters:format(jpeg)/pic3029488.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/HkAt5n4R8XM0vNozl7fftA__previewthumb/img/Y83gz6aOXNe8SkQIaGHiRb57nNE=/fit-in/300x320/filters:strip_icc()/pic3029488.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2016
   },
   {
     "id": "game-56",
@@ -1346,10 +1399,11 @@
     "bggRating": 7.72,
     "bggRank": 98,
     "weight": 2.32,
-    "image": "https://upload.wikimedia.org/wikipedia/en/4/4b/7_Wonders_box_art.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/4/4b/7_Wonders_box_art.jpg",
+    "image": "https://cf.geekdo-images.com/35h9Za_JvMMMtx_92kT0Jg__original/img/jt70jJDZ1y1FWJs4ZQf5FI8APVY=/0x0/filters:format(jpeg)/pic7149798.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/35h9Za_JvMMMtx_92kT0Jg__previewthumb/img/zPH-lJh3s6emy3dcwJH-60t-hts=/fit-in/300x320/filters:strip_icc()/pic7149798.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2010
   },
   {
     "id": "game-57",
@@ -1366,14 +1420,15 @@
     "currentBorrower": null,
     "borrowDate": null,
     "expectedReturnDate": null,
-    "bggId": 68448,
+    "bggId": 346703,
     "bggRating": 7.72,
     "bggRank": 98,
     "weight": 2.32,
-    "image": "https://upload.wikimedia.org/wikipedia/en/0/00/7_Wonders_Architects_box.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/0/00/7_Wonders_Architects_box.jpg",
+    "image": "https://cf.geekdo-images.com/BGtYtHbLgYhYyNMoyOm1RA__original/img/05P7xaW8B4ueCvItryBjO5wVA5s=/0x0/filters:format(jpeg)/pic7416525.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/BGtYtHbLgYhYyNMoyOm1RA__previewthumb/img/iYuLCY4sYCrSOMtQZ3zlJZ-KXCg=/fit-in/300x320/filters:strip_icc()/pic7416525.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2021
   },
   {
     "id": "game-58",
@@ -1394,10 +1449,11 @@
     "bggRating": 7.76,
     "bggRank": 70,
     "weight": 1.76,
-    "image": "https://upload.wikimedia.org/wikipedia/en/2/23/Picture_of_Azul_game_box.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/2/23/Picture_of_Azul_game_box.jpg",
+    "image": "https://cf.geekdo-images.com/aPSHJO0d0XOpQR5X-wJonw__original/img/AkbtYVc6xXJF3c9EUrakklcclKw=/0x0/filters:format(png)/pic6973671.png",
+    "thumbnail": "https://cf.geekdo-images.com/aPSHJO0d0XOpQR5X-wJonw__previewthumb/img/qLCJBbjkXD_hN7ftt-5DLpC1xTw=/fit-in/300x320/filters:strip_icc()/pic6973671.png",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2017
   },
   {
     "id": "game-59",
@@ -1414,14 +1470,15 @@
     "currentBorrower": null,
     "borrowDate": null,
     "expectedReturnDate": null,
-    "bggId": null,
+    "bggId": 330833,
     "bggRating": null,
     "bggRank": null,
     "weight": null,
-    "image": "https://upload.wikimedia.org/wikipedia/en/2/27/Batsu_game.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/2/27/Batsu_game.jpg",
+    "image": "https://cf.geekdo-images.com/naZshzKmhTiCAjFXW8ZAjw__original/img/PAXUhDV08Tv7z6MW8rKcVbZkYy8=/0x0/filters:format(png)/pic7243438.png",
+    "thumbnail": "https://cf.geekdo-images.com/naZshzKmhTiCAjFXW8ZAjw__previewthumb/img/kyQbWU2DgTOt1UA8qp5Y5p4QD2Y=/fit-in/300x320/filters:strip_icc()/pic7243438.png",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2020
   },
   {
     "id": "game-60",
@@ -1442,10 +1499,11 @@
     "bggRating": 4.6,
     "bggRank": 25000,
     "weight": 1.22,
-    "image": "https://upload.wikimedia.org/wikipedia/en/6/65/Battleship_game_board.JPG",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/6/65/Battleship_game_board.JPG",
+    "image": "https://cf.geekdo-images.com/oWcB33sfig9QF_KBEv7iLQ__original/img/retN48ZHxCC5YaECdlWjRdWHPGs=/0x0/filters:format(png)/pic2439783.png",
+    "thumbnail": "https://cf.geekdo-images.com/oWcB33sfig9QF_KBEv7iLQ__previewthumb/img/piytRkzeu892K9N0H38XpL-tUaE=/fit-in/300x320/filters:strip_icc()/pic2439783.png",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 1931
   },
   {
     "id": "game-61",
@@ -1466,10 +1524,11 @@
     "bggRating": 7.03,
     "bggRank": 600,
     "weight": 2.38,
-    "image": "https://upload.wikimedia.org/wikipedia/en/7/77/Betrayal_at_House_on_the_Hill_box.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/7/77/Betrayal_at_House_on_the_Hill_box.jpg",
+    "image": "https://cf.geekdo-images.com/lqmt2Oti_qJS65XqHcB8AA__original/img/7R6yYk8A2eUMmSDaxGjae5SceGI=/0x0/filters:format(png)/pic5146864.png",
+    "thumbnail": "https://cf.geekdo-images.com/lqmt2Oti_qJS65XqHcB8AA__previewthumb/img/tq7eid3oWgfGuP44JA966BSjBwI=/fit-in/300x320/filters:strip_icc()/pic5146864.png",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2004
   },
   {
     "id": "game-62",
@@ -1486,14 +1545,15 @@
     "currentBorrower": null,
     "borrowDate": null,
     "expectedReturnDate": null,
-    "bggId": null,
+    "bggId": 27951,
     "bggRating": null,
     "bggRank": null,
     "weight": null,
-    "image": "https://upload.wikimedia.org/wikipedia/en/7/73/Bezzerwizzer_box.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/7/73/Bezzerwizzer_box.jpg",
+    "image": "https://cf.geekdo-images.com/a_vKettVYkZ3lH7RpdUKOA__original/img/vdPP9cf-fS4fj498zCBnfw4_yRQ=/0x0/filters:format(jpeg)/pic184582.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/a_vKettVYkZ3lH7RpdUKOA__previewthumb/img/2K-TGYtRL-p_I_vOhM844kmfi48=/fit-in/300x320/filters:strip_icc()/pic184582.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 0
   },
   {
     "id": "game-63",
@@ -1510,14 +1570,15 @@
     "currentBorrower": null,
     "borrowDate": null,
     "expectedReturnDate": null,
-    "bggId": null,
+    "bggId": 822,
     "bggRating": null,
     "bggRank": null,
     "weight": null,
-    "image": "https://upload.wikimedia.org/wikipedia/en/5/5e/Carcassonne-game.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/5/5e/Carcassonne-game.jpg",
+    "image": "https://cf.geekdo-images.com/peUgu3A20LRmAXAMyDQfpQ__original/img/bP18m_PYjyFOv1IBGgMOteQUneA=/0x0/filters:format(jpeg)/pic8621446.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/peUgu3A20LRmAXAMyDQfpQ__previewthumb/img/CNYO9XZt0eqN5fu_wc6VptdWwIE=/fit-in/300x320/filters:strip_icc()/pic8621446.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2000
   },
   {
     "id": "game-64",
@@ -1538,10 +1599,11 @@
     "bggRating": 7.12,
     "bggRank": 520,
     "weight": 2.3,
-    "image": "https://upload.wikimedia.org/wikipedia/en/a/a3/Catan-2015-boxart.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/a/a3/Catan-2015-boxart.jpg",
+    "image": "https://cf.geekdo-images.com/0XODRpReiZBFUffEcqT5-Q__original/img/oRc0AomWA9ZtFqQDZiZbIyKE1j0=/0x0/filters:format(png)/pic9156909.png",
+    "thumbnail": "https://cf.geekdo-images.com/0XODRpReiZBFUffEcqT5-Q__previewthumb/img/6DsnQZpWcdOSo8O18m-QhvgclKY=/fit-in/300x320/filters:strip_icc()/pic9156909.png",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 1995
   },
   {
     "id": "game-65",
@@ -1562,10 +1624,11 @@
     "bggRating": 7.55,
     "bggRank": 145,
     "weight": 1.27,
-    "image": "https://upload.wikimedia.org/wikipedia/en/0/09/Codenames_game_cover.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/0/09/Codenames_game_cover.jpg",
+    "image": "https://cf.geekdo-images.com/nC6ifPCDnAItwoKSKXVrnw__original/img/Id-jjIer_61ZbvI2_RVRCeBZFY4=/0x0/filters:format(jpeg)/pic8907965.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/nC6ifPCDnAItwoKSKXVrnw__previewthumb/img/o4iHvfVWCLwbHRz9QJNz579a2_s=/fit-in/300x320/filters:strip_icc()/pic8907965.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2015
   },
   {
     "id": "game-66",
@@ -1582,14 +1645,15 @@
     "currentBorrower": null,
     "borrowDate": null,
     "expectedReturnDate": null,
-    "bggId": 178900,
+    "bggId": 205158,
     "bggRating": 7.55,
     "bggRank": 145,
     "weight": 1.27,
-    "image": "https://upload.wikimedia.org/wikipedia/en/0/09/Codenames_game_cover.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/0/09/Codenames_game_cover.jpg",
+    "image": "https://cf.geekdo-images.com/QoX69AhT7gRvJ10t04K_Bw__original/img/JG4GrU7AOsU3Y-o-1qKYyw8V5_Q=/0x0/filters:format(jpeg)/pic3119534.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/QoX69AhT7gRvJ10t04K_Bw__previewthumb/img/BSTqkvUzcfvl0w6BSOMSsmy5vUc=/fit-in/300x320/filters:strip_icc()/pic3119534.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2016
   },
   {
     "id": "game-67",
@@ -1610,10 +1674,11 @@
     "bggRating": 7.02,
     "bggRank": 580,
     "weight": 1.41,
-    "image": "https://upload.wikimedia.org/wikipedia/en/8/89/Coup_card_game.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/8/89/Coup_card_game.jpg",
+    "image": "https://cf.geekdo-images.com/MWhSY_GOe2-bmlQ2rntSVg__original/img/ayAAWBK1rAEumARNmROsOtvqW-4=/0x0/filters:format(jpeg)/pic2016054.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/MWhSY_GOe2-bmlQ2rntSVg__previewthumb/img/AzYNYJyZYTZtnDkenejbPPmAlOg=/fit-in/300x320/filters:strip_icc()/pic2016054.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2012
   },
   {
     "id": "game-68",
@@ -1634,10 +1699,11 @@
     "bggRating": 7.78,
     "bggRank": 130,
     "weight": 1.82,
-    "image": "https://upload.wikimedia.org/wikipedia/en/e/eb/Decrypto_board_game.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/e/eb/Decrypto_board_game.jpg",
+    "image": "https://cf.geekdo-images.com/hHZWXnUTMYDd_KTAM6Jwlw__original/img/lL6QJ69UmZT7CeljUcjyA47b-e0=/0x0/filters:format(jpeg)/pic3759421.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/hHZWXnUTMYDd_KTAM6Jwlw__previewthumb/img/yYQUsJ_PwxOAu909p-A-Njw4ESY=/fit-in/300x320/filters:strip_icc()/pic3759421.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2018
   },
   {
     "id": "game-69",
@@ -1658,10 +1724,11 @@
     "bggRating": 7.21,
     "bggRank": 350,
     "weight": 1.2,
-    "image": "https://upload.wikimedia.org/wikipedia/en/7/7b/Dixitgame.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/7/7b/Dixitgame.jpg",
+    "image": "https://cf.geekdo-images.com/J0PlHArkZDJ57H-brXW2Fw__original/img/jt3kFCHJ3HJ2079dMLwipFZqdQg=/0x0/filters:format(jpeg)/pic6738336.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/J0PlHArkZDJ57H-brXW2Fw__previewthumb/img/1vqdA41zdt6JR0ZgDdEuTXT23E8=/fit-in/300x320/filters:strip_icc()/pic6738336.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2008
   },
   {
     "id": "game-70",
@@ -1678,14 +1745,15 @@
     "currentBorrower": null,
     "borrowDate": null,
     "expectedReturnDate": null,
-    "bggId": null,
+    "bggId": 1482,
     "bggRating": null,
     "bggRank": null,
     "weight": null,
-    "image": "https://upload.wikimedia.org/wikipedia/en/3/36/Dutch_Blitz_box.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/3/36/Dutch_Blitz_box.jpg",
+    "image": "https://cf.geekdo-images.com/voLF1xTR77pMVrajwRW1hg__original/img/rUgNUsdXh-vjqDPhz7mGN3xqAEI=/0x0/filters:format(jpeg)/pic511038.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/voLF1xTR77pMVrajwRW1hg__previewthumb/img/BIVsx3ziJUELHrM94HgJxylxGRc=/fit-in/300x320/filters:strip_icc()/pic511038.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 1986
   },
   {
     "id": "game-71",
@@ -1702,14 +1770,15 @@
     "currentBorrower": null,
     "borrowDate": null,
     "expectedReturnDate": null,
-    "bggId": null,
+    "bggId": 452817,
     "bggRating": null,
     "bggRank": null,
     "weight": null,
-    "image": "https://upload.wikimedia.org/wikipedia/en/6/62/Emberheart_game.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/6/62/Emberheart_game.jpg",
+    "image": "https://cf.geekdo-images.com/jUlZOyHFX-T8WIrwJu-hqQ__original/img/L1exq5YdG4k3Kpi76ayBNyBauGA=/0x0/filters:format(png)/pic9081476.png",
+    "thumbnail": "https://cf.geekdo-images.com/jUlZOyHFX-T8WIrwJu-hqQ__previewthumb/img/tFdtKE_8NNMk8DG_EC7ZScOw0Z0=/fit-in/300x320/filters:strip_icc()/pic9081476.png",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2025
   },
   {
     "id": "game-72",
@@ -1730,10 +1799,11 @@
     "bggRating": 7.08,
     "bggRank": 510,
     "weight": 1.7,
-    "image": "https://upload.wikimedia.org/wikipedia/en/0/02/Hanabi_card_game_box.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/0/02/Hanabi_card_game_box.jpg",
+    "image": "https://cf.geekdo-images.com/JDVksMwfcqoem1k_xtZrOA__original/img/5vNHZiTEhK4aRDuGXv5KImp9cmQ=/0x0/filters:format(jpeg)/pic2007286.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/JDVksMwfcqoem1k_xtZrOA__previewthumb/img/X5IJzzZmEI5GNPhmIyDrF3cn1NE=/fit-in/300x320/filters:strip_icc()/pic2007286.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2010
   },
   {
     "id": "game-73",
@@ -1750,14 +1820,15 @@
     "currentBorrower": null,
     "borrowDate": null,
     "expectedReturnDate": null,
-    "bggId": null,
+    "bggId": 269701,
     "bggRating": null,
     "bggRank": null,
     "weight": null,
-    "image": "https://upload.wikimedia.org/wikipedia/en/2/21/Llamas_Unleashed_box.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/2/21/Llamas_Unleashed_box.jpg",
+    "image": "https://cf.geekdo-images.com/8XlZVll7fsmQK4FzGsHM1g__original/img/2BD_KlqV1aLwxwLRDtQAlhktt7I=/0x0/filters:format(jpeg)/pic4534410.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/8XlZVll7fsmQK4FzGsHM1g__previewthumb/img/DsJpybYmwY5aofJaXeYnzDAIyfM=/fit-in/300x320/filters:strip_icc()/pic4534410.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2017
   },
   {
     "id": "game-74",
@@ -1778,10 +1849,11 @@
     "bggRating": 7.2,
     "bggRank": 420,
     "weight": 1.18,
-    "image": "https://upload.wikimedia.org/wikipedia/en/e/e1/Love_Letter_box.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/e/e1/Love_Letter_box.jpg",
+    "image": "https://cf.geekdo-images.com/JT_06u5Eung6jueDM3kvpA__original/img/rJ0HXkjdU0SQr04kr0ZS_LI1h7U=/0x0/filters:format(jpeg)/pic9868049.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/JT_06u5Eung6jueDM3kvpA__previewthumb/img/RpJB_mC0eZ-kqOgIcmZweIf4rtg=/fit-in/300x320/filters:strip_icc()/pic9868049.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2012
   },
   {
     "id": "game-75",
@@ -1802,10 +1874,11 @@
     "bggRating": 5.7,
     "bggRank": 11500,
     "weight": 1.75,
-    "image": "https://upload.wikimedia.org/wikipedia/en/6/65/Mastermind_box.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/6/65/Mastermind_box.jpg",
+    "image": "https://cf.geekdo-images.com/im_XE341_hfKMchAeH6mtw__original/img/8DHauNAVePanWVWT0zIgSkcFrHw=/0x0/filters:format(jpeg)/pic1118956.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/im_XE341_hfKMchAeH6mtw__previewthumb/img/Np-IidNyZW5SOIw5ZCzS1ZNlXo8=/fit-in/300x320/filters:strip_icc()/pic1118956.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 1971
   },
   {
     "id": "game-76",
@@ -1826,10 +1899,11 @@
     "bggRating": 4.4,
     "bggRank": 26000,
     "weight": 1.64,
-    "image": "https://upload.wikimedia.org/wikipedia/en/d/dc/Monopoly_pack.JPG",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/d/dc/Monopoly_pack.JPG",
+    "image": "https://cf.geekdo-images.com/9nGoBZ0MRbi6rdH47sj2Qg__original/img/bA8irydTCNlE38QSzM9EhcUIuNU=/0x0/filters:format(jpeg)/pic5786795.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/9nGoBZ0MRbi6rdH47sj2Qg__previewthumb/img/cO-1s_fAx_dqsuJxmwYjf3QG7ss=/fit-in/300x320/filters:strip_icc()/pic5786795.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 1935
   },
   {
     "id": "game-77",
@@ -1850,10 +1924,11 @@
     "bggRating": 7.55,
     "bggRank": 140,
     "weight": 2.4,
-    "image": "https://upload.wikimedia.org/wikipedia/en/3/36/Pandemic_game.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/3/36/Pandemic_game.jpg",
+    "image": "https://cf.geekdo-images.com/S3ybV1LAp-8SnHIXLLjVqA__original/img/IsrvRLpUV1TEyZsO5rC-btXaPz0=/0x0/filters:format(jpeg)/pic1534148.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/S3ybV1LAp-8SnHIXLLjVqA__previewthumb/img/89tAMBmsLsaHj5LKFmyXWxQxiZs=/fit-in/300x320/filters:strip_icc()/pic1534148.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2008
   },
   {
     "id": "game-78",
@@ -1874,10 +1949,11 @@
     "bggRating": 7.55,
     "bggRank": 140,
     "weight": 2.4,
-    "image": "https://upload.wikimedia.org/wikipedia/en/8/86/Pandemic_Rapid_Response.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/8/86/Pandemic_Rapid_Response.jpg",
+    "image": "https://cf.geekdo-images.com/S3ybV1LAp-8SnHIXLLjVqA__original/img/IsrvRLpUV1TEyZsO5rC-btXaPz0=/0x0/filters:format(jpeg)/pic1534148.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/S3ybV1LAp-8SnHIXLLjVqA__previewthumb/img/89tAMBmsLsaHj5LKFmyXWxQxiZs=/fit-in/300x320/filters:strip_icc()/pic1534148.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2008
   },
   {
     "id": "game-79",
@@ -1894,14 +1970,15 @@
     "currentBorrower": null,
     "borrowDate": null,
     "expectedReturnDate": null,
-    "bggId": null,
+    "bggId": 2381,
     "bggRating": null,
     "bggRank": null,
     "weight": null,
-    "image": "https://upload.wikimedia.org/wikipedia/en/a/a2/Scattergories_box.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/a/a2/Scattergories_box.jpg",
+    "image": "https://cf.geekdo-images.com/eIL4hvMb7ZPgizc7BZOh-g__original/img/ZjWZidMJYVPML2OXLGfvQqR8Hyw=/0x0/filters:format(jpeg)/pic4994410.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/eIL4hvMb7ZPgizc7BZOh-g__previewthumb/img/5NcRK7XGYLHLGzrgPVf4-d_LmgI=/fit-in/300x320/filters:strip_icc()/pic4994410.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 1988
   },
   {
     "id": "game-80",
@@ -1922,10 +1999,11 @@
     "bggRating": 6.1,
     "bggRank": 3800,
     "weight": 1.92,
-    "image": "https://upload.wikimedia.org/wikipedia/en/d/db/Stratego_box.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/d/db/Stratego_box.jpg",
+    "image": "https://cf.geekdo-images.com/FCOo5cVkf6Le5brx_B7zDg__original/img/11KrFk07h0PEw9qDo5zmDSmBZRU=/0x0/filters:format(jpeg)/pic9063233.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/FCOo5cVkf6Le5brx_B7zDg__previewthumb/img/WUH-yDbTegaTIM1MeJUubgry6TY=/fit-in/300x320/filters:strip_icc()/pic9063233.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 1946
   },
   {
     "id": "game-81",
@@ -1946,10 +2024,11 @@
     "bggRating": 7.5,
     "bggRank": 175,
     "weight": 1.95,
-    "image": "https://upload.wikimedia.org/wikipedia/en/b/b4/The_Resistance_Avalon.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/b/b4/The_Resistance_Avalon.jpg",
+    "image": "https://cf.geekdo-images.com/LPa6rsGcv8S0-OeNjCOAEQ__original/img/AF8HHaIad1re-eg3kd9mlm2j_ss=/0x0/filters:format(jpeg)/pic1398895.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/LPa6rsGcv8S0-OeNjCOAEQ__previewthumb/img/xdl-YST374X2Ppge9hSjWeiX0vQ=/fit-in/300x320/filters:strip_icc()/pic1398895.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2012
   },
   {
     "id": "game-82",
@@ -1970,8 +2049,8 @@
     "bggRating": 6.25,
     "bggRank": 3300,
     "weight": 1.05,
-    "image": "https://upload.wikimedia.org/wikipedia/en/7/76/Throw_Throw_Burrito_box.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/7/76/Throw_Throw_Burrito_box.jpg",
+    "image": "https://cf.geekdo-images.com/uylF9zMUasKCncswuqn_qw__original/img/qs0ZQx_HzorlYVWuDmzKcxhNTDA=/0x0/filters:format(png)/pic4650074.png",
+    "thumbnail": "https://cf.geekdo-images.com/uylF9zMUasKCncswuqn_qw__previewthumb/img/Z8hEDsiYoDONWwv8c4oXVS7h8Hc=/fit-in/300x320/filters:strip_icc()/pic4650074.png",
     "description": "",
     "history": []
   },
@@ -1994,10 +2073,11 @@
     "bggRating": 7.4,
     "bggRank": 240,
     "weight": 1.83,
-    "image": "https://upload.wikimedia.org/wikipedia/en/9/92/Ticket_to_Ride_Board_Game_Box_Cover.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/9/92/Ticket_to_Ride_Board_Game_Box_Cover.jpg",
+    "image": "https://cf.geekdo-images.com/kdWYkW-7AqG63HhqPL6ekA__original/img/rWF8r4JXXCQQ7QhiWHhmT-rQ3Pc=/0x0/filters:format(jpeg)/pic8937637.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/kdWYkW-7AqG63HhqPL6ekA__previewthumb/img/32owvagSnqmny6qXaUjGN06WL98=/fit-in/300x320/filters:strip_icc()/pic8937637.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2004
   },
   {
     "id": "game-84",
@@ -2014,14 +2094,15 @@
     "currentBorrower": null,
     "borrowDate": null,
     "expectedReturnDate": null,
-    "bggId": null,
+    "bggId": 8530,
     "bggRating": null,
     "bggRank": null,
     "weight": null,
-    "image": "https://upload.wikimedia.org/wikipedia/en/c/cb/Trivial_Pursuit_box.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/c/cb/Trivial_Pursuit_box.jpg",
+    "image": "https://cf.geekdo-images.com/BRdt6IH3e-k5iMvaOolNSA__original/img/pYznyvgstEHiTHfsZFp6L_FJ0ug=/0x0/filters:format(jpeg)/pic518015.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/BRdt6IH3e-k5iMvaOolNSA__previewthumb/img/1Lx1yTPSc1Yg9ZQngLvRBUhtIds=/fit-in/300x320/filters:strip_icc()/pic518015.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2003
   },
   {
     "id": "game-85",
@@ -2042,10 +2123,11 @@
     "bggRating": 7.95,
     "bggRank": 120,
     "weight": 2.85,
-    "image": "https://cf.geekdo-images.com/YwN9p9_5s_p-w4qT1p6t7A__itemrep/img/Fk5l8E4r7e2N6g3b5L8M9m0A=/fit-in/246x300/filters:strip_icc()/pic7923896.jpg",
-    "thumbnail": "https://cf.geekdo-images.com/YwN9p9_5s_p-w4qT1p6t7A__itemrep/img/Fk5l8E4r7e2N6g3b5L8M9m0A=/fit-in/246x300/filters:strip_icc()/pic7923896.jpg",
+    "image": "https://cf.geekdo-images.com/cNc-FMsYo-mcRTGaXV2qcQ__original/img/K2Y7PB7XtZhou_WS2qgx8y7N_GE=/0x0/filters:format(jpeg)/pic8894992.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/cNc-FMsYo-mcRTGaXV2qcQ__previewthumb/img/anMnE7AZRRL9fXXPVwgNMEM8dN0=/fit-in/300x320/filters:strip_icc()/pic8894992.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2024
   },
   {
     "id": "game-86",
@@ -2066,10 +2148,11 @@
     "bggRating": 7.72,
     "bggRank": 98,
     "weight": 2.32,
-    "image": "https://upload.wikimedia.org/wikipedia/en/4/4b/7_Wonders_box_art.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/4/4b/7_Wonders_box_art.jpg",
+    "image": "https://cf.geekdo-images.com/35h9Za_JvMMMtx_92kT0Jg__original/img/jt70jJDZ1y1FWJs4ZQf5FI8APVY=/0x0/filters:format(jpeg)/pic7149798.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/35h9Za_JvMMMtx_92kT0Jg__previewthumb/img/zPH-lJh3s6emy3dcwJH-60t-hts=/fit-in/300x320/filters:strip_icc()/pic7149798.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2010
   },
   {
     "id": "game-87",
@@ -2090,10 +2173,11 @@
     "bggRating": 7.72,
     "bggRank": 98,
     "weight": 2.32,
-    "image": "https://upload.wikimedia.org/wikipedia/en/9/90/7_Wonders_Duel_Box_Art.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/9/90/7_Wonders_Duel_Box_Art.jpg",
+    "image": "https://cf.geekdo-images.com/35h9Za_JvMMMtx_92kT0Jg__original/img/jt70jJDZ1y1FWJs4ZQf5FI8APVY=/0x0/filters:format(jpeg)/pic7149798.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/35h9Za_JvMMMtx_92kT0Jg__previewthumb/img/zPH-lJh3s6emy3dcwJH-60t-hts=/fit-in/300x320/filters:strip_icc()/pic7149798.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2010
   },
   {
     "id": "game-88",
@@ -2114,10 +2198,11 @@
     "bggRating": 8.52,
     "bggRank": 4,
     "weight": 3.75,
-    "image": "https://upload.wikimedia.org/wikipedia/en/e/e0/Ark_Nova_board_game_box.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/e/e0/Ark_Nova_board_game_box.jpg",
+    "image": "https://cf.geekdo-images.com/SoU8p28Sk1s8MSvoM4N8pQ__original/img/g4S18szTdrXCdIwVKzMKrZrYAcM=/0x0/filters:format(jpeg)/pic6293412.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/SoU8p28Sk1s8MSvoM4N8pQ__previewthumb/img/vJS50Sdz48YBUXhkMbOKvFCpyuE=/fit-in/300x320/filters:strip_icc()/pic6293412.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2021
   },
   {
     "id": "game-89",
@@ -2138,10 +2223,11 @@
     "bggRating": 7.76,
     "bggRank": 70,
     "weight": 1.76,
-    "image": "https://upload.wikimedia.org/wikipedia/en/2/23/Picture_of_Azul_game_box.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/2/23/Picture_of_Azul_game_box.jpg",
+    "image": "https://cf.geekdo-images.com/aPSHJO0d0XOpQR5X-wJonw__original/img/AkbtYVc6xXJF3c9EUrakklcclKw=/0x0/filters:format(png)/pic6973671.png",
+    "thumbnail": "https://cf.geekdo-images.com/aPSHJO0d0XOpQR5X-wJonw__previewthumb/img/qLCJBbjkXD_hN7ftt-5DLpC1xTw=/fit-in/300x320/filters:strip_icc()/pic6973671.png",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2017
   },
   {
     "id": "game-90",
@@ -2162,10 +2248,11 @@
     "bggRating": 7.03,
     "bggRank": 600,
     "weight": 2.38,
-    "image": "https://upload.wikimedia.org/wikipedia/en/7/77/Betrayal_at_House_on_the_Hill_box.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/7/77/Betrayal_at_House_on_the_Hill_box.jpg",
+    "image": "https://cf.geekdo-images.com/lqmt2Oti_qJS65XqHcB8AA__original/img/7R6yYk8A2eUMmSDaxGjae5SceGI=/0x0/filters:format(png)/pic5146864.png",
+    "thumbnail": "https://cf.geekdo-images.com/lqmt2Oti_qJS65XqHcB8AA__previewthumb/img/tq7eid3oWgfGuP44JA966BSjBwI=/fit-in/300x320/filters:strip_icc()/pic5146864.png",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2004
   },
   {
     "id": "game-91",
@@ -2186,10 +2273,11 @@
     "bggRating": 6.92,
     "bggRank": 780,
     "weight": 1.76,
-    "image": "https://upload.wikimedia.org/wikipedia/en/a/a8/Blokus_board_game.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/a/a8/Blokus_board_game.jpg",
+    "image": "https://cf.geekdo-images.com/96YA5wUJDxtPkmPxemr5Qg__original/img/sdX6o0TZpXjsDMw071k2P80wpYw=/0x0/filters:format(jpeg)/pic2197702.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/96YA5wUJDxtPkmPxemr5Qg__previewthumb/img/a6t32G9Whtz3WIKIGpnKITRMkBQ=/fit-in/300x320/filters:strip_icc()/pic2197702.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2000
   },
   {
     "id": "game-92",
@@ -2210,10 +2298,11 @@
     "bggRating": 7.96,
     "bggRank": 48,
     "weight": 1.84,
-    "image": "https://upload.wikimedia.org/wikipedia/en/f/fc/Cascadia_board_game_box_cover.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/f/fc/Cascadia_board_game_box_cover.jpg",
+    "image": "https://cf.geekdo-images.com/MjeJZfulbsM1DSV3DrGJYA__original/img/B374C04Eip7fmQBGJzgiOTp-jyQ=/0x0/filters:format(jpeg)/pic5100691.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/MjeJZfulbsM1DSV3DrGJYA__previewthumb/img/z9ZxaoEx4iVzO2nhExNSdvmmoy4=/fit-in/300x320/filters:strip_icc()/pic5100691.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2021
   },
   {
     "id": "game-93",
@@ -2234,10 +2323,11 @@
     "bggRating": 7.12,
     "bggRank": 520,
     "weight": 2.3,
-    "image": "https://upload.wikimedia.org/wikipedia/en/a/a3/Catan-2015-boxart.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/a/a3/Catan-2015-boxart.jpg",
+    "image": "https://cf.geekdo-images.com/0XODRpReiZBFUffEcqT5-Q__original/img/oRc0AomWA9ZtFqQDZiZbIyKE1j0=/0x0/filters:format(png)/pic9156909.png",
+    "thumbnail": "https://cf.geekdo-images.com/0XODRpReiZBFUffEcqT5-Q__previewthumb/img/6DsnQZpWcdOSo8O18m-QhvgclKY=/fit-in/300x320/filters:strip_icc()/pic9156909.png",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 1995
   },
   {
     "id": "game-94",
@@ -2258,10 +2348,11 @@
     "bggRating": 4.9,
     "bggRank": 24000,
     "weight": 1.18,
-    "image": "https://upload.wikimedia.org/wikipedia/en/7/79/Connect_4_Board_and_Box.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/7/79/Connect_4_Board_and_Box.jpg",
+    "image": "https://cf.geekdo-images.com/I_ZPIWEvFlrMa8caT4UD-w__original/img/w93rimjstxQr4BVmaZ_Tl5pQGOw=/0x0/filters:format(jpeg)/pic859430.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/I_ZPIWEvFlrMa8caT4UD-w__previewthumb/img/cU8OvhkZqrHsYjhQLKZdwx1xraU=/fit-in/300x320/filters:strip_icc()/pic859430.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 1974
   },
   {
     "id": "game-95",
@@ -2282,10 +2373,11 @@
     "bggRating": 7.02,
     "bggRank": 580,
     "weight": 1.41,
-    "image": "https://upload.wikimedia.org/wikipedia/en/8/89/Coup_card_game.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/8/89/Coup_card_game.jpg",
+    "image": "https://cf.geekdo-images.com/MWhSY_GOe2-bmlQ2rntSVg__original/img/ayAAWBK1rAEumARNmROsOtvqW-4=/0x0/filters:format(jpeg)/pic2016054.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/MWhSY_GOe2-bmlQ2rntSVg__previewthumb/img/AzYNYJyZYTZtnDkenejbPPmAlOg=/fit-in/300x320/filters:strip_icc()/pic2016054.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2012
   },
   {
     "id": "game-96",
@@ -2306,10 +2398,11 @@
     "bggRating": 7.48,
     "bggRank": 260,
     "weight": 2.25,
-    "image": "https://upload.wikimedia.org/wikipedia/en/9/9f/Cryptid_board_game.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/9/9f/Cryptid_board_game.jpg",
+    "image": "https://cf.geekdo-images.com/qrPLpAnhFgc470ZRuXlvbg__original/img/QenUCVaFRry4-wlimHmeLn226Bo=/0x0/filters:format(jpeg)/pic4037705.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/qrPLpAnhFgc470ZRuXlvbg__previewthumb/img/-F6Lcbp-ddn4o8HV9ptGH9WO1L0=/fit-in/300x320/filters:strip_icc()/pic4037705.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2018
   },
   {
     "id": "game-97",
@@ -2326,14 +2419,15 @@
     "currentBorrower": null,
     "borrowDate": null,
     "expectedReturnDate": null,
-    "bggId": null,
+    "bggId": 260922,
     "bggRating": null,
     "bggRank": null,
     "weight": null,
-    "image": "https://upload.wikimedia.org/wikipedia/en/8/82/Deblockle_game.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/8/82/Deblockle_game.jpg",
+    "image": "https://cf.geekdo-images.com/s0rs4OACTAOIFblLLiP2Jg__original/img/_YRd05MjVfl4wBw7S3NZAU5LZKg=/0x0/filters:format(jpeg)/pic4888605.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/s0rs4OACTAOIFblLLiP2Jg__previewthumb/img/HdEoQ1qW5hRd1-rM56AyYOfGj2Y=/fit-in/300x320/filters:strip_icc()/pic4888605.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2018
   },
   {
     "id": "game-98",
@@ -2354,10 +2448,11 @@
     "bggRating": 7.78,
     "bggRank": 130,
     "weight": 1.82,
-    "image": "https://upload.wikimedia.org/wikipedia/en/e/eb/Decrypto_board_game.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/e/eb/Decrypto_board_game.jpg",
+    "image": "https://cf.geekdo-images.com/hHZWXnUTMYDd_KTAM6Jwlw__original/img/lL6QJ69UmZT7CeljUcjyA47b-e0=/0x0/filters:format(jpeg)/pic3759421.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/hHZWXnUTMYDd_KTAM6Jwlw__previewthumb/img/yYQUsJ_PwxOAu909p-A-Njw4ESY=/fit-in/300x320/filters:strip_icc()/pic3759421.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2018
   },
   {
     "id": "game-99",
@@ -2378,10 +2473,11 @@
     "bggRating": 7.2,
     "bggRank": 460,
     "weight": 1.98,
-    "image": "https://upload.wikimedia.org/wikipedia/en/f/fa/Dice_Forge_box.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/f/fa/Dice_Forge_box.jpg",
+    "image": "https://cf.geekdo-images.com/4BTVGQWO0M9ayxyku3FW6Q__original/img/8G3m0Cc_y3Qa0jcFn4ynWTwOV3A=/0x0/filters:format(jpeg)/pic3477004.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/4BTVGQWO0M9ayxyku3FW6Q__previewthumb/img/6uYPCeCn7MBFE00WKqFsr3j4Zes=/fit-in/300x320/filters:strip_icc()/pic3477004.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2017
   },
   {
     "id": "game-100",
@@ -2398,14 +2494,15 @@
     "currentBorrower": null,
     "borrowDate": null,
     "expectedReturnDate": null,
-    "bggId": null,
+    "bggId": 155703,
     "bggRating": null,
     "bggRank": null,
     "weight": null,
-    "image": "https://upload.wikimedia.org/wikipedia/en/9/92/Evolution_board_game.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/9/92/Evolution_board_game.jpg",
+    "image": "https://cf.geekdo-images.com/wo_EYno7S66psGPMl_JtiQ__original/img/buKqUQr48Cb41noIhoaAJzWBLQA=/0x0/filters:format(jpeg)/pic3543505.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/wo_EYno7S66psGPMl_JtiQ__previewthumb/img/liqZdPA0XVnRI_Z5RchsaI_iHv0=/fit-in/300x320/filters:strip_icc()/pic3543505.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2014
   },
   {
     "id": "game-101",
@@ -2422,14 +2519,15 @@
     "currentBorrower": null,
     "borrowDate": null,
     "expectedReturnDate": null,
-    "bggId": null,
+    "bggId": 338573,
     "bggRating": null,
     "bggRank": null,
     "weight": null,
-    "image": "https://upload.wikimedia.org/wikipedia/en/9/94/Exploding_Kittens_box.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/9/94/Exploding_Kittens_box.jpg",
+    "image": "https://cf.geekdo-images.com/N2Q6ALz_LhOErUmkTukL5w__original/img/dnLcQbJtrA4Xxymmq7bX_mSSlk4=/0x0/filters:format(png)/pic6167953.png",
+    "thumbnail": "https://cf.geekdo-images.com/N2Q6ALz_LhOErUmkTukL5w__previewthumb/img/GbEUmhTfxBIqgK66JETLDaEZOmY=/fit-in/300x320/filters:strip_icc()/pic6167953.png",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2021
   },
   {
     "id": "game-102",
@@ -2450,10 +2548,11 @@
     "bggRating": 7.08,
     "bggRank": 510,
     "weight": 1.7,
-    "image": "https://upload.wikimedia.org/wikipedia/en/0/02/Hanabi_card_game_box.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/0/02/Hanabi_card_game_box.jpg",
+    "image": "https://cf.geekdo-images.com/JDVksMwfcqoem1k_xtZrOA__original/img/5vNHZiTEhK4aRDuGXv5KImp9cmQ=/0x0/filters:format(jpeg)/pic2007286.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/JDVksMwfcqoem1k_xtZrOA__previewthumb/img/X5IJzzZmEI5GNPhmIyDrF3cn1NE=/fit-in/300x320/filters:strip_icc()/pic2007286.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2010
   },
   {
     "id": "game-103",
@@ -2474,10 +2573,11 @@
     "bggRating": 4.4,
     "bggRank": 26000,
     "weight": 1.64,
-    "image": "https://upload.wikimedia.org/wikipedia/en/d/dc/Monopoly_pack.JPG",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/d/dc/Monopoly_pack.JPG",
+    "image": "https://cf.geekdo-images.com/9nGoBZ0MRbi6rdH47sj2Qg__original/img/bA8irydTCNlE38QSzM9EhcUIuNU=/0x0/filters:format(jpeg)/pic5786795.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/9nGoBZ0MRbi6rdH47sj2Qg__previewthumb/img/cO-1s_fAx_dqsuJxmwYjf3QG7ss=/fit-in/300x320/filters:strip_icc()/pic5786795.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 1935
   },
   {
     "id": "game-104",
@@ -2494,14 +2594,15 @@
     "currentBorrower": null,
     "borrowDate": null,
     "expectedReturnDate": null,
-    "bggId": 1406,
+    "bggId": 247191,
     "bggRating": 4.4,
     "bggRank": 26000,
     "weight": 1.64,
-    "image": "https://upload.wikimedia.org/wikipedia/en/d/dc/Monopoly_pack.JPG",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/d/dc/Monopoly_pack.JPG",
+    "image": "https://cf.geekdo-images.com/s3YZNAIxYJd37YBnXnzDFA__original/img/E2kZeGJu6z5ifs1nMg2Rqc5RMYU=/0x0/filters:format(png)/pic4192150.png",
+    "thumbnail": "https://cf.geekdo-images.com/s3YZNAIxYJd37YBnXnzDFA__previewthumb/img/oOzUYZUP3WHridlhH-6TxUtGHrQ=/fit-in/300x320/filters:strip_icc()/pic4192150.png",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2018
   },
   {
     "id": "game-105",
@@ -2522,10 +2623,11 @@
     "bggRating": 8.1,
     "bggRank": 32,
     "weight": 3.81,
-    "image": "https://upload.wikimedia.org/wikipedia/en/2/29/Root_Board_Game_Box_Art.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/2/29/Root_Board_Game_Box_Art.jpg",
+    "image": "https://cf.geekdo-images.com/JUAUWaVUzeBgzirhZNmHHw__original/img/E0s2LvtFA1L5YKk-_44D4u2VD2s=/0x0/filters:format(jpeg)/pic4254509.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/JUAUWaVUzeBgzirhZNmHHw__previewthumb/img/I5RKaHR2dTF0AYXonk-0mSTRi6E=/fit-in/300x320/filters:strip_icc()/pic4254509.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2018
   },
   {
     "id": "game-106",
@@ -2546,10 +2648,11 @@
     "bggRating": 7.52,
     "bggRank": 195,
     "weight": 1.67,
-    "image": "https://upload.wikimedia.org/wikipedia/en/8/87/Secret_Hitler_box_art.png",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/8/87/Secret_Hitler_box_art.png",
+    "image": "https://cf.geekdo-images.com/rAQ3hIXoH6xDcj41v9iqCg__original/img/7oKwNUYakx3-vHUBLHWVuFNKfl4=/0x0/filters:format(jpeg)/pic5164305.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/rAQ3hIXoH6xDcj41v9iqCg__previewthumb/img/IWGfGKG3MH4MjSjh1n8i54Ot0Dg=/fit-in/300x320/filters:strip_icc()/pic5164305.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2016
   },
   {
     "id": "game-107",
@@ -2566,14 +2669,15 @@
     "currentBorrower": null,
     "borrowDate": null,
     "expectedReturnDate": null,
-    "bggId": null,
+    "bggId": 4187,
     "bggRating": null,
     "bggRank": null,
     "weight": null,
-    "image": "https://upload.wikimedia.org/wikipedia/en/9/9a/Sequence_board_game.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/9/9a/Sequence_board_game.jpg",
+    "image": "https://cf.geekdo-images.com/sch0_KaOQedXzrRiedZBbQ__original/img/1y5ZeOvt7sj41uJ-LmtJ8dYKsZw=/0x0/filters:format(jpeg)/pic7716448.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/sch0_KaOQedXzrRiedZBbQ__previewthumb/img/7eB1quME9a5zetupIK0YOGH2NUk=/fit-in/300x320/filters:strip_icc()/pic7716448.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 1988
   },
   {
     "id": "game-108",
@@ -2594,10 +2698,11 @@
     "bggRating": 6.65,
     "bggRank": 1700,
     "weight": 1.05,
-    "image": "https://upload.wikimedia.org/wikipedia/en/b/bd/Taco_Cat_Goat_Cheese_Pizza.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/b/bd/Taco_Cat_Goat_Cheese_Pizza.jpg",
+    "image": "https://cf.geekdo-images.com/GHrnr-Khb0LvBU_QkrC_qA__original/img/1BR5aHWIz_v4ki-YB2IiMuS-uIs=/0x0/filters:format(png)/pic7192024.png",
+    "thumbnail": "https://cf.geekdo-images.com/GHrnr-Khb0LvBU_QkrC_qA__previewthumb/img/YWmjaQM-nBD80HdfbF1zc3evTeQ=/fit-in/300x320/filters:strip_icc()/pic7192024.png",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2018
   },
   {
     "id": "game-109",
@@ -2618,10 +2723,11 @@
     "bggRating": 7.4,
     "bggRank": 240,
     "weight": 1.83,
-    "image": "https://upload.wikimedia.org/wikipedia/en/9/92/Ticket_to_Ride_Board_Game_Box_Cover.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/9/92/Ticket_to_Ride_Board_Game_Box_Cover.jpg",
+    "image": "https://cf.geekdo-images.com/kdWYkW-7AqG63HhqPL6ekA__original/img/rWF8r4JXXCQQ7QhiWHhmT-rQ3Pc=/0x0/filters:format(jpeg)/pic8937637.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/kdWYkW-7AqG63HhqPL6ekA__previewthumb/img/32owvagSnqmny6qXaUjGN06WL98=/fit-in/300x320/filters:strip_icc()/pic8937637.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2004
   },
   {
     "id": "game-110",
@@ -2642,10 +2748,11 @@
     "bggRating": 7.4,
     "bggRank": 240,
     "weight": 1.83,
-    "image": "https://upload.wikimedia.org/wikipedia/en/9/92/Ticket_to_Ride_Board_Game_Box_Cover.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/9/92/Ticket_to_Ride_Board_Game_Box_Cover.jpg",
+    "image": "https://cf.geekdo-images.com/kdWYkW-7AqG63HhqPL6ekA__original/img/rWF8r4JXXCQQ7QhiWHhmT-rQ3Pc=/0x0/filters:format(jpeg)/pic8937637.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/kdWYkW-7AqG63HhqPL6ekA__previewthumb/img/32owvagSnqmny6qXaUjGN06WL98=/fit-in/300x320/filters:strip_icc()/pic8937637.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2004
   },
   {
     "id": "game-111",
@@ -2666,10 +2773,11 @@
     "bggRating": 8.02,
     "bggRank": 42,
     "weight": 2.89,
-    "image": "https://upload.wikimedia.org/wikipedia/en/2/25/Viticulture_EE_box.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/2/25/Viticulture_EE_box.jpg",
+    "image": "https://cf.geekdo-images.com/l_PRU2lVlX9seScRFcvFlA__original/img/gDL7OZFlzoOFgU0VYlREs8P5hCQ=/0x0/filters:format(jpeg)/pic6500949.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/l_PRU2lVlX9seScRFcvFlA__previewthumb/img/1jcaVUL2jwAjvqfI-AugfZ5oM3Y=/fit-in/300x320/filters:strip_icc()/pic6500949.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2015
   },
   {
     "id": "game-112",
@@ -2690,10 +2798,11 @@
     "bggRating": 8.42,
     "bggRank": 55,
     "weight": 4.6,
-    "image": "https://upload.wikimedia.org/wikipedia/en/d/d4/Voidfall_box.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/d/d4/Voidfall_box.jpg",
+    "image": "https://cf.geekdo-images.com/hItZjdDTNuaCZ7fEztwcUQ__original/img/gIhusTrYRr_2JQGEv0zuSgLtuUo=/0x0/filters:format(jpeg)/pic6153324.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/hItZjdDTNuaCZ7fEztwcUQ__previewthumb/img/xQneJu5nkfKW9RrXNKvL3geTuzE=/fit-in/300x320/filters:strip_icc()/pic6153324.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2023
   },
   {
     "id": "game-113",
@@ -2714,10 +2823,11 @@
     "bggRating": 7.42,
     "bggRank": 310,
     "weight": 1.15,
-    "image": "https://upload.wikimedia.org/wikipedia/en/d/da/Wavelength_game_box.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/d/da/Wavelength_game_box.jpg",
+    "image": "https://cf.geekdo-images.com/z4fbPdmJg_5yphJEvql4ZA__original/img/bP1gM8RC-o5iz20_WazBaBNDHnU=/0x0/filters:format(png)/pic4552862.png",
+    "thumbnail": "https://cf.geekdo-images.com/z4fbPdmJg_5yphJEvql4ZA__previewthumb/img/lpGQJSaLEF1wj1ytCzg-IMgUcp4=/fit-in/300x320/filters:strip_icc()/pic4552862.png",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2019
   },
   {
     "id": "game-114",
@@ -2738,10 +2848,11 @@
     "bggRating": 8.06,
     "bggRank": 27,
     "weight": 2.47,
-    "image": "https://upload.wikimedia.org/wikipedia/en/c/c3/3d-wingspan-768x752.png",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/c/c3/3d-wingspan-768x752.png",
+    "image": "https://cf.geekdo-images.com/yLZJCVLlIx4c7eJEWUNJ7w__original/img/cI782Zis9cT66j2MjSHKJGnFPNw=/0x0/filters:format(jpeg)/pic4458123.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/yLZJCVLlIx4c7eJEWUNJ7w__previewthumb/img/Wb5DRcUTi7d-Mykb1rTwD9wLO1U=/fit-in/300x320/filters:strip_icc()/pic4458123.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2019
   },
   {
     "id": "game-115",
@@ -2762,10 +2873,11 @@
     "bggRating": 7.95,
     "bggRank": 120,
     "weight": 2.85,
-    "image": "https://cf.geekdo-images.com/YwN9p9_5s_p-w4qT1p6t7A__itemrep/img/Fk5l8E4r7e2N6g3b5L8M9m0A=/fit-in/246x300/filters:strip_icc()/pic7923896.jpg",
-    "thumbnail": "https://cf.geekdo-images.com/YwN9p9_5s_p-w4qT1p6t7A__itemrep/img/Fk5l8E4r7e2N6g3b5L8M9m0A=/fit-in/246x300/filters:strip_icc()/pic7923896.jpg",
+    "image": "https://cf.geekdo-images.com/cNc-FMsYo-mcRTGaXV2qcQ__original/img/K2Y7PB7XtZhou_WS2qgx8y7N_GE=/0x0/filters:format(jpeg)/pic8894992.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/cNc-FMsYo-mcRTGaXV2qcQ__previewthumb/img/anMnE7AZRRL9fXXPVwgNMEM8dN0=/fit-in/300x320/filters:strip_icc()/pic8894992.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2024
   },
   {
     "id": "game-116",
@@ -2782,14 +2894,15 @@
     "currentBorrower": null,
     "borrowDate": null,
     "expectedReturnDate": null,
-    "bggId": 391163,
+    "bggId": 371942,
     "bggRating": 7.78,
     "bggRank": 215,
     "weight": 2.78,
-    "image": "https://upload.wikimedia.org/wikipedia/en/0/0a/The_White_Castle_board_game_box.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/0/0a/The_White_Castle_board_game_box.jpg",
+    "image": "https://cf.geekdo-images.com/qXT1U-nFh9PE8ujfdmI7dA__original/img/jzmifZJ0Sg2Js7hmQjzX7bEHVBY=/0x0/filters:format(jpeg)/pic7754663.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/qXT1U-nFh9PE8ujfdmI7dA__previewthumb/img/0xSWdER5XqFBj8u6lOqqGmgY8lw=/fit-in/300x320/filters:strip_icc()/pic7754663.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2023
   },
   {
     "id": "game-117",
@@ -2810,10 +2923,11 @@
     "bggRating": 7.95,
     "bggRank": 120,
     "weight": 2.85,
-    "image": "https://cf.geekdo-images.com/YwN9p9_5s_p-w4qT1p6t7A__itemrep/img/Fk5l8E4r7e2N6g3b5L8M9m0A=/fit-in/246x300/filters:strip_icc()/pic7923896.jpg",
-    "thumbnail": "https://cf.geekdo-images.com/YwN9p9_5s_p-w4qT1p6t7A__itemrep/img/Fk5l8E4r7e2N6g3b5L8M9m0A=/fit-in/246x300/filters:strip_icc()/pic7923896.jpg",
+    "image": "https://cf.geekdo-images.com/cNc-FMsYo-mcRTGaXV2qcQ__original/img/K2Y7PB7XtZhou_WS2qgx8y7N_GE=/0x0/filters:format(jpeg)/pic8894992.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/cNc-FMsYo-mcRTGaXV2qcQ__previewthumb/img/anMnE7AZRRL9fXXPVwgNMEM8dN0=/fit-in/300x320/filters:strip_icc()/pic8894992.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2024
   },
   {
     "id": "game-118",
@@ -2834,10 +2948,11 @@
     "bggRating": 4.4,
     "bggRank": 26000,
     "weight": 1.64,
-    "image": "https://upload.wikimedia.org/wikipedia/en/d/dc/Monopoly_pack.JPG",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/d/dc/Monopoly_pack.JPG",
+    "image": "https://cf.geekdo-images.com/9nGoBZ0MRbi6rdH47sj2Qg__original/img/bA8irydTCNlE38QSzM9EhcUIuNU=/0x0/filters:format(jpeg)/pic5786795.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/9nGoBZ0MRbi6rdH47sj2Qg__previewthumb/img/cO-1s_fAx_dqsuJxmwYjf3QG7ss=/fit-in/300x320/filters:strip_icc()/pic5786795.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 1935
   },
   {
     "id": "game-119",
@@ -2858,10 +2973,11 @@
     "bggRating": 4.4,
     "bggRank": 26000,
     "weight": 1.64,
-    "image": "https://upload.wikimedia.org/wikipedia/en/d/dc/Monopoly_pack.JPG",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/d/dc/Monopoly_pack.JPG",
+    "image": "https://cf.geekdo-images.com/9nGoBZ0MRbi6rdH47sj2Qg__original/img/bA8irydTCNlE38QSzM9EhcUIuNU=/0x0/filters:format(jpeg)/pic5786795.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/9nGoBZ0MRbi6rdH47sj2Qg__previewthumb/img/cO-1s_fAx_dqsuJxmwYjf3QG7ss=/fit-in/300x320/filters:strip_icc()/pic5786795.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 1935
   },
   {
     "id": "game-120",
@@ -2882,10 +2998,11 @@
     "bggRating": 4.4,
     "bggRank": 26000,
     "weight": 1.64,
-    "image": "https://upload.wikimedia.org/wikipedia/en/d/dc/Monopoly_pack.JPG",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/d/dc/Monopoly_pack.JPG",
+    "image": "https://cf.geekdo-images.com/9nGoBZ0MRbi6rdH47sj2Qg__original/img/bA8irydTCNlE38QSzM9EhcUIuNU=/0x0/filters:format(jpeg)/pic5786795.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/9nGoBZ0MRbi6rdH47sj2Qg__previewthumb/img/cO-1s_fAx_dqsuJxmwYjf3QG7ss=/fit-in/300x320/filters:strip_icc()/pic5786795.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 1935
   },
   {
     "id": "game-121",
@@ -2906,10 +3023,11 @@
     "bggRating": 8.18,
     "bggRank": 75,
     "weight": 2.05,
-    "image": "https://upload.wikimedia.org/wikipedia/en/a/ad/Sky_Team_board_game_cover.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/a/ad/Sky_Team_board_game_cover.jpg",
+    "image": "https://cf.geekdo-images.com/uXMeQzNenHb3zK7Hoa6b2w__original/img/mWOQnkpyYBorh_Y1-0Y2o-ew17k=/0x0/filters:format(jpeg)/pic7398904.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/uXMeQzNenHb3zK7Hoa6b2w__previewthumb/img/cnpnOSqkt_k2qk19EoudZjKOom0=/fit-in/300x320/filters:strip_icc()/pic7398904.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2023
   },
   {
     "id": "game-122",
@@ -2926,14 +3044,15 @@
     "currentBorrower": null,
     "borrowDate": null,
     "expectedReturnDate": null,
-    "bggId": null,
+    "bggId": 444007,
     "bggRating": null,
     "bggRank": null,
     "weight": null,
-    "image": "https://upload.wikimedia.org/wikipedia/en/4/4b/Super_Skills_game.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/4/4b/Super_Skills_game.jpg",
+    "image": "https://cf.geekdo-images.com/zxVVmggfpHJpmnJY9j-k1w__original/img/eBeOyAv08r-qFkQmVKhtBg_netU=/0x0/filters:format(jpeg)/pic1657689.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/zxVVmggfpHJpmnJY9j-k1w__previewthumb/img/7kn_r9OwMSpWvdCjyx_J0kF29o0=/fit-in/300x320/filters:strip_icc()/pic1657689.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2023
   },
   {
     "id": "game-123",
@@ -2950,14 +3069,15 @@
     "currentBorrower": null,
     "borrowDate": null,
     "expectedReturnDate": null,
-    "bggId": null,
+    "bggId": 1115,
     "bggRating": null,
     "bggRank": null,
     "weight": null,
-    "image": "https://upload.wikimedia.org/wikipedia/en/a/a7/Taboo_board_game.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/a/a7/Taboo_board_game.jpg",
+    "image": "https://cf.geekdo-images.com/QhsvR9GY0LbTpj27fairWA__original/img/4ODyzAOOgoIJrUzLOjtzItR2uH0=/0x0/filters:format(jpeg)/pic186610.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/QhsvR9GY0LbTpj27fairWA__previewthumb/img/imL27jgWLhc6SFK16FzYPD7MN0I=/fit-in/300x320/filters:strip_icc()/pic186610.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 1810
   },
   {
     "id": "game-124",
@@ -2978,10 +3098,11 @@
     "bggRating": 8.18,
     "bggRank": 19,
     "weight": 3.45,
-    "image": "https://thumb.wikimedia.org/wikipedia/en/thumb/1/1a/Scythe_boxart.png/330px-Scythe_boxart.png",
-    "thumbnail": "https://thumb.wikimedia.org/wikipedia/en/thumb/1/1a/Scythe_boxart.png/330px-Scythe_boxart.png",
+    "image": "https://cf.geekdo-images.com/7k_nOxpO9OGIjhLq2BUZdA__original/img/HlDb9F365w0tSP8uD1vf1pfniQE=/0x0/filters:format(jpeg)/pic3163924.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/7k_nOxpO9OGIjhLq2BUZdA__previewthumb/img/a0RCn6d_nc-KNPcAdutO_PFq5xE=/fit-in/300x320/filters:strip_icc()/pic3163924.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2016
   },
   {
     "id": "game-125",
@@ -3002,10 +3123,11 @@
     "bggRating": 6.05,
     "bggRank": 3900,
     "weight": 1.08,
-    "image": "https://upload.wikimedia.org/wikipedia/en/9/94/Exploding_Kittens_box.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/9/94/Exploding_Kittens_box.jpg",
+    "image": "https://cf.geekdo-images.com/N8bL53-pRU7zaXDTrEaYrw__original/img/0ciN1VZYifUd0qIDO0e8cGXmiss=/0x0/filters:format(png)/pic2691976.png",
+    "thumbnail": "https://cf.geekdo-images.com/N8bL53-pRU7zaXDTrEaYrw__previewthumb/img/B5aTyx6HuU8B3Y5A45fA-idgp20=/fit-in/300x320/filters:strip_icc()/pic2691976.png",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2015
   },
   {
     "id": "game-126",
@@ -3022,13 +3144,14 @@
     "currentBorrower": null,
     "borrowDate": null,
     "expectedReturnDate": null,
-    "bggId": null,
+    "bggId": 312786,
     "bggRating": null,
     "bggRank": null,
     "weight": null,
-    "image": "https://upload.wikimedia.org/wikipedia/en/a/a2/Poetry_for_Neanderthals.jpg",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/a/a2/Poetry_for_Neanderthals.jpg",
+    "image": "https://cf.geekdo-images.com/CDlBjXSPT-3Zyrj8ENBkvQ__original/img/FgAyx5Q1pe7TyHsYskhbab_S_os=/0x0/filters:format(jpeg)/pic5702797.jpg",
+    "thumbnail": "https://cf.geekdo-images.com/CDlBjXSPT-3Zyrj8ENBkvQ__previewthumb/img/wMgv6kQXpAwv2iFD47ByvaqnniE=/fit-in/300x320/filters:strip_icc()/pic5702797.jpg",
     "description": "",
-    "history": []
+    "history": [],
+    "year": 2020
   }
 ]

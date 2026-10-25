@@ -17,7 +17,8 @@ import {
   Calendar,
   CheckCircle2,
   Sparkles,
-  UserCheck
+  UserCheck,
+  Edit3
 } from 'lucide-react';
 
 interface GameDetailModalProps {
@@ -27,6 +28,7 @@ interface GameDetailModalProps {
   onBorrow: (game: Game) => void;
   onReturn: (game: Game) => void;
   onRequestBorrow: (game: Game) => void;
+  onEdit?: (game: Game) => void;
 }
 
 export const GameDetailModal: React.FC<GameDetailModalProps> = ({
@@ -36,6 +38,7 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
   onBorrow,
   onReturn,
   onRequestBorrow,
+  onEdit,
 }) => {
   if (!isOpen || !game) return null;
 
@@ -68,40 +71,53 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
+      
       <div 
-        className="w-full max-w-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150 my-8"
+        className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl max-w-2xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Modal Header */}
-        <div className="p-4 sm:p-5 border-b border-zinc-100 dark:border-zinc-800 flex items-start justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700">
-                {game.type}
-              </span>
-              <span className="text-xs text-zinc-500 font-medium flex items-center gap-1">
-                <UserCheck className="w-3.5 h-3.5 text-zinc-400" />
-                Owned by <strong className="text-zinc-800 dark:text-zinc-200">{game.owner}</strong>
-              </span>
-            </div>
-            <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-50 mt-1">
-              {game.title}
-            </h2>
+        
+        {/* Header */}
+        <div className="p-4 sm:px-6 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">
+              {game.type}
+            </span>
+            <span className="text-xs text-zinc-400">•</span>
+            <span className="text-xs font-medium text-zinc-500">
+              Owner: <strong className="text-zinc-800 dark:text-zinc-200">{game.owner}</strong>
+            </span>
           </div>
 
           <div className="flex items-center gap-2">
+            {onEdit && (
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  onEdit(game);
+                }}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 rounded-lg border border-indigo-200 dark:border-indigo-800 transition-colors"
+                title="Edit Game & Link BGG Cover"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Edit / Link BGG</span>
+              </button>
+            )}
+
             {game.bggId && (
               <a
                 href={`https://boardgamegeek.com/boardgame/${game.bggId}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-1 px-2.5 py-1 text-xs font-semibold bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 rounded-lg transition-colors"
+                className="text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1 px-2 py-1 rounded bg-indigo-50 dark:bg-indigo-950/50"
               >
                 <span>BGG</span>
                 <ExternalLink className="w-3.5 h-3.5" />
               </a>
             )}
+
             <button
               type="button"
               onClick={onClose}
@@ -181,28 +197,39 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
 
               </div>
 
-              {/* Current Loan Card */}
-              <div className="p-3.5 bg-zinc-50 dark:bg-zinc-800/80 rounded-xl border border-zinc-200 dark:border-zinc-700/80 space-y-2">
-                <div className="flex items-center justify-between">
+              {/* Status Box */}
+              <div className="p-3.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/30">
+                <div className="flex items-center justify-between mb-2">
                   <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">
-                    Current Status
+                    Current Availability
                   </span>
                   {isAvailable ? (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500 text-white">
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300">
+                      <CheckCircle2 className="w-3.5 h-3.5" />
                       Available to borrow
                     </span>
                   ) : (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-500 text-white">
-                      With {game.currentBorrower}
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300">
+                      <Clock className="w-3.5 h-3.5" />
+                      Currently on loan
                     </span>
                   )}
                 </div>
 
                 {!isAvailable && (
-                  <div className="text-xs text-zinc-600 dark:text-zinc-300 space-y-0.5 pt-1">
-                    <p>Borrowed on: <strong>{formatDate(game.borrowDate)}</strong> ({calculateDuration(game.borrowDate || '')})</p>
+                  <div className="text-xs space-y-1 text-zinc-600 dark:text-zinc-300">
+                    <p className="flex items-center gap-1.5">
+                      <UserCheck className="w-3.5 h-3.5 text-zinc-400" />
+                      <span>Held by: <strong className="text-zinc-900 dark:text-zinc-100">{game.currentBorrower}</strong></span>
+                    </p>
+                    <p className="flex items-center gap-1.5 text-zinc-500">
+                      <Calendar className="w-3.5 h-3.5 text-zinc-400" />
+                      <span>Borrowed on: {formatDate(game.borrowDate)} ({calculateDuration(game.borrowDate || '')})</span>
+                    </p>
                     {game.expectedReturnDate && (
-                      <p>Expected back: <strong>{formatDate(game.expectedReturnDate)}</strong></p>
+                      <p className="text-zinc-500 pl-5">
+                        Target return: {formatDate(game.expectedReturnDate)}
+                      </p>
                     )}
                   </div>
                 )}

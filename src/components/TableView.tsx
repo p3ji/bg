@@ -12,7 +12,8 @@ import {
   SendHorizontal, 
   Info,
   PackageOpen,
-  PlusCircle
+  PlusCircle,
+  Sparkles
 } from 'lucide-react';
 
 interface TableViewProps {
@@ -24,6 +25,7 @@ interface TableViewProps {
   onRequestBorrow: (game: Game) => void;
   onResetFilters: () => void;
   onAddForHousehold?: (household: string) => void;
+  onEdit?: (game: Game) => void;
 }
 
 export const TableView: React.FC<TableViewProps> = ({
@@ -35,6 +37,7 @@ export const TableView: React.FC<TableViewProps> = ({
   onRequestBorrow,
   onResetFilters,
   onAddForHousehold,
+  onEdit,
 }) => {
   if (games.length === 0) {
     return (
@@ -70,29 +73,20 @@ export const TableView: React.FC<TableViewProps> = ({
   };
 
   return (
-    <div className="py-4 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-      
+    <div className="py-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
       {/* Household Header Banner if filtered */}
       {activeHousehold && activeHousehold !== 'all' && (
-        <div className="mb-4 p-4 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 flex items-center justify-center font-bold text-xs">
-              {activeHousehold.split('&').map(n => n.trim()[0]).join('&')}
-            </div>
-            <div>
-              <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-50">
-                {activeHousehold}’s Collection
-              </h3>
-              <p className="text-xs text-zinc-500">
-                {games.length} board game{games.length === 1 ? '' : 's'} in this household
-              </p>
-            </div>
+        <div className="mb-4 p-3.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl flex items-center justify-between gap-3 shadow-xs">
+          <div className="flex items-center gap-2.5">
+            <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Filtered by:</span>
+            <span className="font-bold text-sm text-zinc-900 dark:text-zinc-100">{activeHousehold}</span>
+            <span className="text-xs text-zinc-400">({games.length} games)</span>
           </div>
           {onAddForHousehold && (
             <button
               type="button"
               onClick={() => onAddForHousehold(activeHousehold)}
-              className="flex items-center justify-center gap-1.5 px-3.5 py-1.5 bg-zinc-900 dark:bg-zinc-100 hover:bg-zinc-800 dark:hover:bg-zinc-200 text-white dark:text-zinc-900 text-xs font-bold rounded-lg shadow-xs transition-colors shrink-0"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-900 dark:bg-zinc-100 hover:bg-zinc-800 dark:hover:bg-zinc-200 text-white dark:text-zinc-900 text-xs font-bold rounded-lg shadow-xs transition-colors"
             >
               <PlusCircle className="w-3.5 h-3.5" />
               Add Game to {activeHousehold}
@@ -101,28 +95,28 @@ export const TableView: React.FC<TableViewProps> = ({
         </div>
       )}
 
-      <div className="border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden bg-white dark:bg-zinc-900 shadow-xs">
+      {/* Main High-Density Table */}
+      <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden shadow-xs">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
+          <table className="w-full text-left text-xs whitespace-nowrap">
             
             {/* Table Header */}
-            <thead className="bg-zinc-50 dark:bg-zinc-950/80 border-b border-zinc-200 dark:border-zinc-800 text-[11px] font-bold text-zinc-500 uppercase tracking-wider select-none">
+            <thead className="bg-zinc-50 dark:bg-zinc-950/80 border-b border-zinc-200 dark:border-zinc-800 text-[11px] font-bold uppercase text-zinc-500 dark:text-zinc-400 tracking-wider">
               <tr>
-                <th className="py-3 px-4 min-w-[200px]">Game Title</th>
-                <th className="py-3 px-3 min-w-[85px]">Players</th>
-                <th className="py-3 px-3 min-w-[95px]">Playtime</th>
-                <th className="py-3 px-3 min-w-[110px]">Type</th>
-                <th className="py-3 px-3 min-w-[80px]">BGG Rank</th>
-                <th className="py-3 px-3 min-w-[85px]">Rating</th>
-                <th className="py-3 px-3 min-w-[80px]">Weight</th>
-                <th className="py-3 px-3 min-w-[130px]">Owner</th>
-                <th className="py-3 px-3 min-w-[150px]">Status</th>
-                <th className="py-3 px-4 min-w-[140px] text-right">Actions</th>
+                <th className="py-3 px-4">Title</th>
+                <th className="py-3 px-3">Category</th>
+                <th className="py-3 px-3">Players</th>
+                <th className="py-3 px-3">Playtime</th>
+                <th className="py-3 px-3">BGG Score</th>
+                <th className="py-3 px-3">Weight</th>
+                <th className="py-3 px-3">Owner</th>
+                <th className="py-3 px-3">Availability</th>
+                <th className="py-3 px-4 text-right">Actions</th>
               </tr>
             </thead>
 
             {/* Table Body */}
-            <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800/80">
+            <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
               {games.map((game) => {
                 const isAvailable = game.status === 'available';
                 const hasPendingRequest = (game.borrowRequests || []).some((r) => r.status === 'pending');
@@ -130,73 +124,75 @@ export const TableView: React.FC<TableViewProps> = ({
                 return (
                   <tr 
                     key={game.id} 
-                    className="hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40 transition-colors group"
+                    className="hover:bg-zinc-50/70 dark:hover:bg-zinc-800/40 transition-colors"
                   >
-                    
-                    {/* Title & Notes */}
+                    {/* Game Title with BGG link icon */}
                     <td className="py-3 px-4">
-                      <div className="flex items-center gap-1.5">
-                        <span 
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
                           onClick={() => onSelectGame(game)}
-                          className="font-bold text-zinc-900 dark:text-zinc-100 hover:text-indigo-600 dark:hover:text-indigo-400 cursor-pointer text-[13px]"
+                          className="font-bold text-zinc-900 dark:text-zinc-100 hover:text-indigo-600 dark:hover:text-indigo-400 text-left transition-colors truncate max-w-xs"
+                          title={game.title}
                         >
                           {game.title}
-                        </span>
+                        </button>
                         {game.bggId && (
                           <a
                             href={`https://boardgamegeek.com/boardgame/${game.bggId}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200"
-                            title="Open on BoardGameGeek"
-                            onClick={(e) => e.stopPropagation()}
+                            className="text-zinc-400 hover:text-indigo-500 transition-colors"
+                            title={`BGG ID: ${game.bggId}`}
                           >
                             <ExternalLink className="w-3 h-3" />
                           </a>
                         )}
                       </div>
                       {game.notes && (
-                        <p className="text-[11px] text-zinc-400 italic mt-0.5 line-clamp-1">
+                        <p className="text-[10px] text-zinc-400 italic truncate max-w-xs mt-0.5">
                           {game.notes}
                         </p>
                       )}
                     </td>
 
-                    {/* Players */}
-                    <td className="py-3 px-3 font-medium text-zinc-700 dark:text-zinc-300">
-                      <span className="inline-flex items-center gap-1">
+                    {/* Category */}
+                    <td className="py-3 px-3">
+                      <span className="px-2 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-[10px] font-medium text-zinc-600 dark:text-zinc-300">
+                        {game.type}
+                      </span>
+                    </td>
+
+                    {/* Player Count */}
+                    <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300">
+                      <span className="flex items-center gap-1 font-mono">
                         <Users className="w-3 h-3 text-zinc-400" />
                         {game.minPlayers === game.maxPlayers ? `${game.minPlayers}p` : `${game.minPlayers}–${game.maxPlayers}p`}
                       </span>
                     </td>
 
                     {/* Playtime */}
-                    <td className="py-3 px-3 text-zinc-600 dark:text-zinc-400 font-medium">
-                      <span className="inline-flex items-center gap-1">
+                    <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 font-mono">
+                      <span className="flex items-center gap-1">
                         <Clock className="w-3 h-3 text-zinc-400" />
                         {game.playtimeDisplay}
                       </span>
                     </td>
 
-                    {/* Type / Category */}
-                    <td className="py-3 px-3">
-                      <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700/60">
-                        {game.type}
-                      </span>
-                    </td>
-
-                    {/* BGG Rank */}
-                    <td className="py-3 px-3 font-mono text-zinc-600 dark:text-zinc-400">
-                      {game.bggRank ? `#${game.bggRank}` : '—'}
-                    </td>
-
-                    {/* BGG Rating */}
+                    {/* BGG Rating & Rank */}
                     <td className="py-3 px-3">
                       {game.bggRating ? (
-                        <span className="inline-flex items-center gap-0.5 font-bold text-amber-600 dark:text-amber-400">
-                          <Star className="w-3 h-3 fill-amber-400 text-amber-500" />
-                          {game.bggRating.toFixed(1)}
-                        </span>
+                        <div className="flex items-center gap-1">
+                          <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
+                          <span className="font-bold text-zinc-800 dark:text-zinc-200">
+                            {game.bggRating.toFixed(1)}
+                          </span>
+                          {game.bggRank && (
+                            <span className="text-[10px] text-zinc-400 font-mono ml-0.5">
+                              (#{game.bggRank})
+                            </span>
+                          )}
+                        </div>
                       ) : (
                         <span className="text-zinc-400">—</span>
                       )}
@@ -271,6 +267,16 @@ export const TableView: React.FC<TableViewProps> = ({
                               Ping
                             </button>
                           </>
+                        )}
+                        {onEdit && (
+                          <button
+                            type="button"
+                            onClick={() => onEdit(game)}
+                            className="p-1 text-zinc-400 hover:text-indigo-600 dark:hover:text-indigo-400 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                            title="Edit Game & Link BGG Cover"
+                          >
+                            <Sparkles className="w-3.5 h-3.5" />
+                          </button>
                         )}
                         <button
                           type="button"

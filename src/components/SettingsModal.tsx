@@ -156,7 +156,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             <div className="flex gap-2">
               <input
                 type="password"
-                value={bggToken}
+                value={bggToken || ''}
                 onChange={(e) => setBggToken(e.target.value)}
                 placeholder="Bearer token..."
                 className="flex-1 px-3 py-1.5 text-xs font-mono bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 rounded-lg text-zinc-900 dark:text-zinc-100 focus:outline-hidden"

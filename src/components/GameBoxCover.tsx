@@ -24,11 +24,37 @@ export const GameBoxCover: React.FC<GameBoxCoverProps> = ({
   playtimeDisplay = '45 min',
   className = '',
 }) => {
-  const [imgError, setImgError] = useState(false);
-  const src = !imgError && (image || thumbnail);
+  const [triedProxy, setTriedProxy] = useState(false);
+  const [hasError, setHasError] = useState(false);
+
+  const rawSrc = image || thumbnail;
+  
+  // Choose source: raw first, then proxy if raw fails
+  let activeSrc: string | null = null;
+  if (!hasError && rawSrc) {
+    if (triedProxy) {
+      // If direct failed and it's an external http(s) URL, use our server proxy
+      if (rawSrc.startsWith('http')) {
+        activeSrc = `/api/image-proxy?url=${encodeURIComponent(rawSrc)}`;
+      } else {
+        activeSrc = rawSrc;
+      }
+    } else {
+      activeSrc = rawSrc;
+    }
+  }
+
+  const handleImageError = () => {
+    if (!triedProxy && rawSrc && rawSrc.startsWith('http')) {
+      // Try again through the internal proxy before giving up
+      setTriedProxy(true);
+    } else {
+      setHasError(true);
+    }
+  };
 
   // Generate deterministic subtle color theme based on type or title
-  const getThemeColors = (gameType: string, gameTitle: string) => {
+  const getThemeColors = (gameType: string, _gameTitle: string) => {
     const t = (gameType || '').toLowerCase();
     if (t.includes('strategy')) {
       return {
@@ -67,17 +93,18 @@ export const GameBoxCover: React.FC<GameBoxCoverProps> = ({
 
   const theme = getThemeColors(type, title);
 
-  if (src) {
+  if (activeSrc) {
     return (
       <div className={`relative overflow-hidden bg-zinc-900 ${className}`}>
         <Image
-          src={src}
+          src={activeSrc}
           alt={title}
           fill
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 33vw, 25vw"
           className="object-cover transition-transform duration-300 group-hover:scale-105"
-          onError={() => setImgError(true)}
+          onError={handleImageError}
           unoptimized
+          referrerPolicy="no-referrer"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20 pointer-events-none" />
       </div>
