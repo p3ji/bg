@@ -1,36 +1,49 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# GameShare • Friend Board Game Library & Lending Tracker
 
-## Getting Started
+A clean, utilitarian web app for tracking and sharing board game collections among friends, with full BoardGameGeek (BGG) integration, live loan tracking, and dual browsing views.
 
-First, run the development server:
+## Features
+
+- **Preloaded Collection**: 126 games preloaded directly from your friend circle inventory spreadsheet across four households:
+  - **Angel & Peter** (~66 games)
+  - **Kalissa & Allen** (~30 games)
+  - **Carissa & Brandon** (~31 games)
+  - **Celina & Stefan** (~11 games)
+- **Dual Browsing Views**:
+  - **Bookshelf / Cover Grid**: Netflix/shelf-style cards with box art, live availability pills, player counts, and playtime badges.
+  - **Coverless Dense Table**: Clean, high-density tabular view for rapid scanning without artwork.
+- **BoardGameGeek Integration**:
+  - Sync collection directly from any BGG username (batch import with box art, community ratings, rank, and complexity weight).
+  - Search BGG by game title to add individual titles with 1 click.
+  - Optional support for registered BGG API Bearer tokens.
+- **Borrowing & Lending Management**:
+  - Low-friction friend roster: Pick your name from a dropdown or type a name to borrow.
+  - Record borrow dates, optional target return dates, and notes.
+  - Full loan history timeline for each game.
+- **Request Borrow & 1-Click Pings**:
+  - Request games that are currently on loan.
+  - Dynamic in-app notification badge on the bell icon and browser tab.
+  - 1-click **WhatsApp**, **iMessage / SMS**, or **Copy link** nudge messages to ping the current holder.
+- **Rich Filters & Sorting**:
+  - Filter by exact player count (1p, 2p, 3p, 4p, 5p, 6p+).
+  - Filter by max playtime (≤ 30m, 45m, 60m, 90m, 120m).
+  - Filter by availability (*Available Now* vs. *Loaned*).
+  - Filter by owner household or game type/category.
+  - Sort by BGG Rank, BGG Rating, Title (A–Z), Playtime, or Complexity Weight.
+
+## Running Locally
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Deployment to Vercel / Cloudflare
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+The app is built with standard Next.js (App Router) and can be deployed with one click to Vercel:
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+npx vercel
+```
