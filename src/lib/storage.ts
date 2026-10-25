@@ -2,9 +2,9 @@ import { Game, BorrowRequest } from '@/types';
 import seedData from '@/data/seedGames.json';
 import { DEFAULT_FRIENDS } from '@/data/friends';
 
-const GAMES_STORAGE_KEY = 'bg_share_games_v2';
-const REQUESTS_STORAGE_KEY = 'bg_share_requests_v2';
-const FRIENDS_STORAGE_KEY = 'bg_share_friends_v2';
+const GAMES_STORAGE_KEY = 'bg_share_games_v3';
+const REQUESTS_STORAGE_KEY = 'bg_share_requests_v3';
+const FRIENDS_STORAGE_KEY = 'bg_share_households_v1';
 const BGG_TOKEN_KEY = 'bg_share_bgg_token_v1';
 
 export function getInitialGames(): Game[] {
@@ -78,11 +78,11 @@ export function getInitialRequests(): BorrowRequest[] {
       id: 'req-sample-1',
       gameId: 'game-1',
       gameTitle: 'Harry Potter Stupefy',
-      requesterName: 'Peter',
-      holderName: 'Brandon',
+      requesterName: 'Angel & Peter',
+      holderName: 'Carissa & Brandon',
       requestedAt: new Date(Date.now() - 3600000 * 4).toISOString(),
       status: 'pending',
-      note: 'Need it for family game night this Saturday!'
+      note: 'Need it for game night this weekend!'
     }
   ];
 }

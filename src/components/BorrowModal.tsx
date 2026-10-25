@@ -75,10 +75,10 @@ export const BorrowModal: React.FC<BorrowModalProps> = ({
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="p-4 sm:p-5 space-y-4">
           
-          {/* Friend Selector */}
+          {/* Household Selector */}
           <div>
             <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-2">
-              Who is taking this game?
+              Which household is borrowing this game?
             </label>
             <div className="flex flex-wrap gap-1.5 mb-2">
               {friends.map((f) => {
@@ -110,7 +110,7 @@ export const BorrowModal: React.FC<BorrowModalProps> = ({
                     : 'bg-zinc-50 dark:bg-zinc-800 text-zinc-500 border-zinc-200 dark:border-zinc-700 hover:text-zinc-800'
                 }`}
               >
-                + Type name
+                + Other
               </button>
             </div>
 
@@ -122,7 +122,7 @@ export const BorrowModal: React.FC<BorrowModalProps> = ({
                   required
                   value={customName}
                   onChange={(e) => setCustomName(e.target.value)}
-                  placeholder="Enter borrower's name..."
+                  placeholder="Enter household or borrower name..."
                   autoFocus
                   className="w-full pl-9 pr-3 py-2 text-xs bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 rounded-lg text-zinc-900 dark:text-zinc-100 focus:outline-hidden focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100"
                 />

@@ -11,7 +11,8 @@ import {
   UserCheck, 
   ArrowUpDown, 
   RotateCcw,
-  Sparkles
+  Sparkles,
+  PlusCircle
 } from 'lucide-react';
 
 interface FilterBarProps {
@@ -19,6 +20,7 @@ interface FilterBarProps {
   onChange: (filters: FilterState) => void;
   onReset: () => void;
   resultCount: number;
+  onAddForHousehold?: (household: string) => void;
 }
 
 export const FilterBar: React.FC<FilterBarProps> = ({
@@ -26,6 +28,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   onChange,
   onReset,
   resultCount,
+  onAddForHousehold,
 }) => {
   const isFiltered = Boolean(
     filters.search ||
@@ -211,6 +214,19 @@ export const FilterBar: React.FC<FilterBarProps> = ({
               ))}
             </select>
           </div>
+
+          {/* Quick Add Game for Household Button (when filtered by a household) */}
+          {filters.owner !== 'all' && onAddForHousehold && (
+            <button
+              type="button"
+              onClick={() => onAddForHousehold(filters.owner)}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors shadow-xs animate-in fade-in"
+              title={`Search and add a board game to ${filters.owner}'s library`}
+            >
+              <PlusCircle className="w-3.5 h-3.5" />
+              <span>Add to {filters.owner}</span>
+            </button>
+          )}
 
           {/* Game Type Filter */}
           <div className="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800/80 p-1 rounded-lg border border-zinc-200 dark:border-zinc-700/60">

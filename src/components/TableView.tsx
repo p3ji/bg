@@ -11,25 +11,30 @@ import {
   Hand, 
   SendHorizontal, 
   Info,
-  PackageOpen
+  PackageOpen,
+  PlusCircle
 } from 'lucide-react';
 
 interface TableViewProps {
   games: Game[];
+  activeHousehold?: string;
   onSelectGame: (game: Game) => void;
   onBorrow: (game: Game) => void;
   onReturn: (game: Game) => void;
   onRequestBorrow: (game: Game) => void;
   onResetFilters: () => void;
+  onAddForHousehold?: (household: string) => void;
 }
 
 export const TableView: React.FC<TableViewProps> = ({
   games,
+  activeHousehold,
   onSelectGame,
   onBorrow,
   onReturn,
   onRequestBorrow,
   onResetFilters,
+  onAddForHousehold,
 }) => {
   if (games.length === 0) {
     return (
@@ -66,6 +71,36 @@ export const TableView: React.FC<TableViewProps> = ({
 
   return (
     <div className="py-4 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+      
+      {/* Household Header Banner if filtered */}
+      {activeHousehold && activeHousehold !== 'all' && (
+        <div className="mb-4 p-4 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 flex items-center justify-center font-bold text-xs">
+              {activeHousehold.split('&').map(n => n.trim()[0]).join('&')}
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-50">
+                {activeHousehold}’s Collection
+              </h3>
+              <p className="text-xs text-zinc-500">
+                {games.length} board game{games.length === 1 ? '' : 's'} in this household
+              </p>
+            </div>
+          </div>
+          {onAddForHousehold && (
+            <button
+              type="button"
+              onClick={() => onAddForHousehold(activeHousehold)}
+              className="flex items-center justify-center gap-1.5 px-3.5 py-1.5 bg-zinc-900 dark:bg-zinc-100 hover:bg-zinc-800 dark:hover:bg-zinc-200 text-white dark:text-zinc-900 text-xs font-bold rounded-lg shadow-xs transition-colors shrink-0"
+            >
+              <PlusCircle className="w-3.5 h-3.5" />
+              Add Game to {activeHousehold}
+            </button>
+          )}
+        </div>
+      )}
+
       <div className="border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden bg-white dark:bg-zinc-900 shadow-xs">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">

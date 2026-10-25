@@ -93,16 +93,16 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         {/* Body */}
         <div className="p-4 sm:p-5 space-y-6 overflow-y-auto flex-1">
           
-          {/* Friend Roster */}
+          {/* Household Roster */}
           <div>
             <h4 className="text-xs font-bold text-zinc-900 dark:text-zinc-100 uppercase tracking-wider mb-2">
-              Friend Circle Roster
+              Household Circle Roster
             </h4>
             <p className="text-xs text-zinc-500 mb-3">
-              Friends listed here appear in the 1-click borrow and request dropdowns.
+              Households listed here appear in the 1-click borrow, return, and ownership dropdowns.
             </p>
 
-            {/* List of current friends */}
+            {/* List of current households */}
             <div className="flex flex-wrap gap-1.5 mb-3">
               {friends.map((name) => (
                 <span
@@ -122,13 +122,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               ))}
             </div>
 
-            {/* Add friend form */}
+            {/* Add household form */}
             <form onSubmit={handleAddFriend} className="flex gap-2">
               <input
                 type="text"
                 value={newFriend}
                 onChange={(e) => setNewFriend(e.target.value)}
-                placeholder="Add friend name..."
+                placeholder="Add household name (e.g. Maya & Sam)..."
                 className="flex-1 px-3 py-1.5 text-xs bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 rounded-lg text-zinc-900 dark:text-zinc-100 focus:outline-hidden focus:ring-2 focus:ring-zinc-900"
               />
               <button

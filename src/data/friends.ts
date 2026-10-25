@@ -1,12 +1,8 @@
 export const DEFAULT_FRIENDS = [
-  'Angel',
-  'Peter',
-  'Kalissa',
-  'Allen',
-  'Carissa',
-  'Brandon',
-  'Celina',
-  'Stefan'
+  'Angel & Peter',
+  'Kalissa & Allen',
+  'Carissa & Brandon',
+  'Celina & Stefan'
 ];
 
 export const OWNER_GROUPS = [

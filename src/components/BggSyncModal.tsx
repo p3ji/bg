@@ -14,7 +14,8 @@ import {
   Users, 
   Clock, 
   Sparkles,
-  AlertCircle
+  AlertCircle,
+  UserCheck
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -23,6 +24,8 @@ interface BggSyncModalProps {
   onClose: () => void;
   onAddGame: (game: Omit<Game, 'id' | 'status' | 'history'>) => void;
   onBatchImportGames: (games: Omit<Game, 'id' | 'status' | 'history'>[]) => void;
+  initialHousehold?: string;
+  initialTab?: 'sync' | 'search';
 }
 
 export const BggSyncModal: React.FC<BggSyncModalProps> = ({
@@ -30,12 +33,14 @@ export const BggSyncModal: React.FC<BggSyncModalProps> = ({
   onClose,
   onAddGame,
   onBatchImportGames,
+  initialHousehold,
+  initialTab = 'sync',
 }) => {
-  const [activeTab, setActiveTab] = useState<'sync' | 'search'>('sync');
+  const [activeTab, setActiveTab] = useState<'sync' | 'search'>(initialTab);
   
   // Sync tab state
   const [username, setUsername] = useState('pizzicatoz');
-  const [syncOwner, setSyncOwner] = useState(OWNER_GROUPS[0]);
+  const [syncOwner, setSyncOwner] = useState(initialHousehold || OWNER_GROUPS[0]);
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncError, setSyncError] = useState<string | null>(null);
   const [syncedGames, setSyncedGames] = useState<any[]>([]);
@@ -45,8 +50,20 @@ export const BggSyncModal: React.FC<BggSyncModalProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [searchOwner, setSearchOwner] = useState(OWNER_GROUPS[0]);
+  const [searchOwner, setSearchOwner] = useState(initialHousehold || OWNER_GROUPS[0]);
   const [searchAddedIds, setSearchAddedIds] = useState<Set<string>>(new Set());
+
+  React.useEffect(() => {
+    if (isOpen) {
+      if (initialHousehold && OWNER_GROUPS.includes(initialHousehold)) {
+        setSearchOwner(initialHousehold);
+        setSyncOwner(initialHousehold);
+      }
+      if (initialTab) {
+        setActiveTab(initialTab);
+      }
+    }
+  }, [isOpen, initialHousehold, initialTab]);
 
   if (!isOpen) return null;
 
@@ -343,6 +360,28 @@ export const BggSyncModal: React.FC<BggSyncModalProps> = ({
           ) : (
             /* Search & Add Tab */
             <div className="space-y-4">
+              
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/80 rounded-xl text-xs">
+                <div className="flex items-center gap-2 text-zinc-700 dark:text-zinc-200">
+                  <UserCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                  <span>Assign added games to: <strong className="text-zinc-900 dark:text-zinc-50">{searchOwner}</strong></span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[11px] text-zinc-500">Change:</span>
+                  <select
+                    value={searchOwner}
+                    onChange={(e) => setSearchOwner(e.target.value)}
+                    className="px-2.5 py-1 text-xs font-semibold bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-lg text-zinc-900 dark:text-zinc-100 focus:outline-hidden"
+                  >
+                    {OWNER_GROUPS.map((grp) => (
+                      <option key={grp} value={grp}>
+                        {grp}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
               <form onSubmit={handleSearch} className="flex gap-2">
                 <div className="relative flex-1">
                   <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
@@ -350,7 +389,7 @@ export const BggSyncModal: React.FC<BggSyncModalProps> = ({
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search game title on BoardGameGeek..."
+                    placeholder={`Search BGG to add game for ${searchOwner}...`}
                     className="w-full pl-9 pr-3 py-2 text-xs bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 rounded-lg text-zinc-900 dark:text-zinc-100 focus:outline-hidden focus:ring-2 focus:ring-zinc-900"
                   />
                 </div>
@@ -359,24 +398,9 @@ export const BggSyncModal: React.FC<BggSyncModalProps> = ({
                   disabled={isSearching}
                   className="px-4 py-2 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-xs font-semibold rounded-lg hover:bg-zinc-800 transition-colors shadow-xs"
                 >
-                  {isSearching ? 'Searching...' : 'Search'}
+                  {isSearching ? 'Searching...' : 'Search BGG'}
                 </button>
               </form>
-
-              <div className="flex items-center gap-2 text-xs">
-                <span className="font-semibold text-zinc-600 dark:text-zinc-400">Assign added games to:</span>
-                <select
-                  value={searchOwner}
-                  onChange={(e) => setSearchOwner(e.target.value)}
-                  className="px-2.5 py-1 text-xs font-semibold bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-md"
-                >
-                  {OWNER_GROUPS.map((grp) => (
-                    <option key={grp} value={grp}>
-                      {grp}
-                    </option>
-                  ))}
-                </select>
-              </div>
 
               {searchResults.length > 0 && (
                 <div className="divide-y divide-zinc-100 dark:divide-zinc-800 border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden">

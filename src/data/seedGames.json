@@ -11,7 +11,7 @@
     "type": "Family friendly",
     "notes": "",
     "status": "borrowed",
-    "currentBorrower": "Brandon",
+    "currentBorrower": "Carissa & Brandon",
     "borrowDate": "2026-10-18T14:30:00.000Z",
     "expectedReturnDate": "2026-11-01T00:00:00.000Z",
     "bggId": 362402,
@@ -24,7 +24,7 @@
     "history": [
       {
         "id": "hist-1",
-        "borrower": "Allen",
+        "borrower": "Kalissa & Allen",
         "borrowDate": "2026-09-02T10:00:00.000Z",
         "returnDate": "2026-09-16T18:00:00.000Z",
         "notes": "Played at game night!"
@@ -235,7 +235,7 @@
     "type": "Party",
     "notes": "",
     "status": "borrowed",
-    "currentBorrower": "Celina",
+    "currentBorrower": "Celina & Stefan",
     "borrowDate": "2026-10-21T19:00:00.000Z",
     "expectedReturnDate": "2026-10-28T00:00:00.000Z",
     "bggId": 254640,

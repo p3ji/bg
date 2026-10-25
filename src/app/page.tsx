@@ -50,6 +50,7 @@ export default function HomePage() {
   const [requestingGame, setRequestingGame] = useState<Game | null>(null);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isBggSyncOpen, setIsBggSyncOpen] = useState(false);
+  const [selectedHouseholdForAdd, setSelectedHouseholdForAdd] = useState<string | undefined>(undefined);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   // Initialize data on mount
@@ -328,6 +329,16 @@ export default function HomePage() {
     saveRequests([]);
   };
 
+  const handleOpenAddForHousehold = (household: string) => {
+    setSelectedHouseholdForAdd(household);
+    setIsBggSyncOpen(true);
+  };
+
+  const handleOpenGeneralAdd = () => {
+    setSelectedHouseholdForAdd(filters.owner !== 'all' ? filters.owner : undefined);
+    setIsBggSyncOpen(true);
+  };
+
   if (!mounted) {
     return (
       <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex items-center justify-center">
@@ -348,7 +359,7 @@ export default function HomePage() {
         borrowedCount={borrowedCount}
         pendingRequestsCount={pendingRequestsCount}
         onOpenNotifications={() => setIsNotificationsOpen(true)}
-        onOpenAddModal={() => setIsBggSyncOpen(true)}
+        onOpenAddModal={handleOpenGeneralAdd}
         onOpenSettings={() => setIsSettingsOpen(true)}
       />
 
@@ -358,6 +369,7 @@ export default function HomePage() {
         onChange={setFilters}
         onReset={() => setFilters(initialFilters)}
         resultCount={filteredGames.length}
+        onAddForHousehold={handleOpenAddForHousehold}
       />
 
       {/* Main Content Area */}
@@ -365,20 +377,24 @@ export default function HomePage() {
         {viewMode === 'bookshelf' ? (
           <BookshelfView
             games={filteredGames}
+            activeHousehold={filters.owner}
             onSelectGame={setSelectedGame}
             onBorrow={setBorrowingGame}
             onReturn={setReturningGame}
             onRequestBorrow={setRequestingGame}
             onResetFilters={() => setFilters(initialFilters)}
+            onAddForHousehold={handleOpenAddForHousehold}
           />
         ) : (
           <TableView
             games={filteredGames}
+            activeHousehold={filters.owner}
             onSelectGame={setSelectedGame}
             onBorrow={setBorrowingGame}
             onReturn={setReturningGame}
             onRequestBorrow={setRequestingGame}
             onResetFilters={() => setFilters(initialFilters)}
+            onAddForHousehold={handleOpenAddForHousehold}
           />
         )}
       </main>
@@ -428,9 +444,14 @@ export default function HomePage() {
 
       <BggSyncModal
         isOpen={isBggSyncOpen}
-        onClose={() => setIsBggSyncOpen(false)}
+        onClose={() => {
+          setIsBggSyncOpen(false);
+          setSelectedHouseholdForAdd(undefined);
+        }}
         onAddGame={handleAddGame}
         onBatchImportGames={handleBatchImportGames}
+        initialHousehold={selectedHouseholdForAdd}
+        initialTab={selectedHouseholdForAdd ? 'search' : 'sync'}
       />
 
       <SettingsModal
