@@ -10,9 +10,10 @@ import {
   RotateCcw, 
   Check, 
   ShieldCheck,
-  AlertTriangle 
+  AlertTriangle,
+  Sparkles 
 } from 'lucide-react';
-import { getBggToken, saveBggToken } from '@/lib/storage';
+import { getBggToken, saveBggToken, forceRefreshAllImages } from '@/lib/storage';
 
 interface SettingsModalProps {
   friends: string[];
@@ -33,8 +34,15 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const [bggToken, setBggToken] = useState(() => getBggToken());
   const [tokenSaved, setTokenSaved] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
+  const [imagesRefreshed, setImagesRefreshed] = useState(false);
 
   if (!isOpen) return null;
+
+  const handleRefreshImages = () => {
+    forceRefreshAllImages();
+    setImagesRefreshed(true);
+    setTimeout(() => setImagesRefreshed(false), 3000);
+  };
 
   const handleAddFriend = (e: React.FormEvent) => {
     e.preventDefault();
@@ -170,6 +178,24 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 {tokenSaved ? 'Saved' : 'Save Token'}
               </button>
             </div>
+          </div>
+
+          {/* Sync Official Covers */}
+          <div className="pt-4 border-t border-zinc-200 dark:border-zinc-800">
+            <h4 className="text-xs font-bold text-zinc-900 dark:text-zinc-100 uppercase tracking-wider mb-1">
+              Sync Official BGG Covers
+            </h4>
+            <p className="text-xs text-zinc-500 mb-2">
+              Refresh all game box art and BoardGameGeek links to the latest verified high-resolution database images.
+            </p>
+            <button
+              type="button"
+              onClick={handleRefreshImages}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-indigo-700 bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-100 border border-indigo-200 dark:border-indigo-900 rounded-lg transition-colors"
+            >
+              {imagesRefreshed ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Sparkles className="w-3.5 h-3.5 text-indigo-600" />}
+              {imagesRefreshed ? 'All Covers Synced!' : 'Refresh & Sync All Covers'}
+            </button>
           </div>
 
           {/* Reset Library */}

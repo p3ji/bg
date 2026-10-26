@@ -39,6 +39,7 @@ export interface Game {
   image?: string | null;
   thumbnail?: string | null;
   description?: string | null;
+  year?: number | null;
   history: LoanHistoryRecord[];
   borrowRequests?: BorrowRequest[];
 }

@@ -2,7 +2,7 @@ import { Game, BorrowRequest } from '@/types';
 import seedData from '@/data/seedGames.json';
 import { DEFAULT_FRIENDS } from '@/data/friends';
 
-const GAMES_STORAGE_KEY = 'bg_share_games_v4';
+const GAMES_STORAGE_KEY = 'bg_share_games_v5';
 const REQUESTS_STORAGE_KEY = 'bg_share_requests_v3';
 const FRIENDS_STORAGE_KEY = 'bg_share_households_v1';
 const BGG_TOKEN_KEY = 'bg_share_bgg_token_v1';
@@ -15,32 +15,42 @@ export function getInitialGames(): Game[] {
   try {
     const stored =
       localStorage.getItem(GAMES_STORAGE_KEY) ||
+      localStorage.getItem('bg_share_games_v4') ||
       localStorage.getItem('bg_share_games_v3') ||
       localStorage.getItem('bg_share_games_v1');
 
     if (stored) {
       const parsed = JSON.parse(stored);
       if (Array.isArray(parsed) && parsed.length > 0) {
-        // Build seed map for image & bggId enrichment
-        const seedMap = new Map(seedList.map((g) => [g.title.toLowerCase().trim(), g]));
+        // Build maps for both ID and title matching
+        const seedMapById = new Map(seedList.map((g) => [g.id, g]));
+        const seedMapByTitle = new Map(seedList.map((g) => [(g.title || '').toLowerCase().trim(), g]));
+
         const merged = parsed.map((game: Game) => {
-          const seed = seedMap.get((game.title || '').toLowerCase().trim());
-          const isWikimedia = (game.image || '').includes('wikimedia.org');
-          const isMissingImage = !game.image && !game.thumbnail;
-          
-          if (seed && (isWikimedia || isMissingImage || !game.bggId)) {
+          const seed = seedMapById.get(game.id) || seedMapByTitle.get((game.title || '').toLowerCase().trim());
+          if (seed) {
+            // Update to verified official seed metadata while preserving user loan history and borrow states
             return {
-              ...game,
-              image: isWikimedia || isMissingImage ? seed.image : game.image,
-              thumbnail: isWikimedia || isMissingImage ? seed.thumbnail : game.thumbnail,
-              bggId: game.bggId || seed.bggId,
-              bggRating: game.bggRating || seed.bggRating,
-              bggRank: game.bggRank || seed.bggRank,
-              weight: game.weight || seed.weight,
+              ...seed,
+              status: game.status || seed.status,
+              currentBorrower: game.currentBorrower !== undefined ? game.currentBorrower : seed.currentBorrower,
+              borrowDate: game.borrowDate !== undefined ? game.borrowDate : seed.borrowDate,
+              expectedReturnDate: game.expectedReturnDate !== undefined ? game.expectedReturnDate : seed.expectedReturnDate,
+              history: Array.isArray(game.history) && game.history.length > 0 ? game.history : (seed.history || []),
+              borrowRequests: Array.isArray(game.borrowRequests) && game.borrowRequests.length > 0 ? game.borrowRequests : (seed.borrowRequests || []),
+              notes: game.notes !== undefined && game.notes !== '' ? game.notes : (seed.notes || ''),
             };
           }
           return game;
         });
+
+        // Add any seed items not present in parsed
+        const existingIds = new Set(merged.map((g: Game) => g.id));
+        for (const seed of seedList) {
+          if (!existingIds.has(seed.id)) {
+            merged.push(seed);
+          }
+        }
 
         localStorage.setItem(GAMES_STORAGE_KEY, JSON.stringify(merged));
         return merged;
@@ -53,6 +63,39 @@ export function getInitialGames(): Game[] {
   // Fallback to fresh seed data
   localStorage.setItem(GAMES_STORAGE_KEY, JSON.stringify(seedList));
   return seedList;
+}
+
+export function forceRefreshAllImages(): Game[] {
+  const seedList = seedData as unknown as Game[];
+  if (typeof window === 'undefined') return seedList;
+  try {
+    const current = getInitialGames();
+    const seedMapById = new Map(seedList.map((g) => [g.id, g]));
+    const seedMapByTitle = new Map(seedList.map((g) => [(g.title || '').toLowerCase().trim(), g]));
+
+    const refreshed = current.map((game: Game) => {
+      const seed = seedMapById.get(game.id) || seedMapByTitle.get((game.title || '').toLowerCase().trim());
+      if (seed) {
+        return {
+          ...game,
+          image: seed.image,
+          thumbnail: seed.thumbnail,
+          bggId: seed.bggId,
+          bggRating: seed.bggRating,
+          bggRank: seed.bggRank,
+          weight: seed.weight,
+          year: seed.year,
+        };
+      }
+      return game;
+    });
+
+    saveGames(refreshed);
+    return refreshed;
+  } catch (err) {
+    console.error('Failed to force refresh images:', err);
+    return seedList;
+  }
 }
 
 export function saveGames(games: Game[]): void {
@@ -144,6 +187,7 @@ export function resetLibrary(): Game[] {
   if (typeof window === 'undefined') return seedList;
   localStorage.removeItem(GAMES_STORAGE_KEY);
   localStorage.removeItem(REQUESTS_STORAGE_KEY);
+  localStorage.removeItem('bg_share_games_v4');
   localStorage.removeItem('bg_share_games_v3');
   localStorage.removeItem('bg_share_games_v1');
   localStorage.setItem(GAMES_STORAGE_KEY, JSON.stringify(seedList));

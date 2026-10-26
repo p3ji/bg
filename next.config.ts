@@ -27,6 +27,22 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "thumb.wikimedia.org",
       },
+      {
+        protocol: "https",
+        hostname: "**.shopify.com",
+      },
+      {
+        protocol: "https",
+        hostname: "playworldgame.com",
+      },
+      {
+        protocol: "https",
+        hostname: "littlecanadian.ca",
+      },
+      {
+        protocol: "https",
+        hostname: "ravensburger.com.au",
+      },
     ],
   },
   cacheComponents: true,
