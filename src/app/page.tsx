@@ -13,6 +13,7 @@ import {
   getActiveHousehold,
   saveActiveHousehold
 } from '@/lib/storage';
+import { registerServiceWorker, updateHomeScreenAppBadge } from '@/lib/badgeManager';
 import { Header } from '@/components/Header';
 import { FilterBar } from '@/components/FilterBar';
 import { BookshelfView } from '@/components/BookshelfView';
@@ -78,6 +79,7 @@ export default function HomePage() {
       setIsIdentityModalOpen(true);
     }
     setMounted(true);
+    registerServiceWorker();
 
     const handleGamesUpdate = () => setGames(getInitialGames());
     const handleRequestsUpdate = () => setRequests(getInitialRequests());
@@ -103,74 +105,7 @@ export default function HomePage() {
   }, [requests]);
 
   useEffect(() => {
-    if (typeof document === 'undefined') return;
-
-    // 1. Document title badge
-    if (pendingRequestsCount > 0) {
-      document.title = `(${pendingRequestsCount}) GameShare • Friend Board Game Library`;
-    } else {
-      document.title = 'GameShare • Friend Board Game Library';
-    }
-
-    // 2. Web App Badging API (for installed PWA on iPhone / Android / macOS home screen & dock)
-    if (typeof navigator !== 'undefined' && 'setAppBadge' in navigator) {
-      if (pendingRequestsCount > 0) {
-        navigator.setAppBadge(pendingRequestsCount).catch(() => {});
-      } else {
-        navigator.clearAppBadge().catch(() => {});
-      }
-    }
-
-    // 3. Dynamic browser favicon with little notification number on the top right
-    try {
-      const canvas = document.createElement('canvas');
-      canvas.width = 32;
-      canvas.height = 32;
-      const ctx = canvas.getContext('2d');
-      if (ctx) {
-        // Draw dark dice rounded box
-        ctx.fillStyle = '#18181b';
-        ctx.beginPath();
-        ctx.roundRect(1, 1, 30, 30, 6);
-        ctx.fill();
-
-        // Draw dice dots
-        ctx.fillStyle = '#ffffff';
-        ctx.beginPath();
-        ctx.arc(9, 9, 2.5, 0, Math.PI * 2);
-        ctx.arc(16, 16, 2.5, 0, Math.PI * 2);
-        ctx.arc(23, 23, 2.5, 0, Math.PI * 2);
-        ctx.fill();
-
-        if (pendingRequestsCount > 0) {
-          // Draw red badge on top right
-          ctx.fillStyle = '#e11d48';
-          ctx.beginPath();
-          ctx.arc(23, 9, 8, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.lineWidth = 1.5;
-          ctx.strokeStyle = '#ffffff';
-          ctx.stroke();
-
-          // Draw count
-          ctx.fillStyle = '#ffffff';
-          ctx.font = 'bold 9px sans-serif';
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillText(pendingRequestsCount > 9 ? '9+' : String(pendingRequestsCount), 23, 9.5);
-        }
-
-        let link: HTMLLinkElement | null = document.querySelector("link[rel*='icon']");
-        if (!link) {
-          link = document.createElement('link');
-          link.rel = 'icon';
-          document.head.appendChild(link);
-        }
-        link.href = canvas.toDataURL();
-      }
-    } catch {
-      // Ignore if canvas is not supported
-    }
+    updateHomeScreenAppBadge(pendingRequestsCount);
   }, [pendingRequestsCount]);
 
   // Filtered & Sorted Games List

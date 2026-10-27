@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   X, 
   Settings, 
@@ -9,9 +9,13 @@ import {
   Check, 
   Sparkles,
   ExternalLink,
-  Palette
+  Palette,
+  Smartphone,
+  Bell,
+  RefreshCw
 } from 'lucide-react';
 import { getBggToken, saveBggToken, forceRefreshAllImages } from '@/lib/storage';
+import { requestBadgeNotificationPermission, getNotificationPermissionStatus, updateHomeScreenAppBadge } from '@/lib/badgeManager';
 
 interface SettingsModalProps {
   friends: string[];
@@ -31,8 +35,28 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const [bggToken, setBggToken] = useState(() => getBggToken());
   const [tokenSaved, setTokenSaved] = useState(false);
   const [imagesRefreshed, setImagesRefreshed] = useState(false);
+  const [permissionStatus, setPermissionStatus] = useState<string>('default');
+  const [isSyncingBadge, setIsSyncingBadge] = useState(false);
+  const [badgeSynced, setBadgeSynced] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setPermissionStatus(getNotificationPermissionStatus());
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
+
+  const handleEnableBadges = async () => {
+    setIsSyncingBadge(true);
+    const granted = await requestBadgeNotificationPermission();
+    if (granted) {
+      setPermissionStatus('granted');
+      setBadgeSynced(true);
+      setTimeout(() => setBadgeSynced(false), 3000);
+    }
+    setIsSyncingBadge(false);
+  };
 
   const handleRefreshImages = () => {
     forceRefreshAllImages();
@@ -189,6 +213,77 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               {imagesRefreshed ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Sparkles className="w-3.5 h-3.5 text-indigo-600" />}
               {imagesRefreshed ? 'All Covers Synced!' : 'Refresh & Sync All Covers'}
             </button>
+          </div>
+
+          {/* Phone Home Screen App Badges */}
+          <div className="pt-4 border-t border-zinc-200 dark:border-zinc-800">
+            <div className="flex items-center gap-1.5 mb-1">
+              <Smartphone className="w-3.5 h-3.5 text-zinc-400" />
+              <h4 className="text-xs font-bold text-zinc-900 dark:text-zinc-100 uppercase tracking-wider">
+                Phone Home Screen App Badging
+              </h4>
+            </div>
+            <p className="text-xs text-zinc-500 mb-3">
+              Displays the red notification counter on your phone&apos;s app icon whenever an exchange request needs your action.
+            </p>
+
+            <div className="p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl border border-zinc-200/80 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5">
+                <div className="relative shrink-0">
+                  <div className="w-9 h-9 rounded-xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 flex items-center justify-center shadow-xs">
+                    <Bell className="w-4 h-4" />
+                  </div>
+                  <span className="absolute -top-1 -right-1 flex h-4 min-w-4 px-1 items-center justify-center rounded-full bg-rose-600 text-[10px] font-bold text-white shadow-xs">
+                    1
+                  </span>
+                </div>
+                <div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs font-semibold text-zinc-900 dark:text-zinc-100">
+                      Icon Counter Status:
+                    </span>
+                    {permissionStatus === 'granted' ? (
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400">
+                        <Check className="w-3 h-3" />
+                        Enabled & Synced
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300">
+                        Permission Required
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-zinc-500 mt-0.5">
+                    {permissionStatus === 'granted'
+                      ? 'Badges will appear natively on your iPhone & Android home screens.'
+                      : 'iOS & Android require notification permissions to badge the app icon.'}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleEnableBadges}
+                className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-zinc-900 dark:bg-zinc-100 hover:bg-zinc-800 dark:hover:bg-zinc-200 text-white dark:text-zinc-900 rounded-lg text-xs font-semibold transition-colors shrink-0 shadow-xs"
+              >
+                {isSyncingBadge ? (
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                ) : badgeSynced ? (
+                  <Check className="w-3.5 h-3.5 text-emerald-500" />
+                ) : (
+                  <Bell className="w-3.5 h-3.5" />
+                )}
+                <span>
+                  {badgeSynced
+                    ? 'Badge Synced!'
+                    : isSyncingBadge
+                    ? 'Syncing...'
+                    : permissionStatus === 'granted'
+                    ? 'Sync Badge Now'
+                    : 'Enable App Badges'}
+                </span>
+              </button>
+            </div>
           </div>
 
           {/* Visual Portfolio Note */}

@@ -15,8 +15,10 @@ import {
   Copy,
   Zap,
   ShieldCheck,
-  PackageCheck
+  PackageCheck,
+  Bell
 } from 'lucide-react';
+import { requestBadgeNotificationPermission, getNotificationPermissionStatus } from '@/lib/badgeManager';
 
 interface BorrowModalProps {
   game: Game | null;
@@ -44,6 +46,7 @@ export const BorrowModal: React.FC<BorrowModalProps> = ({
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [submittedRequester, setSubmittedRequester] = useState('');
   const [copied, setCopied] = useState(false);
+  const [permissionStatus, setPermissionStatus] = useState<string>('default');
 
   // Group that currently holds the game
   const currentHolder = game
@@ -52,6 +55,7 @@ export const BorrowModal: React.FC<BorrowModalProps> = ({
 
   useEffect(() => {
     if (isOpen) {
+      setPermissionStatus(getNotificationPermissionStatus());
       if (activeHousehold) {
         setBorrower(activeHousehold);
       } else {
@@ -216,6 +220,28 @@ export const BorrowModal: React.FC<BorrowModalProps> = ({
                 )}
               </button>
             </div>
+
+            {/* Phone Home Screen Badge Prompt if permission not yet granted */}
+            {permissionStatus !== 'granted' && permissionStatus !== 'unsupported' && (
+              <div className="p-3 bg-zinc-50 dark:bg-zinc-800/60 rounded-xl border border-zinc-200 dark:border-zinc-800 flex items-center justify-between gap-2.5 text-xs">
+                <div className="flex items-center gap-2 min-w-0">
+                  <Bell className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
+                  <span className="text-zinc-700 dark:text-zinc-300 text-[11px]">
+                    Show red notification badge on your phone&apos;s app icon?
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const ok = await requestBadgeNotificationPermission();
+                    if (ok) setPermissionStatus('granted');
+                  }}
+                  className="px-2.5 py-1.5 bg-rose-600 hover:bg-rose-700 active:scale-95 text-white font-bold rounded-lg text-[11px] shrink-0 shadow-xs transition-colors"
+                >
+                  Enable Badge
+                </button>
+              </div>
+            )}
 
             <div className="pt-2 flex justify-end">
               <button
