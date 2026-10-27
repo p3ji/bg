@@ -83,14 +83,16 @@ export const GameCard: React.FC<GameCardProps> = ({
         {/* Floating Status Badge */}
         <div className="absolute top-2 left-2 sm:top-2.5 sm:left-2.5 z-20 flex flex-col gap-1 items-start">
           {isAvailable ? (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-[10px] sm:text-[11px] font-bold bg-emerald-500/90 text-white backdrop-blur-xs shadow-xs">
-              <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-              Available
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-[10px] sm:text-[11px] font-bold bg-emerald-600/95 text-white backdrop-blur-xs shadow-xs">
+              <span className="w-1.5 h-1.5 rounded-full bg-white" />
+              <span className="truncate max-w-[110px] sm:max-w-none">
+                With {game.owner}
+              </span>
             </span>
           ) : (
             <span className="inline-flex items-center gap-1 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-[10px] sm:text-[11px] font-bold bg-amber-500/95 text-white backdrop-blur-xs shadow-xs">
               <Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-              <span className="truncate max-w-[95px] sm:max-w-none">
+              <span className="truncate max-w-[110px] sm:max-w-none">
                 With {game.currentBorrower}
               </span>
             </span>
@@ -134,12 +136,9 @@ export const GameCard: React.FC<GameCardProps> = ({
       <div className="flex-1 p-2.5 sm:p-3.5 flex flex-col justify-between gap-2 sm:gap-3">
         
         <div>
-          {/* Owner & Type line */}
+          {/* Type tag (no redundant owner line on home page) */}
           <div className="flex items-center justify-between text-[10px] sm:text-[11px] text-zinc-500 dark:text-zinc-400 mb-1">
-            <span className="font-semibold text-zinc-700 dark:text-zinc-300 truncate max-w-[110px] sm:max-w-[170px]" title={game.owner}>
-              {game.owner}
-            </span>
-            <span className="px-1.5 py-0.2 rounded bg-zinc-100 dark:bg-zinc-800 text-[9px] sm:text-[10px] font-medium shrink-0">
+            <span className="px-1.5 py-0.2 rounded bg-zinc-100 dark:bg-zinc-800 text-[9px] sm:text-[10px] font-medium">
               {game.type}
             </span>
           </div>

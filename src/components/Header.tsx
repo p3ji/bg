@@ -72,7 +72,7 @@ export const Header: React.FC<HeaderProps> = ({
                   GameShare
                 </h1>
                 <p className="text-[10px] text-zinc-500 font-medium sm:hidden">
-                  {totalGames} games • {availableCount} avail
+                  {totalGames} games
                 </p>
               </div>
             </div>
@@ -83,7 +83,7 @@ export const Header: React.FC<HeaderProps> = ({
               <span className="text-zinc-400">•</span>
               <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
                 <CheckCircle2 className="w-3.5 h-3.5" />
-                <span className="font-semibold">{availableCount}</span> available
+                <span className="font-semibold">{availableCount}</span> with owners
               </span>
               <span className="text-zinc-400">•</span>
               <span className="flex items-center gap-1 text-amber-600 dark:text-amber-400">

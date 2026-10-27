@@ -137,7 +137,7 @@ export const TableView: React.FC<TableViewProps> = ({
                   </div>
 
                   <p className="text-[11px] text-zinc-500 mt-0.5 flex items-center gap-2 flex-wrap">
-                    <span>{game.owner}</span>
+                    <span>{game.type}</span>
                     <span>•</span>
                     <span>{game.minPlayers === game.maxPlayers ? `${game.minPlayers}p` : `${game.minPlayers}–${game.maxPlayers}p`}</span>
                     <span>•</span>
@@ -154,7 +154,7 @@ export const TableView: React.FC<TableViewProps> = ({
                     </span>
                   ) : isAvailable ? (
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-                      Available
+                      With {game.owner}
                     </span>
                   ) : (
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
@@ -247,7 +247,6 @@ export const TableView: React.FC<TableViewProps> = ({
                 <th className="py-3 px-3">Playtime</th>
                 <th className="py-3 px-3">Type</th>
                 <th className="py-3 px-3">Weight</th>
-                <th className="py-3 px-3">Owner</th>
                 <th className="py-3 px-3">Status</th>
                 <th className="py-3 px-4 text-right">Actions</th>
               </tr>
@@ -335,11 +334,6 @@ export const TableView: React.FC<TableViewProps> = ({
                       {game.weight ? `${game.weight} / 5` : '—'}
                     </td>
 
-                    {/* Owner Household */}
-                    <td className="py-3 px-3 font-semibold text-zinc-800 dark:text-zinc-200">
-                      {game.owner}
-                    </td>
-
                     {/* Status & Borrower */}
                     <td className="py-3 px-3">
                       {activeExchange ? (
@@ -357,7 +351,7 @@ export const TableView: React.FC<TableViewProps> = ({
                       ) : isAvailable ? (
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60">
                           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                          Available
+                          With {game.owner}
                         </span>
                       ) : (
                         <div className="flex flex-col gap-0.5">
