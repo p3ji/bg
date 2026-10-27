@@ -13,6 +13,18 @@ import {
   getActiveHousehold,
   saveActiveHousehold
 } from '@/lib/storage';
+import { 
+  subscribeToCloudGames, 
+  subscribeToCloudRequests, 
+  subscribeToCloudHouseholds,
+  saveGameToCloud,
+  saveGamesBatchToCloud,
+  saveRequestToCloud,
+  deleteRequestFromCloud,
+  saveHouseholdsToCloud,
+  seedCloudDatabaseIfNeeded
+} from '@/lib/firebase';
+import { DEFAULT_FRIENDS } from '@/data/friends';
 import { registerServiceWorker, updateHomeScreenAppBadge } from '@/lib/badgeManager';
 import { Header } from '@/components/Header';
 import { FilterBar } from '@/components/FilterBar';
@@ -68,9 +80,13 @@ export default function HomePage() {
 
   // Initialize data on mount
   useEffect(() => {
-    setGames(getInitialGames());
-    setRequests(getInitialRequests());
-    setFriends(getInitialFriends());
+    const initialGames = getInitialGames();
+    const initialRequests = getInitialRequests();
+    const initialFriends = getInitialFriends();
+
+    setGames(initialGames);
+    setRequests(initialRequests);
+    setFriends(initialFriends);
 
     const savedIdentity = getActiveHousehold();
     setActiveHousehold(savedIdentity);
@@ -80,6 +96,29 @@ export default function HomePage() {
     }
     setMounted(true);
     registerServiceWorker();
+
+    // Auto-seed Firestore on first connect if cloud database is empty
+    seedCloudDatabaseIfNeeded(initialGames, DEFAULT_FRIENDS).catch(() => {});
+
+    // Real-time Cloud Firestore Subscriptions across all friend devices
+    const unsubCloudGames = subscribeToCloudGames((cloudGames) => {
+      if (cloudGames && cloudGames.length > 0) {
+        setGames(cloudGames);
+        saveGames(cloudGames);
+      }
+    });
+
+    const unsubCloudRequests = subscribeToCloudRequests((cloudRequests) => {
+      setRequests(cloudRequests);
+      saveRequests(cloudRequests);
+    });
+
+    const unsubCloudHouseholds = subscribeToCloudHouseholds((cloudFriends) => {
+      if (cloudFriends && cloudFriends.length > 0) {
+        setFriends(cloudFriends);
+        saveFriends(cloudFriends);
+      }
+    });
 
     const handleGamesUpdate = () => setGames(getInitialGames());
     const handleRequestsUpdate = () => setRequests(getInitialRequests());
@@ -92,6 +131,9 @@ export default function HomePage() {
     window.addEventListener('bg_identity_updated', handleIdentityUpdate);
 
     return () => {
+      unsubCloudGames();
+      unsubCloudRequests();
+      unsubCloudHouseholds();
       window.removeEventListener('bg_games_updated', handleGamesUpdate);
       window.removeEventListener('bg_requests_updated', handleRequestsUpdate);
       window.removeEventListener('bg_friends_updated', handleFriendsUpdate);
@@ -209,6 +251,10 @@ export default function HomePage() {
     setRequests(updatedRequests);
     saveRequests(updatedRequests);
 
+    const updatedGame = updatedGames.find((g) => g.id === gameId);
+    if (updatedGame) saveGameToCloud(updatedGame);
+    updatedRequests.filter((r) => r.gameId === gameId).forEach((r) => saveRequestToCloud(r));
+
     // Auto-update selectedGame if open
     if (selectedGame?.id === gameId) {
       setSelectedGame(updatedGames.find((g) => g.id === gameId) || null);
@@ -242,6 +288,9 @@ export default function HomePage() {
     setGames(updatedGames);
     saveGames(updatedGames);
 
+    const updatedGame = updatedGames.find((g) => g.id === gameId);
+    if (updatedGame) saveGameToCloud(updatedGame);
+
     if (selectedGame?.id === gameId) {
       setSelectedGame(updatedGames.find((g) => g.id === gameId) || null);
     }
@@ -271,6 +320,7 @@ export default function HomePage() {
     const updatedRequests = [newRequest, ...requests];
     setRequests(updatedRequests);
     saveRequests(updatedRequests);
+    saveRequestToCloud(newRequest);
 
     // Prompt for Web Notification & App Badge permission if not yet requested
     if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
@@ -287,6 +337,9 @@ export default function HomePage() {
 
     setGames(updatedGames);
     saveGames(updatedGames);
+
+    const updatedGame = updatedGames.find((g) => g.id === gameId);
+    if (updatedGame) saveGameToCloud(updatedGame);
 
     if (selectedGame?.id === gameId) {
       setSelectedGame(updatedGames.find((g) => g.id === gameId) || null);
@@ -305,6 +358,9 @@ export default function HomePage() {
     setRequests(updatedRequests);
     saveRequests(updatedRequests);
 
+    const updatedReq = updatedRequests.find((r) => r.id === requestId);
+    if (updatedReq) saveRequestToCloud(updatedReq);
+
     const updatedGames = games.map((g) => {
       if (g.id !== req.gameId) return g;
       return {
@@ -316,6 +372,9 @@ export default function HomePage() {
     });
     setGames(updatedGames);
     saveGames(updatedGames);
+
+    const updatedGame = updatedGames.find((g) => g.id === req.gameId);
+    if (updatedGame) saveGameToCloud(updatedGame);
 
     if (selectedGame?.id === req.gameId) {
       setSelectedGame(updatedGames.find((g) => g.id === req.gameId) || null);
@@ -367,6 +426,10 @@ export default function HomePage() {
     setRequests(updatedRequests);
     saveRequests(updatedRequests);
 
+    const updatedReq = updatedRequests.find((r) => r.id === requestId);
+    if (updatedReq) saveRequestToCloud(updatedReq);
+    saveGameToCloud(updatedGame);
+
     if (selectedGame?.id === targetGame.id) {
       setSelectedGame(updatedGame);
     }
@@ -376,6 +439,7 @@ export default function HomePage() {
     const updatedRequests = requests.map((r) => (r.id === requestId ? { ...r, status: 'cancelled' as const } : r));
     setRequests(updatedRequests);
     saveRequests(updatedRequests);
+    deleteRequestFromCloud(requestId);
 
     const req = requests.find((r) => r.id === requestId);
     if (req) {
@@ -390,6 +454,9 @@ export default function HomePage() {
       });
       setGames(updatedGames);
       saveGames(updatedGames);
+
+      const updatedGame = updatedGames.find((g) => g.id === req.gameId);
+      if (updatedGame) saveGameToCloud(updatedGame);
 
       if (selectedGame?.id === req.gameId) {
         setSelectedGame(updatedGames.find((g) => g.id === req.gameId) || null);
@@ -411,6 +478,7 @@ export default function HomePage() {
     const updated = [newGame, ...games];
     setGames(updated);
     saveGames(updated);
+    saveGameToCloud(newGame);
   };
 
   const handleBatchImportGames = (importedGames: Omit<Game, 'id' | 'status' | 'history'>[]) => {
@@ -427,11 +495,13 @@ export default function HomePage() {
     const updated = [...createdGames, ...games];
     setGames(updated);
     saveGames(updated);
+    saveGamesBatchToCloud(createdGames);
   };
 
   const handleUpdateFriends = (updatedFriends: string[]) => {
     setFriends(updatedFriends);
     saveFriends(updatedFriends);
+    saveHouseholdsToCloud(updatedFriends);
   };
 
   const handleResetLibrary = () => {
@@ -455,6 +525,7 @@ export default function HomePage() {
     const nextGames = games.map((g) => (g.id === updatedGame.id ? updatedGame : g));
     setGames(nextGames);
     saveGames(nextGames);
+    saveGameToCloud(updatedGame);
     if (selectedGame && selectedGame.id === updatedGame.id) {
       setSelectedGame(updatedGame);
     }

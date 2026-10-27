@@ -286,6 +286,22 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             </div>
           </div>
 
+          {/* Cloud Database Sync Status */}
+          <div className="pt-4 border-t border-zinc-200 dark:border-zinc-800">
+            <div className="flex items-center justify-between mb-1">
+              <h4 className="text-xs font-bold text-zinc-900 dark:text-zinc-100 uppercase tracking-wider">
+                Cloud Database Sync
+              </h4>
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400">
+                <Check className="w-3 h-3" />
+                Live Firestore
+              </span>
+            </div>
+            <p className="text-xs text-zinc-500">
+              Connected to <strong className="font-mono text-zinc-800 dark:text-zinc-200">gameshare-d5fe0</strong>. Additions, borrow handshakes, and library changes sync live across all households.
+            </p>
+          </div>
+
           {/* Visual Portfolio Note */}
           <div className="pt-4 border-t border-zinc-200 dark:border-zinc-800">
             <div className="p-3.5 bg-gradient-to-r from-indigo-50/70 via-purple-50/50 to-pink-50/40 dark:from-indigo-950/40 dark:via-purple-950/30 dark:to-pink-950/20 border border-indigo-100 dark:border-indigo-900/60 rounded-xl flex items-center justify-between gap-3">
