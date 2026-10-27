@@ -389,6 +389,22 @@ export default function HomePage() {
     const req = requests.find((r) => r.id === requestId);
     if (!req) return;
 
+    // Strict profile authorization check: Only the current holder can accept
+    const isSelfTest = normalizeName(req.holderName) === normalizeName(req.requesterName);
+    const isAuthorized = Boolean(
+      isSelfTest || (activeHousehold && normalizeName(activeHousehold) === normalizeName(req.holderName))
+    );
+
+    if (!isAuthorized) {
+      if (!activeHousehold) {
+        setIsFirstIdentityPrompt(false);
+        setIsIdentityModalOpen(true);
+      } else {
+        alert(`Only ${req.holderName} can accept this borrow request. Your profile is currently set to ${activeHousehold}.`);
+      }
+      return;
+    }
+
     const nowIso = new Date().toISOString();
     const updatedRequests = requests.map((r) =>
       r.id === requestId ? { ...r, status: 'accepted' as const, acceptedAt: nowIso } : r
@@ -423,6 +439,22 @@ export default function HomePage() {
   const handleConfirmExchange = (requestId: string) => {
     const req = requests.find((r) => r.id === requestId);
     if (!req) return;
+
+    // Strict profile authorization check: Only the requester can confirm receipt
+    const isSelfTest = normalizeName(req.holderName) === normalizeName(req.requesterName);
+    const isAuthorized = Boolean(
+      isSelfTest || (activeHousehold && normalizeName(activeHousehold) === normalizeName(req.requesterName))
+    );
+
+    if (!isAuthorized) {
+      if (!activeHousehold) {
+        setIsFirstIdentityPrompt(false);
+        setIsIdentityModalOpen(true);
+      } else {
+        alert(`Only ${req.requesterName} can confirm receipt of this game. Your profile is currently set to ${activeHousehold}.`);
+      }
+      return;
+    }
 
     const targetGame = games.find((g) => g.id === req.gameId);
     if (!targetGame) return;
@@ -569,6 +601,16 @@ export default function HomePage() {
     }
   };
 
+  const handleInitiateBorrow = (game: Game) => {
+    if (!activeHousehold) {
+      setBorrowingGame(game);
+      setIsFirstIdentityPrompt(false);
+      setIsIdentityModalOpen(true);
+      return;
+    }
+    setBorrowingGame(game);
+  };
+
   const handleSelectHousehold = (household: string) => {
     saveActiveHousehold(household);
     setActiveHousehold(household);
@@ -633,9 +675,9 @@ export default function HomePage() {
             activeHousehold={filters.owner}
             activeHouseholdUser={activeHousehold}
             onSelectGame={setSelectedGame}
-            onBorrow={setBorrowingGame}
+            onBorrow={handleInitiateBorrow}
             onReturn={setReturningGame}
-            onRequestBorrow={setBorrowingGame}
+            onRequestBorrow={handleInitiateBorrow}
             onAcceptExchange={handleAcceptExchange}
             onConfirmExchange={handleConfirmExchange}
             onResetFilters={() => setFilters(initialFilters)}
@@ -649,9 +691,9 @@ export default function HomePage() {
             activeHousehold={filters.owner}
             activeHouseholdUser={activeHousehold}
             onSelectGame={setSelectedGame}
-            onBorrow={setBorrowingGame}
+            onBorrow={handleInitiateBorrow}
             onReturn={setReturningGame}
-            onRequestBorrow={setBorrowingGame}
+            onRequestBorrow={handleInitiateBorrow}
             onAcceptExchange={handleAcceptExchange}
             onConfirmExchange={handleConfirmExchange}
             onResetFilters={() => setFilters(initialFilters)}
@@ -667,9 +709,9 @@ export default function HomePage() {
         activeHousehold={activeHousehold}
         isOpen={Boolean(selectedGame)}
         onClose={() => setSelectedGame(null)}
-        onBorrow={setBorrowingGame}
+        onBorrow={handleInitiateBorrow}
         onReturn={setReturningGame}
-        onRequestBorrow={setBorrowingGame}
+        onRequestBorrow={handleInitiateBorrow}
         onAcceptExchange={handleAcceptExchange}
         onConfirmExchange={handleConfirmExchange}
         onEdit={setEditingGame}

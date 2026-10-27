@@ -126,8 +126,8 @@ export const TableView: React.FC<TableViewProps> = ({
             );
 
           const isSelfTest = Boolean(activeExchange && normalizeName(activeExchange.holderName) === normalizeName(activeExchange.requesterName));
-          const isUserHolder = Boolean(activeExchange && (isSelfTest || !activeHouseholdUser || normalizeName(activeHouseholdUser) === normalizeName(activeExchange.holderName)));
-          const isUserRequester = Boolean(activeExchange && (isSelfTest || !activeHouseholdUser || normalizeName(activeHouseholdUser) === normalizeName(activeExchange.requesterName)));
+          const isUserHolder = Boolean(activeExchange && (isSelfTest || (activeHouseholdUser && normalizeName(activeHouseholdUser) === normalizeName(activeExchange.holderName))));
+          const isUserRequester = Boolean(activeExchange && (isSelfTest || (activeHouseholdUser && normalizeName(activeHouseholdUser) === normalizeName(activeExchange.requesterName))));
 
           return (
             <div
@@ -192,23 +192,35 @@ export const TableView: React.FC<TableViewProps> = ({
                       <button
                         type="button"
                         onClick={() => {
-                          if (onAcceptExchange) onAcceptExchange(activeExchange.id);
+                          if (isUserHolder && onAcceptExchange) onAcceptExchange(activeExchange.id);
                           else onSelectGame(game);
                         }}
-                        className="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold"
+                        disabled={!isUserHolder}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-semibold ${
+                          isUserHolder
+                            ? 'bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer active:scale-95'
+                            : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 border border-zinc-200 dark:border-zinc-700 cursor-not-allowed'
+                        }`}
+                        title={isUserHolder ? "Holder can accept exchange" : `Only ${activeExchange.holderName} can accept`}
                       >
-                        {isUserHolder ? 'Accept' : 'Pending'}
+                        {isUserHolder ? 'Accept' : `Wait (${activeExchange.holderName})`}
                       </button>
                     ) : (
                       <button
                         type="button"
                         onClick={() => {
-                          if (onConfirmExchange) onConfirmExchange(activeExchange.id);
+                          if (isUserRequester && onConfirmExchange) onConfirmExchange(activeExchange.id);
                           else onSelectGame(game);
                         }}
-                        className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold"
+                        disabled={!isUserRequester}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-semibold ${
+                          isUserRequester
+                            ? 'bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer active:scale-95'
+                            : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 border border-zinc-200 dark:border-zinc-700 cursor-not-allowed'
+                        }`}
+                        title={isUserRequester ? "Confirm receipt to finish exchange" : `Only ${activeExchange.requesterName} can confirm`}
                       >
-                        {isUserRequester ? 'Confirm' : 'Awaiting'}
+                        {isUserRequester ? 'Confirm' : `Wait (${activeExchange.requesterName})`}
                       </button>
                     )
                   ) : isAvailable ? (
@@ -277,8 +289,8 @@ export const TableView: React.FC<TableViewProps> = ({
                   );
 
                 const isSelfTest = Boolean(activeExchange && normalizeName(activeExchange.holderName) === normalizeName(activeExchange.requesterName));
-                const isUserHolder = Boolean(activeExchange && (isSelfTest || !activeHouseholdUser || normalizeName(activeHouseholdUser) === normalizeName(activeExchange.holderName)));
-                const isUserRequester = Boolean(activeExchange && (isSelfTest || !activeHouseholdUser || normalizeName(activeHouseholdUser) === normalizeName(activeExchange.requesterName)));
+                const isUserHolder = Boolean(activeExchange && (isSelfTest || (activeHouseholdUser && normalizeName(activeHouseholdUser) === normalizeName(activeExchange.holderName))));
+                const isUserRequester = Boolean(activeExchange && (isSelfTest || (activeHouseholdUser && normalizeName(activeHouseholdUser) === normalizeName(activeExchange.requesterName))));
 
                 return (
                   <tr 
@@ -392,41 +404,43 @@ export const TableView: React.FC<TableViewProps> = ({
                             <button
                               type="button"
                               onClick={() => {
-                                if (onAcceptExchange) {
+                                if (isUserHolder && onAcceptExchange) {
                                   onAcceptExchange(activeExchange.id);
                                 } else {
                                   onSelectGame(game);
                                 }
                               }}
+                              disabled={!isUserHolder}
                               className={`inline-flex items-center gap-1 px-2.5 py-1 rounded text-xs font-semibold shadow-xs transition-colors ${
                                 isUserHolder
-                                  ? 'bg-indigo-600 hover:bg-indigo-700 text-white'
-                                  : 'bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300'
+                                  ? 'bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer active:scale-95'
+                                  : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 border border-zinc-200 dark:border-zinc-700 cursor-not-allowed'
                               }`}
-                              title="Accept exchange hand-off"
+                              title={isUserHolder ? "Accept exchange hand-off" : `Only ${activeExchange.holderName} can accept`}
                             >
                               <ArrowRightLeft className="w-3 h-3" />
-                              {isUserHolder ? 'Accept Exchange' : 'Pending Accept'}
+                              {isUserHolder ? 'Accept Exchange' : `Wait (${activeExchange.holderName})`}
                             </button>
                           ) : (
                             <button
                               type="button"
                               onClick={() => {
-                                if (onConfirmExchange) {
+                                if (isUserRequester && onConfirmExchange) {
                                   onConfirmExchange(activeExchange.id);
                                 } else {
                                   onSelectGame(game);
                                 }
                               }}
+                              disabled={!isUserRequester}
                               className={`inline-flex items-center gap-1 px-2.5 py-1 rounded text-xs font-semibold shadow-xs transition-colors ${
                                 isUserRequester
-                                  ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
-                                  : 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300'
+                                  ? 'bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer active:scale-95'
+                                  : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 border border-zinc-200 dark:border-zinc-700 cursor-not-allowed'
                               }`}
-                              title="Confirm receipt of game"
+                              title={isUserRequester ? "Confirm receipt of game" : `Only ${activeExchange.requesterName} can confirm receipt`}
                             >
                               <Check className="w-3 h-3" />
-                              {isUserRequester ? 'Confirm Received' : 'Awaiting Receipt'}
+                              {isUserRequester ? 'Confirm Received' : `Wait (${activeExchange.requesterName})`}
                             </button>
                           )
                         ) : isAvailable ? (

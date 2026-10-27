@@ -82,8 +82,14 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
     }
   };
 
-  const isUserHolder = activeHousehold && activeExchange && activeHousehold.toLowerCase() === activeExchange.holderName.toLowerCase();
-  const isUserRequester = activeHousehold && activeExchange && activeHousehold.toLowerCase() === activeExchange.requesterName.toLowerCase();
+  const normalizeName = (name?: string | null) => {
+    if (!name) return '';
+    return name.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]/g, '');
+  };
+
+  const isSelfTest = Boolean(activeExchange && normalizeName(activeExchange.holderName) === normalizeName(activeExchange.requesterName));
+  const isUserHolder = Boolean(activeExchange && (isSelfTest || (activeHousehold && normalizeName(activeHousehold) === normalizeName(activeExchange.holderName))));
+  const isUserRequester = Boolean(activeExchange && (isSelfTest || (activeHousehold && normalizeName(activeHousehold) === normalizeName(activeExchange.requesterName))));
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-xs">
@@ -243,40 +249,52 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
 
                     {/* Step guidance & action */}
                     {activeExchange.status === 'pending' ? (
-                      <div className="pt-1 flex items-center justify-between gap-2">
+                      <div className="pt-1 flex items-center justify-between gap-2 flex-wrap">
                         <span className="text-[11px] text-amber-700 dark:text-amber-300 font-medium">
                           Waiting for <strong>{activeExchange.holderName}</strong> to accept
                         </span>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (onAcceptExchange) {
-                              onAcceptExchange(activeExchange.id);
-                            }
-                          }}
-                          className="flex items-center gap-1 px-3 py-1.5 bg-zinc-900 dark:bg-zinc-100 hover:bg-zinc-800 dark:hover:bg-zinc-200 text-white dark:text-zinc-900 rounded-lg text-xs font-semibold shadow-xs transition-colors"
-                        >
-                          <ArrowRightLeft className="w-3.5 h-3.5 text-indigo-400 dark:text-indigo-600" />
-                          Accept & Execute Exchange
-                        </button>
+                        {isUserHolder ? (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (onAcceptExchange) {
+                                onAcceptExchange(activeExchange.id);
+                              }
+                            }}
+                            className="flex items-center gap-1 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold shadow-xs transition-colors active:scale-95 cursor-pointer"
+                          >
+                            <ArrowRightLeft className="w-3.5 h-3.5" />
+                            Accept & Execute Exchange
+                          </button>
+                        ) : (
+                          <span className="text-[10px] font-semibold text-zinc-500 bg-zinc-100 dark:bg-zinc-800 px-2 py-1 rounded-md border border-zinc-200 dark:border-zinc-700">
+                            Only {activeExchange.holderName} can accept
+                          </span>
+                        )}
                       </div>
                     ) : (
-                      <div className="pt-1 flex items-center justify-between gap-2">
+                      <div className="pt-1 flex items-center justify-between gap-2 flex-wrap">
                         <span className="text-[11px] text-emerald-700 dark:text-emerald-300 font-medium">
                           <strong>{activeExchange.holderName}</strong> accepted! Confirm receipt:
                         </span>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (onConfirmExchange) {
-                              onConfirmExchange(activeExchange.id);
-                            }
-                          }}
-                          className="flex items-center gap-1 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold shadow-xs transition-colors"
-                        >
-                          <Check className="w-3.5 h-3.5" />
-                          Confirm Received
-                        </button>
+                        {isUserRequester ? (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (onConfirmExchange) {
+                                onConfirmExchange(activeExchange.id);
+                              }
+                            }}
+                            className="flex items-center gap-1 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold shadow-xs transition-colors active:scale-95 cursor-pointer"
+                          >
+                            <Check className="w-3.5 h-3.5" />
+                            Confirm Received
+                          </button>
+                        ) : (
+                          <span className="text-[10px] font-semibold text-zinc-500 bg-zinc-100 dark:bg-zinc-800 px-2 py-1 rounded-md border border-zinc-200 dark:border-zinc-700">
+                            Only {activeExchange.requesterName} can confirm
+                          </span>
+                        )}
                       </div>
                     )}
                   </div>

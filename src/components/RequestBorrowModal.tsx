@@ -36,9 +36,14 @@ export const RequestBorrowModal: React.FC<RequestBorrowModalProps> = ({
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [copied, setCopied] = useState(false);
 
+  const normalizeName = (name?: string | null) => {
+    if (!name) return '';
+    return name.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]/g, '');
+  };
+
   useEffect(() => {
     if (isOpen) {
-      if (activeHousehold && activeHousehold !== game?.currentBorrower) {
+      if (activeHousehold && normalizeName(activeHousehold) !== normalizeName(game?.currentBorrower)) {
         setRequester(activeHousehold);
       } else {
         setRequester('');
@@ -132,7 +137,7 @@ export const RequestBorrowModal: React.FC<RequestBorrowModalProps> = ({
               </label>
               <div className="flex flex-wrap gap-1.5 mb-2">
                 {friends.filter((f) => f !== holder).map((f) => {
-                  const isSelected = requester === f;
+                  const isSelected = normalizeName(requester) === normalizeName(f);
                   return (
                     <button
                       key={f}

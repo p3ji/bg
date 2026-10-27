@@ -48,6 +48,11 @@ export const BorrowModal: React.FC<BorrowModalProps> = ({
   const [copied, setCopied] = useState(false);
   const [permissionStatus, setPermissionStatus] = useState<string>('default');
 
+  const normalizeName = (name?: string | null) => {
+    if (!name) return '';
+    return name.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]/g, '');
+  };
+
   // Group that currently holds the game
   const currentHolder = game
     ? (game.status === 'borrowed' && game.currentBorrower ? game.currentBorrower : game.owner)
@@ -295,8 +300,8 @@ export const BorrowModal: React.FC<BorrowModalProps> = ({
               </label>
               <div className="flex flex-wrap gap-1.5 mb-2">
                 {friends.map((f) => {
-                  const isCurrentHolder = f.toLowerCase() === currentHolder.toLowerCase();
-                  const isSelected = borrower === f;
+                  const isCurrentHolder = normalizeName(f) === normalizeName(currentHolder);
+                  const isSelected = normalizeName(borrower) === normalizeName(f);
                   return (
                     <button
                       key={f}

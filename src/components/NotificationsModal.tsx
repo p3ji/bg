@@ -97,8 +97,8 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
     const isAwaitingRequester = req.status === 'accepted';
 
     const isSelfTest = Boolean(normalizeName(req.holderName) === normalizeName(req.requesterName));
-    const isCurrentUserHolder = Boolean(isSelfTest || !activeHousehold || normalizeName(activeHousehold) === normalizeName(req.holderName));
-    const isCurrentUserRequester = Boolean(isSelfTest || !activeHousehold || normalizeName(activeHousehold) === normalizeName(req.requesterName));
+    const isCurrentUserHolder = Boolean(isSelfTest || (activeHousehold && normalizeName(activeHousehold) === normalizeName(req.holderName)));
+    const isCurrentUserRequester = Boolean(isSelfTest || (activeHousehold && normalizeName(activeHousehold) === normalizeName(req.requesterName)));
 
     return (
       <div
@@ -243,12 +243,18 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
             {isPendingHolder ? (
               <button
                 type="button"
-                onClick={() => onAcceptExchange(req.id)}
+                onClick={() => {
+                  if (isCurrentUserHolder) {
+                    onAcceptExchange(req.id);
+                  }
+                }}
+                disabled={!isCurrentUserHolder}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold shadow-xs transition-colors ${
                   isCurrentUserHolder
-                    ? 'bg-indigo-600 hover:bg-indigo-700 text-white'
-                    : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-300'
+                    ? 'bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer active:scale-95'
+                    : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 cursor-not-allowed border border-zinc-200 dark:border-zinc-700'
                 }`}
+                title={isCurrentUserHolder ? "Accept and execute exchange" : `Only ${req.holderName} can accept`}
               >
                 <ArrowRightLeft className="w-3.5 h-3.5" />
                 <span>{isCurrentUserHolder ? 'Accept & Execute Exchange' : `Awaiting ${req.holderName}`}</span>
@@ -256,12 +262,18 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
             ) : (
               <button
                 type="button"
-                onClick={() => onConfirmExchange(req.id)}
+                onClick={() => {
+                  if (isCurrentUserRequester) {
+                    onConfirmExchange(req.id);
+                  }
+                }}
+                disabled={!isCurrentUserRequester}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold shadow-xs transition-colors ${
                   isCurrentUserRequester
-                    ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
-                    : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-300'
+                    ? 'bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer active:scale-95'
+                    : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 cursor-not-allowed border border-zinc-200 dark:border-zinc-700'
                 }`}
+                title={isCurrentUserRequester ? "Confirm receipt to finish transfer" : `Only ${req.requesterName} can confirm receipt`}
               >
                 <Check className="w-3.5 h-3.5" />
                 <span>{isCurrentUserRequester ? 'Confirm Received & Transfer' : `Awaiting ${req.requesterName}`}</span>

@@ -70,8 +70,8 @@ export const GameCard: React.FC<GameCardProps> = ({
   };
 
   const isSelfTest = Boolean(activeExchange && normalizeName(activeExchange.holderName) === normalizeName(activeExchange.requesterName));
-  const isUserHolder = Boolean(activeExchange && (isSelfTest || !activeHousehold || normalizeName(activeHousehold) === normalizeName(activeExchange.holderName)));
-  const isUserRequester = Boolean(activeExchange && (isSelfTest || !activeHousehold || normalizeName(activeHousehold) === normalizeName(activeExchange.requesterName)));
+  const isUserHolder = Boolean(activeExchange && (isSelfTest || (activeHousehold && normalizeName(activeHousehold) === normalizeName(activeExchange.holderName))));
+  const isUserRequester = Boolean(activeExchange && (isSelfTest || (activeHousehold && normalizeName(activeHousehold) === normalizeName(activeExchange.requesterName))));
 
   return (
     <div className="group flex flex-col bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden hover:shadow-lg hover:border-zinc-300 dark:hover:border-zinc-700 transition-all duration-200">
@@ -202,41 +202,43 @@ export const GameCard: React.FC<GameCardProps> = ({
               <button
                 type="button"
                 onClick={() => {
-                  if (onAcceptExchange) {
+                  if (isUserHolder && onAcceptExchange) {
                     onAcceptExchange(activeExchange.id);
                   } else {
                     onSelectGame(game);
                   }
                 }}
+                disabled={!isUserHolder}
                 className={`flex-1 min-h-[34px] flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg text-xs font-semibold shadow-xs transition-colors ${
                   isUserHolder
-                    ? 'bg-indigo-600 hover:bg-indigo-700 text-white'
-                    : 'bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800'
+                    ? 'bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer active:scale-95'
+                    : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 border border-zinc-200 dark:border-zinc-700 cursor-not-allowed'
                 }`}
-                title="Holder can accept and execute exchange"
+                title={isUserHolder ? "Holder can accept and execute exchange" : `Only ${activeExchange.holderName} can accept`}
               >
                 <ArrowRightLeft className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" />
-                <span className="truncate">{isUserHolder ? 'Accept' : 'Pending'}</span>
+                <span className="truncate">{isUserHolder ? 'Accept' : `Wait (${activeExchange.holderName})`}</span>
               </button>
             ) : (
               <button
                 type="button"
                 onClick={() => {
-                  if (onConfirmExchange) {
+                  if (isUserRequester && onConfirmExchange) {
                     onConfirmExchange(activeExchange.id);
                   } else {
                     onSelectGame(game);
                   }
                 }}
+                disabled={!isUserRequester}
                 className={`flex-1 min-h-[34px] flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg text-xs font-semibold shadow-xs transition-colors ${
                   isUserRequester
-                    ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
-                    : 'bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
+                    ? 'bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer active:scale-95'
+                    : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 border border-zinc-200 dark:border-zinc-700 cursor-not-allowed'
                 }`}
-                title="Borrower confirms receipt to complete exchange"
+                title={isUserRequester ? "Borrower confirms receipt to complete exchange" : `Only ${activeExchange.requesterName} can confirm receipt`}
               >
                 <Check className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" />
-                <span className="truncate">{isUserRequester ? 'Confirm' : 'Awaiting'}</span>
+                <span className="truncate">{isUserRequester ? 'Confirm' : `Wait (${activeExchange.requesterName})`}</span>
               </button>
             )
           ) : isAvailable ? (

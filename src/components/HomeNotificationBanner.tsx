@@ -140,8 +140,8 @@ export const HomeNotificationBanner: React.FC<HomeNotificationBannerProps> = ({
         <div className="mt-2.5 space-y-2">
           {actionableRequests.map((req) => {
             const isSelfTest = normalizeName(req.requesterName) === normalizeName(req.holderName);
-            const isHolder = isSelfTest || !activeHousehold || normalizeName(activeHousehold) === normalizeName(req.holderName);
-            const isRequester = isSelfTest || !activeHousehold || normalizeName(activeHousehold) === normalizeName(req.requesterName);
+            const isHolder = Boolean(isSelfTest || (activeHousehold && normalizeName(activeHousehold) === normalizeName(req.holderName)));
+            const isRequester = Boolean(isSelfTest || (activeHousehold && normalizeName(activeHousehold) === normalizeName(req.requesterName)));
 
             return (
               <div
@@ -185,13 +185,18 @@ export const HomeNotificationBanner: React.FC<HomeNotificationBannerProps> = ({
                   {req.status === 'pending' && (
                     <button
                       type="button"
-                      onClick={() => onAcceptExchange(req.id)}
-                      className={`flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold shadow-xs transition-all active:scale-95 ${
+                      onClick={() => {
+                        if (isHolder) {
+                          onAcceptExchange(req.id);
+                        }
+                      }}
+                      disabled={!isHolder}
+                      className={`flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold shadow-xs transition-all ${
                         isHolder
-                          ? 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-500/20'
-                          : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200'
+                          ? 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-500/20 active:scale-95 cursor-pointer'
+                          : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 cursor-not-allowed border border-zinc-200 dark:border-zinc-700'
                       }`}
-                      title={isHolder ? "Accept and hand off game" : `Waiting for ${req.holderName} to accept`}
+                      title={isHolder ? "Accept and hand off game" : `Only ${req.holderName} can accept this request`}
                     >
                       <ArrowRightLeft className="w-3.5 h-3.5" />
                       <span>{isHolder ? 'Accept & Execute Handshake' : `Awaiting ${req.holderName}`}</span>
@@ -201,13 +206,18 @@ export const HomeNotificationBanner: React.FC<HomeNotificationBannerProps> = ({
                   {req.status === 'accepted' && (
                     <button
                       type="button"
-                      onClick={() => onConfirmExchange(req.id)}
-                      className={`flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold shadow-xs transition-all active:scale-95 ${
+                      onClick={() => {
+                        if (isRequester) {
+                          onConfirmExchange(req.id);
+                        }
+                      }}
+                      disabled={!isRequester}
+                      className={`flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold shadow-xs transition-all ${
                         isRequester
-                          ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-500/20'
-                          : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200'
+                          ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-500/20 active:scale-95 cursor-pointer'
+                          : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 cursor-not-allowed border border-zinc-200 dark:border-zinc-700'
                       }`}
-                      title={isRequester ? "Confirm receipt to finish exchange" : `Waiting for ${req.requesterName} to confirm`}
+                      title={isRequester ? "Confirm receipt to finish exchange" : `Only ${req.requesterName} can confirm receipt`}
                     >
                       <CheckCircle2 className="w-3.5 h-3.5" />
                       <span>{isRequester ? 'Confirm Receipt (Done!)' : `Awaiting ${req.requesterName}`}</span>
