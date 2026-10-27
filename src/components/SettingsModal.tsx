@@ -5,13 +5,11 @@ import {
   X, 
   Settings, 
   UserPlus, 
-  Trash2, 
   Key, 
-  RotateCcw, 
   Check, 
-  ShieldCheck,
-  AlertTriangle,
-  Sparkles 
+  Sparkles,
+  ExternalLink,
+  Palette
 } from 'lucide-react';
 import { getBggToken, saveBggToken, forceRefreshAllImages } from '@/lib/storage';
 
@@ -20,7 +18,7 @@ interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
   onUpdateFriends: (friends: string[]) => void;
-  onResetLibrary: () => void;
+  onResetLibrary?: () => void;
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({
@@ -28,12 +26,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   isOpen,
   onClose,
   onUpdateFriends,
-  onResetLibrary,
 }) => {
   const [newFriend, setNewFriend] = useState('');
   const [bggToken, setBggToken] = useState(() => getBggToken());
   const [tokenSaved, setTokenSaved] = useState(false);
-  const [confirmReset, setConfirmReset] = useState(false);
   const [imagesRefreshed, setImagesRefreshed] = useState(false);
 
   if (!isOpen) return null;
@@ -60,12 +56,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     saveBggToken(bggToken);
     setTokenSaved(true);
     setTimeout(() => setTokenSaved(false), 2000);
-  };
-
-  const handleExecuteReset = () => {
-    onResetLibrary();
-    setConfirmReset(false);
-    onClose();
   };
 
   return (
@@ -201,57 +191,60 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             </button>
           </div>
 
-          {/* Reset Library */}
+          {/* Visual Portfolio Note */}
           <div className="pt-4 border-t border-zinc-200 dark:border-zinc-800">
-            <h4 className="text-xs font-bold text-rose-600 dark:text-rose-400 uppercase tracking-wider mb-1">
-              Reset Library Database
-            </h4>
-            <p className="text-xs text-zinc-500 mb-3">
-              Reset the catalog back to the original 126 inventory games extracted from the spreadsheet.
-            </p>
-            {!confirmReset ? (
-              <button
-                type="button"
-                onClick={() => setConfirmReset(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-rose-700 bg-rose-50 dark:bg-rose-950/50 hover:bg-rose-100 border border-rose-200 dark:border-rose-900 rounded-lg transition-colors"
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-                Reset Library to Initial Inventory
-              </button>
-            ) : (
-              <div className="p-3 bg-rose-50 dark:bg-rose-950/80 border border-rose-200 dark:border-rose-800 rounded-xl space-y-2">
-                <p className="text-xs font-bold text-rose-900 dark:text-rose-200 flex items-center gap-1.5">
-                  <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
-                  Are you sure? This will restore original inventory records.
-                </p>
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={handleExecuteReset}
-                    className="px-3 py-1 bg-rose-600 hover:bg-rose-700 text-white rounded text-xs font-bold transition-colors shadow-xs"
+            <div className="p-3.5 bg-gradient-to-r from-indigo-50/70 via-purple-50/50 to-pink-50/40 dark:from-indigo-950/40 dark:via-purple-950/30 dark:to-pink-950/20 border border-indigo-100 dark:border-indigo-900/60 rounded-xl flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-8 h-8 rounded-lg bg-indigo-600 dark:bg-indigo-500 text-white flex items-center justify-center shrink-0 shadow-xs">
+                  <Palette className="w-4 h-4" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold text-zinc-900 dark:text-zinc-100">
+                    Check out Peji&apos;s visual portfolio
+                  </p>
+                  <a
+                    href="https://portfolio.peji.ca"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium inline-flex items-center gap-1 transition-colors"
                   >
-                    Yes, Reset Library
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setConfirmReset(false)}
-                    className="px-3 py-1 bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 rounded text-xs font-semibold"
-                  >
-                    Cancel
-                  </button>
+                    portfolio.peji.ca
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
                 </div>
               </div>
-            )}
+
+              <a
+                href="https://portfolio.peji.ca"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-3 py-1.5 bg-white dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-xs font-semibold text-zinc-900 dark:text-zinc-100 transition-colors shrink-0 shadow-xs"
+              >
+                Visit
+              </a>
+            </div>
           </div>
 
         </div>
 
         {/* Footer */}
-        <div className="p-3 bg-zinc-50 dark:bg-zinc-950 border-t border-zinc-100 dark:border-zinc-800 flex justify-end">
+        <div className="p-3 sm:p-4 bg-zinc-50 dark:bg-zinc-950 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between gap-3">
+          <p className="text-[11px] text-zinc-500 dark:text-zinc-400 truncate">
+            Check out Peji&apos;s visual portfolio &bull;{' '}
+            <a
+              href="https://portfolio.peji.ca"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-indigo-600 dark:text-indigo-400 hover:underline font-medium inline-flex items-center gap-0.5"
+            >
+              portfolio.peji.ca
+              <ExternalLink className="w-2.5 h-2.5" />
+            </a>
+          </p>
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-1.5 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-xs font-semibold rounded-lg hover:bg-zinc-800 transition-colors"
+            className="px-4 py-1.5 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-xs font-semibold rounded-lg hover:bg-zinc-800 transition-colors shrink-0"
           >
             Done
           </button>

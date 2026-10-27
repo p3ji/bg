@@ -687,7 +687,6 @@ export default function HomePage() {
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
         onUpdateFriends={handleUpdateFriends}
-        onResetLibrary={handleResetLibrary}
       />
 
       <EditGameModal
