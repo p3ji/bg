@@ -42,7 +42,7 @@ export const BggSyncModal: React.FC<BggSyncModalProps> = ({
   const [activeTab, setActiveTab] = useState<'sync' | 'search'>(initialTab);
   
   // Sync tab state
-  const [username, setUsername] = useState('pejiaoter');
+  const [username, setUsername] = useState('');
   const [syncOwner, setSyncOwner] = useState(initialHousehold || availableHouseholds[0]);
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncError, setSyncError] = useState<string | null>(null);
@@ -62,6 +62,10 @@ export const BggSyncModal: React.FC<BggSyncModalProps> = ({
       const defaultOwner = initialHousehold || availableHouseholds[0];
       setSearchOwner(defaultOwner);
       setSyncOwner(defaultOwner);
+      setUsername('');
+      setSyncError(null);
+      setSyncedGames([]);
+      setSelectedToImport(new Set());
       if (initialTab) {
         setActiveTab(initialTab);
       }
@@ -282,7 +286,7 @@ export const BggSyncModal: React.FC<BggSyncModalProps> = ({
                       required
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
-                      placeholder="e.g. pejiaoter"
+                      placeholder="Enter BGG username..."
                       className="w-full px-3 py-2 text-xs bg-white dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 rounded-lg text-zinc-900 dark:text-zinc-100 focus:outline-hidden focus:ring-2 focus:ring-zinc-900"
                     />
                   </div>
