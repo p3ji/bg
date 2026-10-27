@@ -16,7 +16,7 @@ import {
   SendHorizontal
 } from 'lucide-react';
 import { requestBadgeNotificationPermission, getNotificationPermissionStatus } from '@/lib/badgeManager';
-import { normalizeName } from '@/lib/normalize';
+import { normalizeName, isSameHousehold } from '@/lib/normalize';
 
 interface HomeNotificationBannerProps {
   requests: BorrowRequest[];
@@ -56,12 +56,12 @@ export const HomeNotificationBanner: React.FC<HomeNotificationBannerProps> = ({
   // 1. Actionable requests requiring activeHousehold's action
   const actionableRequests = requests.filter((r) => {
     if (!activeHousehold) return false;
-    const isSelfTest = normalizeName(r.holderName) === normalizeName(r.requesterName);
+    const isSelfTest = isSameHousehold(r.holderName, r.requesterName);
     if (r.status === 'pending') {
-      return isSelfTest || normalizeName(r.holderName) === normalizeName(activeHousehold);
+      return isSelfTest || isSameHousehold(r.holderName, activeHousehold);
     }
     if (r.status === 'accepted') {
-      return isSelfTest || normalizeName(r.requesterName) === normalizeName(activeHousehold);
+      return isSelfTest || isSameHousehold(r.requesterName, activeHousehold);
     }
     return false;
   });
@@ -69,13 +69,13 @@ export const HomeNotificationBanner: React.FC<HomeNotificationBannerProps> = ({
   // 2. Outgoing requests submitted by activeHousehold waiting on friends
   const waitingRequests = requests.filter((r) => {
     if (!activeHousehold) return false;
-    const isSelfTest = normalizeName(r.holderName) === normalizeName(r.requesterName);
+    const isSelfTest = isSameHousehold(r.holderName, r.requesterName);
     if (isSelfTest) return false;
     if (r.status === 'pending') {
-      return normalizeName(r.requesterName) === normalizeName(activeHousehold);
+      return isSameHousehold(r.requesterName, activeHousehold);
     }
     if (r.status === 'accepted') {
-      return normalizeName(r.holderName) === normalizeName(activeHousehold);
+      return isSameHousehold(r.holderName, activeHousehold);
     }
     return false;
   });
@@ -153,9 +153,9 @@ export const HomeNotificationBanner: React.FC<HomeNotificationBannerProps> = ({
         {/* Actionable Requests List */}
         <div className="mt-2.5 space-y-2">
           {actionableRequests.map((req) => {
-            const isSelfTest = normalizeName(req.requesterName) === normalizeName(req.holderName);
-            const isHolder = Boolean(isSelfTest || (activeHousehold && normalizeName(activeHousehold) === normalizeName(req.holderName)));
-            const isRequester = Boolean(isSelfTest || (activeHousehold && normalizeName(activeHousehold) === normalizeName(req.requesterName)));
+            const isSelfTest = isSameHousehold(req.requesterName, req.holderName);
+            const isHolder = Boolean(isSelfTest || (activeHousehold && isSameHousehold(activeHousehold, req.holderName)));
+            const isRequester = Boolean(isSelfTest || (activeHousehold && isSameHousehold(activeHousehold, req.requesterName)));
 
             return (
               <div

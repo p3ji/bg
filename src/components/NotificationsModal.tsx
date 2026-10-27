@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { BorrowRequest, Game } from '@/types';
-import { normalizeName } from '@/lib/normalize';
+import { normalizeName, isSameHousehold } from '@/lib/normalize';
 import { 
   X, 
   Bell, 
@@ -56,12 +56,12 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
   // 1. Requests requiring action from activeHousehold (matching the badge counter)
   const myActionableRequests = activeRequests.filter((req) => {
     if (!activeHousehold) return false;
-    const isSelfTest = normalizeName(req.holderName) === normalizeName(req.requesterName);
+    const isSelfTest = isSameHousehold(req.holderName, req.requesterName);
     if (req.status === 'pending') {
-      return isSelfTest || normalizeName(req.holderName) === normalizeName(activeHousehold);
+      return isSelfTest || isSameHousehold(req.holderName, activeHousehold);
     }
     if (req.status === 'accepted') {
-      return isSelfTest || normalizeName(req.requesterName) === normalizeName(activeHousehold);
+      return isSelfTest || isSameHousehold(req.requesterName, activeHousehold);
     }
     return false;
   });
@@ -69,13 +69,13 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
   // 2. Outgoing requests submitted by activeHousehold waiting on friends
   const myWaitingRequests = activeRequests.filter((req) => {
     if (!activeHousehold) return false;
-    const isSelfTest = normalizeName(req.holderName) === normalizeName(req.requesterName);
+    const isSelfTest = isSameHousehold(req.holderName, req.requesterName);
     if (isSelfTest) return false;
     if (req.status === 'pending') {
-      return normalizeName(req.requesterName) === normalizeName(activeHousehold);
+      return isSameHousehold(req.requesterName, activeHousehold);
     }
     if (req.status === 'accepted') {
-      return normalizeName(req.holderName) === normalizeName(activeHousehold);
+      return isSameHousehold(req.holderName, activeHousehold);
     }
     return false;
   });
@@ -92,9 +92,9 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
     const isPendingHolder = req.status === 'pending';
     const isAwaitingRequester = req.status === 'accepted';
 
-    const isSelfTest = Boolean(normalizeName(req.holderName) === normalizeName(req.requesterName));
-    const isCurrentUserHolder = Boolean(isSelfTest || (activeHousehold && normalizeName(activeHousehold) === normalizeName(req.holderName)));
-    const isCurrentUserRequester = Boolean(isSelfTest || (activeHousehold && normalizeName(activeHousehold) === normalizeName(req.requesterName)));
+    const isSelfTest = Boolean(isSameHousehold(req.holderName, req.requesterName));
+    const isCurrentUserHolder = Boolean(isSelfTest || (activeHousehold && isSameHousehold(activeHousehold, req.holderName)));
+    const isCurrentUserRequester = Boolean(isSelfTest || (activeHousehold && isSameHousehold(activeHousehold, req.requesterName)));
 
     return (
       <div

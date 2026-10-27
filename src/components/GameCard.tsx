@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Game, BorrowRequest } from '@/types';
-import { normalizeName } from '@/lib/normalize';
+import { normalizeName, isSameHousehold } from '@/lib/normalize';
 import { GameBoxCover } from './GameBoxCover';
 import { 
   Users, 
@@ -65,9 +65,9 @@ export const GameCard: React.FC<GameCardProps> = ({
     }
   };
 
-  const isSelfTest = Boolean(activeExchange && normalizeName(activeExchange.holderName) === normalizeName(activeExchange.requesterName));
-  const isUserHolder = Boolean(activeExchange && (isSelfTest || (activeHousehold && normalizeName(activeHousehold) === normalizeName(activeExchange.holderName))));
-  const isUserRequester = Boolean(activeExchange && (isSelfTest || (activeHousehold && normalizeName(activeHousehold) === normalizeName(activeExchange.requesterName))));
+  const isSelfTest = Boolean(activeExchange && isSameHousehold(activeExchange.holderName, activeExchange.requesterName));
+  const isUserHolder = Boolean(activeExchange && (isSelfTest || (activeHousehold && isSameHousehold(activeHousehold, activeExchange.holderName))));
+  const isUserRequester = Boolean(activeExchange && (isSelfTest || (activeHousehold && isSameHousehold(activeHousehold, activeExchange.requesterName))));
 
   return (
     <div className="group flex flex-col bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden hover:shadow-lg hover:border-zinc-300 dark:hover:border-zinc-700 transition-all duration-200">

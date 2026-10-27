@@ -19,7 +19,7 @@ import {
   Bell
 } from 'lucide-react';
 import { requestBadgeNotificationPermission, getNotificationPermissionStatus } from '@/lib/badgeManager';
-import { normalizeName } from '@/lib/normalize';
+import { normalizeName, isSameHousehold } from '@/lib/normalize';
 
 interface BorrowModalProps {
   game: Game | null;
@@ -296,8 +296,8 @@ export const BorrowModal: React.FC<BorrowModalProps> = ({
               </label>
               <div className="flex flex-wrap gap-1.5 mb-2">
                 {friends.map((f) => {
-                  const isCurrentHolder = normalizeName(f) === normalizeName(currentHolder);
-                  const isSelected = normalizeName(borrower) === normalizeName(f);
+                  const isCurrentHolder = isSameHousehold(f, currentHolder, friends);
+                  const isSelected = isSameHousehold(borrower, f, friends);
                   return (
                     <button
                       key={f}

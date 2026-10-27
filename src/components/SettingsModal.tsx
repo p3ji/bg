@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { getBggToken, saveBggToken, forceRefreshAllImages } from '@/lib/storage';
 import { requestBadgeNotificationPermission, getNotificationPermissionStatus, updateHomeScreenAppBadge } from '@/lib/badgeManager';
+import { isSameHousehold } from '@/lib/normalize';
 
 interface SettingsModalProps {
   friends: string[];
@@ -67,13 +68,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const handleAddFriend = (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = newFriend.trim();
-    if (!trimmed || friends.includes(trimmed)) return;
+    if (!trimmed || friends.some((f) => isSameHousehold(f, trimmed, friends))) return;
     onUpdateFriends([...friends, trimmed]);
     setNewFriend('');
   };
 
   const handleRemoveFriend = (name: string) => {
-    onUpdateFriends(friends.filter((f) => f !== name));
+    onUpdateFriends(friends.filter((f) => !isSameHousehold(f, name, friends)));
   };
 
   const handleSaveToken = () => {

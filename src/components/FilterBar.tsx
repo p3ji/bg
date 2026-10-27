@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { FilterState } from '@/types';
 import { OWNER_GROUPS, GAME_TYPES } from '@/data/friends';
+import { isSameHousehold } from '@/lib/normalize';
 import { 
   Search, 
   X, 
@@ -221,7 +222,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
 
           {/* Household chips */}
           {availableHouseholds.map((h) => {
-            const isSelected = filters.owner === h;
+            const isSelected = filters.owner !== 'all' && isSameHousehold(filters.owner, h, availableHouseholds);
             return (
               <button
                 key={h}
@@ -251,7 +252,11 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                 Household Collection:
               </label>
               <select
-                value={filters.owner}
+                value={
+                  filters.owner === 'all'
+                    ? 'all'
+                    : availableHouseholds.find((grp) => isSameHousehold(grp, filters.owner, availableHouseholds)) || filters.owner
+                }
                 onChange={(e) => onChange({ ...filters, owner: e.target.value })}
                 className="w-full py-2 px-2.5 text-xs font-medium bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 rounded-lg text-zinc-800 dark:text-zinc-200"
               >

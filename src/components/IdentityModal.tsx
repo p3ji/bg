@@ -3,6 +3,7 @@
 import React from 'react';
 import { X, Check, Users, ShieldCheck } from 'lucide-react';
 import { OWNER_GROUPS } from '@/data/friends';
+import { isSameHousehold } from '@/lib/normalize';
 
 interface IdentityModalProps {
   isOpen: boolean;
@@ -106,7 +107,7 @@ export const IdentityModal: React.FC<IdentityModalProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {availableHouseholds.map((household, idx) => {
               const theme = getHouseholdTheme(idx);
-              const isSelected = activeHousehold === household;
+              const isSelected = isSameHousehold(activeHousehold, household, availableHouseholds);
 
               return (
                 <button

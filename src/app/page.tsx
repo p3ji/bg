@@ -41,7 +41,7 @@ import { EditGameModal } from '@/components/EditGameModal';
 import { IdentityModal } from '@/components/IdentityModal';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { HomeNotificationBanner } from '@/components/HomeNotificationBanner';
-import { normalizeName } from '@/lib/normalize';
+import { normalizeName, getCanonicalName, isSameHousehold } from '@/lib/normalize';
 
 const initialFilters: FilterState = {
   search: '',
@@ -150,32 +150,32 @@ export default function HomePage() {
   const myActionableRequests = useMemo(() => {
     if (!activeHousehold) return [];
     return requests.filter((r) => {
-      const isSelfTest = normalizeName(r.holderName) === normalizeName(r.requesterName);
+      const isSelfTest = isSameHousehold(r.holderName, r.requesterName, friends);
       if (r.status === 'pending') {
-        return isSelfTest || normalizeName(r.holderName) === normalizeName(activeHousehold);
+        return isSelfTest || isSameHousehold(r.holderName, activeHousehold, friends);
       }
       if (r.status === 'accepted') {
-        return isSelfTest || normalizeName(r.requesterName) === normalizeName(activeHousehold);
+        return isSelfTest || isSameHousehold(r.requesterName, activeHousehold, friends);
       }
       return false;
     });
-  }, [requests, activeHousehold]);
+  }, [requests, activeHousehold, friends]);
 
   // Outgoing requests submitted by this profile that are waiting on friends
   const myWaitingRequests = useMemo(() => {
     if (!activeHousehold) return [];
     return requests.filter((r) => {
-      const isSelfTest = normalizeName(r.holderName) === normalizeName(r.requesterName);
+      const isSelfTest = isSameHousehold(r.holderName, r.requesterName, friends);
       if (isSelfTest) return false;
       if (r.status === 'pending') {
-        return normalizeName(r.requesterName) === normalizeName(activeHousehold);
+        return isSameHousehold(r.requesterName, activeHousehold, friends);
       }
       if (r.status === 'accepted') {
-        return normalizeName(r.holderName) === normalizeName(activeHousehold);
+        return isSameHousehold(r.holderName, activeHousehold, friends);
       }
       return false;
     });
-  }, [requests, activeHousehold]);
+  }, [requests, activeHousehold, friends]);
 
   // Badge counter strictly reflects actionable requests requiring YOUR attention (Scenario A)
   // Scenario B (outgoing requests waiting on friends) is excluded from badge numbers
@@ -221,7 +221,7 @@ export default function HomePage() {
         if (filters.availability === 'borrowed' && game.status !== 'borrowed') return false;
 
         // Owner Household
-        if (filters.owner !== 'all' && game.owner !== filters.owner) return false;
+        if (filters.owner !== 'all' && !isSameHousehold(game.owner, filters.owner, friends)) return false;
 
         // Type / Category
         if (filters.type !== 'all' && !game.type.toLowerCase().includes(filters.type.toLowerCase())) return false;
@@ -341,12 +341,15 @@ export default function HomePage() {
       ? targetGame.currentBorrower
       : targetGame.owner;
 
+    const canonicalRequester = getCanonicalName(requester, friends);
+    const canonicalHolder = getCanonicalName(currentHolder, friends);
+
     const newRequest: BorrowRequest = {
       id: `req-${Date.now()}`,
       gameId: targetGame.id,
       gameTitle: targetGame.title,
-      requesterName: requester,
-      holderName: currentHolder,
+      requesterName: canonicalRequester,
+      holderName: canonicalHolder,
       requestedAt: new Date().toISOString(),
       status: 'pending',
       expectedReturnDate: returnDate || undefined,
@@ -388,9 +391,9 @@ export default function HomePage() {
     if (!req) return;
 
     // Strict profile authorization check: Only the current holder can accept
-    const isSelfTest = normalizeName(req.holderName) === normalizeName(req.requesterName);
+    const isSelfTest = isSameHousehold(req.holderName, req.requesterName, friends);
     const isAuthorized = Boolean(
-      isSelfTest || (activeHousehold && normalizeName(activeHousehold) === normalizeName(req.holderName))
+      isSelfTest || (activeHousehold && isSameHousehold(activeHousehold, req.holderName, friends))
     );
 
     if (!isAuthorized) {
@@ -439,9 +442,9 @@ export default function HomePage() {
     if (!req) return;
 
     // Strict profile authorization check: Only the requester can confirm receipt
-    const isSelfTest = normalizeName(req.holderName) === normalizeName(req.requesterName);
+    const isSelfTest = isSameHousehold(req.holderName, req.requesterName, friends);
     const isAuthorized = Boolean(
-      isSelfTest || (activeHousehold && normalizeName(activeHousehold) === normalizeName(req.requesterName))
+      isSelfTest || (activeHousehold && isSameHousehold(activeHousehold, req.requesterName, friends))
     );
 
     if (!isAuthorized) {
@@ -471,12 +474,15 @@ export default function HomePage() {
       });
     }
 
+    const isReturningToOwner = isSameHousehold(req.requesterName, targetGame.owner, friends);
+    const canonicalRequester = getCanonicalName(req.requesterName, friends);
+
     const updatedGame: Game = {
       ...targetGame,
-      status: 'borrowed' as const,
-      currentBorrower: req.requesterName,
-      borrowDate: nowIso,
-      expectedReturnDate: req.expectedReturnDate || null,
+      status: isReturningToOwner ? 'available' : ('borrowed' as const),
+      currentBorrower: isReturningToOwner ? null : canonicalRequester,
+      borrowDate: isReturningToOwner ? null : nowIso,
+      expectedReturnDate: isReturningToOwner ? null : (req.expectedReturnDate || null),
       notes: req.note ? (targetGame.notes ? `${targetGame.notes} | ${req.note}` : req.note) : targetGame.notes,
       history: historyUpdates,
       borrowRequests: (targetGame.borrowRequests || []).map((r) =>

@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Game } from '@/types';
 import { OWNER_GROUPS, GAME_TYPES } from '@/data/friends';
+import { getCanonicalName, isSameHousehold } from '@/lib/normalize';
 import { GameBoxCover } from './GameBoxCover';
 import { 
   X, 
@@ -70,7 +71,7 @@ export const EditGameModal: React.FC<EditGameModalProps> = ({
   useEffect(() => {
     if (game) {
       setTitle(game.title || '');
-      setOwner(game.owner || OWNER_GROUPS[0]);
+      setOwner(getCanonicalName(game.owner, availableHouseholds) || OWNER_GROUPS[0]);
       setType(game.type || 'Strategy');
       setMinPlayers(game.minPlayers || 2);
       setMaxPlayers(game.maxPlayers || 4);
@@ -168,7 +169,7 @@ export const EditGameModal: React.FC<EditGameModalProps> = ({
     const updatedGame: Game = {
       ...game,
       title: title.trim(),
-      owner,
+      owner: getCanonicalName(owner, availableHouseholds),
       type,
       minPlayers: Number(minPlayers) || 1,
       maxPlayers: Number(maxPlayers) || 4,
@@ -408,7 +409,7 @@ export const EditGameModal: React.FC<EditGameModalProps> = ({
                   Owner Household *
                 </label>
                 <select
-                  value={owner}
+                  value={availableHouseholds.find((c) => isSameHousehold(c, owner, availableHouseholds)) || owner}
                   onChange={(e) => setOwner(e.target.value)}
                   className="w-full px-3 py-2 text-xs rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 >

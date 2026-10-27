@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Game } from '@/types';
-import { normalizeName } from '@/lib/normalize';
+import { normalizeName, isSameHousehold } from '@/lib/normalize';
 import { 
   X, 
   SendHorizontal, 
@@ -39,7 +39,7 @@ export const RequestBorrowModal: React.FC<RequestBorrowModalProps> = ({
 
   useEffect(() => {
     if (isOpen) {
-      if (activeHousehold && normalizeName(activeHousehold) !== normalizeName(game?.currentBorrower)) {
+      if (activeHousehold && !isSameHousehold(activeHousehold, game?.currentBorrower, friends)) {
         setRequester(activeHousehold);
       } else {
         setRequester('');
@@ -132,8 +132,8 @@ export const RequestBorrowModal: React.FC<RequestBorrowModalProps> = ({
                 Which household wants to borrow next?
               </label>
               <div className="flex flex-wrap gap-1.5 mb-2">
-                {friends.filter((f) => f !== holder).map((f) => {
-                  const isSelected = normalizeName(requester) === normalizeName(f);
+                {friends.filter((f) => !isSameHousehold(f, holder, friends)).map((f) => {
+                  const isSelected = isSameHousehold(requester, f, friends);
                   return (
                     <button
                       key={f}

@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Game, BorrowRequest } from '@/types';
-import { normalizeName } from '@/lib/normalize';
+import { normalizeName, isSameHousehold } from '@/lib/normalize';
 import { GameBoxCover } from './GameBoxCover';
 import { 
   Users, 
@@ -121,9 +121,9 @@ export const TableView: React.FC<TableViewProps> = ({
               (r) => r.status === 'pending' || r.status === 'accepted'
             );
 
-          const isSelfTest = Boolean(activeExchange && normalizeName(activeExchange.holderName) === normalizeName(activeExchange.requesterName));
-          const isUserHolder = Boolean(activeExchange && (isSelfTest || (activeHouseholdUser && normalizeName(activeHouseholdUser) === normalizeName(activeExchange.holderName))));
-          const isUserRequester = Boolean(activeExchange && (isSelfTest || (activeHouseholdUser && normalizeName(activeHouseholdUser) === normalizeName(activeExchange.requesterName))));
+          const isSelfTest = Boolean(activeExchange && isSameHousehold(activeExchange.holderName, activeExchange.requesterName));
+          const isUserHolder = Boolean(activeExchange && (isSelfTest || (activeHouseholdUser && isSameHousehold(activeHouseholdUser, activeExchange.holderName))));
+          const isUserRequester = Boolean(activeExchange && (isSelfTest || (activeHouseholdUser && isSameHousehold(activeHouseholdUser, activeExchange.requesterName))));
 
           return (
             <div
@@ -284,9 +284,9 @@ export const TableView: React.FC<TableViewProps> = ({
                     (r) => r.status === 'pending' || r.status === 'accepted'
                   );
 
-                const isSelfTest = Boolean(activeExchange && normalizeName(activeExchange.holderName) === normalizeName(activeExchange.requesterName));
-                const isUserHolder = Boolean(activeExchange && (isSelfTest || (activeHouseholdUser && normalizeName(activeHouseholdUser) === normalizeName(activeExchange.holderName))));
-                const isUserRequester = Boolean(activeExchange && (isSelfTest || (activeHouseholdUser && normalizeName(activeHouseholdUser) === normalizeName(activeExchange.requesterName))));
+                const isSelfTest = Boolean(activeExchange && isSameHousehold(activeExchange.holderName, activeExchange.requesterName));
+                const isUserHolder = Boolean(activeExchange && (isSelfTest || (activeHouseholdUser && isSameHousehold(activeHouseholdUser, activeExchange.holderName))));
+                const isUserRequester = Boolean(activeExchange && (isSelfTest || (activeHouseholdUser && isSameHousehold(activeHouseholdUser, activeExchange.requesterName))));
 
                 return (
                   <tr 

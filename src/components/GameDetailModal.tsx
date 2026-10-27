@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Game } from '@/types';
-import { normalizeName } from '@/lib/normalize';
+import { normalizeName, isSameHousehold } from '@/lib/normalize';
 import { GameBoxCover } from './GameBoxCover';
 import { 
   X, 
@@ -83,9 +83,9 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
     }
   };
 
-  const isSelfTest = Boolean(activeExchange && normalizeName(activeExchange.holderName) === normalizeName(activeExchange.requesterName));
-  const isUserHolder = Boolean(activeExchange && (isSelfTest || (activeHousehold && normalizeName(activeHousehold) === normalizeName(activeExchange.holderName))));
-  const isUserRequester = Boolean(activeExchange && (isSelfTest || (activeHousehold && normalizeName(activeHousehold) === normalizeName(activeExchange.requesterName))));
+  const isSelfTest = Boolean(activeExchange && isSameHousehold(activeExchange.holderName, activeExchange.requesterName));
+  const isUserHolder = Boolean(activeExchange && (isSelfTest || (activeHousehold && isSameHousehold(activeHousehold, activeExchange.holderName))));
+  const isUserRequester = Boolean(activeExchange && (isSelfTest || (activeHousehold && isSameHousehold(activeHousehold, activeExchange.requesterName))));
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-xs">
