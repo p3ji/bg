@@ -315,6 +315,151 @@ export async function updateGameBorrowInSheets(
 }
 
 /**
+ * Updates an existing board game row's details (title, min/max players, type, playtime, notes) in Google Sheets
+ */
+export async function updateGameDetailsInSheets(
+  ownerHousehold: string,
+  previousGameTitle: string,
+  updatedGame: Partial<Game>
+): Promise<{ success: boolean; message: string }> {
+  const auth = getGoogleSheetsAuth();
+  if (!auth) {
+    return {
+      success: false,
+      message: 'Service Account credentials not configured in environment.',
+    };
+  }
+
+  const spreadsheetId = getSpreadsheetId();
+  const sheets = google.sheets({ version: 'v4', auth });
+  const meta = await sheets.spreadsheets.get({ spreadsheetId });
+  const sheetTabs = meta.data.sheets || [];
+
+  // 1. Find matching household tab
+  let targetTabTitle: string | null = null;
+  for (const sheet of sheetTabs) {
+    const title = sheet.properties?.title;
+    if (!title || !isHouseholdTabName(title)) continue;
+    if (isSameHousehold(title.replace(/&/g, ' & '), ownerHousehold)) {
+      targetTabTitle = title;
+      break;
+    }
+  }
+
+  if (!targetTabTitle) {
+    return { success: false, message: `Could not find sheet tab for owner household: ${ownerHousehold}` };
+  }
+
+  // 2. Fetch current rows in that tab
+  const range = `${targetTabTitle}!A1:G`;
+  const res = await sheets.spreadsheets.values.get({ spreadsheetId, range });
+  const rows = res.data.values || [];
+  if (rows.length < 2) {
+    return { success: false, message: `No game rows found in tab: ${targetTabTitle}` };
+  }
+
+  // 3. Find matching row index
+  let targetRowIndex = -1;
+  for (let i = 1; i < rows.length; i++) {
+    const rowTitle = String(rows[i][0] || '').trim();
+    if (matchesFuzzy(previousGameTitle, rowTitle) || normalizeName(previousGameTitle) === normalizeName(rowTitle)) {
+      targetRowIndex = i + 1; // 1-based index in sheet
+      break;
+    }
+  }
+
+  if (targetRowIndex === -1 && updatedGame.title) {
+    for (let i = 1; i < rows.length; i++) {
+      const rowTitle = String(rows[i][0] || '').trim();
+      if (matchesFuzzy(updatedGame.title, rowTitle) || normalizeName(updatedGame.title) === normalizeName(rowTitle)) {
+        targetRowIndex = i + 1;
+        break;
+      }
+    }
+  }
+
+  if (targetRowIndex === -1) {
+    return { success: false, message: `Game "${previousGameTitle}" not found in tab "${targetTabTitle}".` };
+  }
+
+  const existingRow = rows[targetRowIndex - 1] || [];
+  const existingBorrowedBy = existingRow[6] || '';
+
+  // Determine playtime representation: if min and max differ, e.g. "30-60", else single number
+  let playtimeStr = '';
+  if (updatedGame.minPlaytime && updatedGame.maxPlaytime && updatedGame.minPlaytime !== updatedGame.maxPlaytime) {
+    playtimeStr = `${updatedGame.minPlaytime}-${updatedGame.maxPlaytime}`;
+  } else if (updatedGame.minPlaytime || updatedGame.maxPlaytime) {
+    playtimeStr = String(updatedGame.minPlaytime || updatedGame.maxPlaytime);
+  } else {
+    playtimeStr = existingRow[4] || '';
+  }
+
+  const newTitle = updatedGame.title !== undefined ? updatedGame.title : existingRow[0] || '';
+  const newMin = updatedGame.minPlayers !== undefined ? updatedGame.minPlayers : existingRow[1] || '';
+  const newMax = updatedGame.maxPlayers !== undefined ? updatedGame.maxPlayers : existingRow[2] || '';
+  const newType = updatedGame.type !== undefined ? updatedGame.type : existingRow[3] || 'Strategy';
+  const newNotes = updatedGame.notes !== undefined ? updatedGame.notes : existingRow[5] || '';
+  const newBorrowedBy = updatedGame.currentBorrower !== undefined ? (updatedGame.currentBorrower || '') : existingBorrowedBy;
+
+  // Check if owner changed to a different household tab
+  if (updatedGame.owner && !isSameHousehold(updatedGame.owner, ownerHousehold)) {
+    await addGameToSheets(updatedGame.owner, {
+      ...updatedGame,
+      title: newTitle,
+      minPlayers: Number(newMin) || 1,
+      maxPlayers: Number(newMax) || 4,
+      type: newType,
+      minPlaytime: Number(String(playtimeStr).split('-')[0]) || 30,
+      notes: newNotes,
+      currentBorrower: newBorrowedBy || null,
+    });
+
+    // Remove row from previous tab
+    const targetSheetId = sheetTabs.find((s) => s.properties?.title === targetTabTitle)?.properties?.sheetId;
+    if (targetSheetId !== undefined) {
+      await sheets.spreadsheets.batchUpdate({
+        spreadsheetId,
+        requestBody: {
+          requests: [
+            {
+              deleteDimension: {
+                range: {
+                  sheetId: targetSheetId,
+                  dimension: 'ROWS',
+                  startIndex: targetRowIndex - 1,
+                  endIndex: targetRowIndex,
+                },
+              },
+            },
+          ],
+        },
+      });
+    }
+
+    return {
+      success: true,
+      message: `Moved game "${newTitle}" from "${targetTabTitle}" to "${updatedGame.owner}".`,
+    };
+  }
+
+  // Update row in current tab
+  await sheets.spreadsheets.values.update({
+    spreadsheetId,
+    range: `${targetTabTitle}!A${targetRowIndex}:G${targetRowIndex}`,
+    valueInputOption: 'USER_ENTERED',
+    requestBody: {
+      values: [[newTitle, newMin, newMax, newType, playtimeStr, newNotes, newBorrowedBy]],
+    },
+  });
+
+  return {
+    success: true,
+    message: `Updated Google Sheets tab "${targetTabTitle}" row ${targetRowIndex} for "${newTitle}".`,
+  };
+}
+
+/**
  * Appends a new board game row to an owner household's tab in Google Sheets
  */
 export async function addGameToSheets(

@@ -10,18 +10,22 @@ import {
   Smartphone,
   Bell,
   RefreshCw,
-  Lock
+  Lock,
+  Download
 } from 'lucide-react';
 import { forceRefreshAllImages } from '@/lib/storage';
 import { requestBadgeNotificationPermission, getNotificationPermissionStatus } from '@/lib/badgeManager';
 import { isSameHousehold } from '@/lib/normalize';
+import { isAppStandalone } from './PwaInstallPrompt';
 
 interface SettingsModalProps {
   friends: string[];
   isOpen: boolean;
   onClose: () => void;
   onUpdateFriends: (friends: string[]) => void;
+  onSyncGames?: (sheetGames: any[]) => void;
   onResetLibrary?: () => void;
+  onTriggerInstallGuide?: () => void;
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({
@@ -29,6 +33,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   isOpen,
   onClose,
   onUpdateFriends,
+  onSyncGames,
+  onResetLibrary,
+  onTriggerInstallGuide,
 }) => {
   const [newFriend, setNewFriend] = useState('');
   const [householdToRemove, setHouseholdToRemove] = useState<string | null>(null);
@@ -74,6 +81,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       const data = await res.json();
 
       if (data.success) {
+        if (Array.isArray(data.games) && data.games.length > 0 && onSyncGames) {
+          onSyncGames(data.games);
+        }
+
         if (Array.isArray(data.households) && data.households.length > 0) {
           const newHouseholds = data.households.filter(
             (h: string) => !friends.some((f) => isSameHousehold(f, h, friends))
@@ -315,6 +326,63 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 {syncStatusText}
               </p>
             )}
+          </div>
+
+          {/* Install GameShare (PWA) */}
+          <div className="pt-4 border-t border-zinc-200 dark:border-zinc-800">
+            <div className="flex items-center gap-1.5 mb-1">
+              <Download className="w-3.5 h-3.5 text-zinc-400" />
+              <h4 className="text-xs font-bold text-zinc-900 dark:text-zinc-100 uppercase tracking-wider">
+                Install GameShare App
+              </h4>
+            </div>
+            <p className="text-xs text-zinc-500 mb-3">
+              Install GameShare onto your phone or desktop home screen for instant full-screen access and badge notifications.
+            </p>
+
+            <div className="p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl border border-zinc-200/80 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 shadow-xs border border-indigo-200/60 dark:border-indigo-900/50">
+                  <Smartphone className="w-4 h-4" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs font-semibold text-zinc-900 dark:text-zinc-100">
+                      App Mode:
+                    </span>
+                    {isAppStandalone() ? (
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400">
+                        <Check className="w-3 h-3" />
+                        Installed (Standalone)
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300">
+                        Browser Tab
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-zinc-500 mt-0.5">
+                    {isAppStandalone()
+                      ? 'GameShare is already installed and running as a standalone app.'
+                      : 'Not installed yet. Install for an app-like experience.'}
+                  </p>
+                </div>
+              </div>
+
+              {!isAppStandalone() && onTriggerInstallGuide && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onTriggerInstallGuide();
+                    onClose();
+                  }}
+                  className="flex items-center justify-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 active:scale-95 rounded-lg transition-all shadow-xs cursor-pointer shrink-0"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Install / Guide</span>
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Phone Home Screen App Badges */}

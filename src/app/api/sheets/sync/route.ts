@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import {
   readAllGamesFromSheets,
   updateGameBorrowInSheets,
+  updateGameDetailsInSheets,
   addGameToSheets,
   createHouseholdTabInSheets,
   getSpreadsheetId,
@@ -66,6 +67,19 @@ export async function POST(request: NextRequest) {
       }
 
       const res = await updateGameBorrowInSheets(ownerHousehold, gameTitle, borrowerName || null);
+      return NextResponse.json(res);
+    }
+
+    if (action === 'update_game_details') {
+      const { previousOwnerHousehold, previousGameTitle, updatedGame } = body;
+      if (!previousOwnerHousehold || !previousGameTitle || !updatedGame) {
+        return NextResponse.json(
+          { success: false, error: 'Missing previousOwnerHousehold, previousGameTitle, or updatedGame' },
+          { status: 400 }
+        );
+      }
+
+      const res = await updateGameDetailsInSheets(previousOwnerHousehold, previousGameTitle, updatedGame);
       return NextResponse.json(res);
     }
 

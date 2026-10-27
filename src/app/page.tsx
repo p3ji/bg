@@ -41,8 +41,9 @@ import { EditGameModal } from '@/components/EditGameModal';
 import { IdentityModal } from '@/components/IdentityModal';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { HomeNotificationBanner } from '@/components/HomeNotificationBanner';
+import { PwaInstallPrompt } from '@/components/PwaInstallPrompt';
 import { normalizeName, getCanonicalName, isSameHousehold } from '@/lib/normalize';
-import { matchesGameSearch } from '@/lib/search';
+import { matchesGameSearch, matchesFuzzy } from '@/lib/search';
 
 const initialFilters: FilterState = {
   search: '',
@@ -79,6 +80,7 @@ export default function HomePage() {
   const [activeHousehold, setActiveHousehold] = useState<string | null>(null);
   const [isIdentityModalOpen, setIsIdentityModalOpen] = useState(false);
   const [isFirstIdentityPrompt, setIsFirstIdentityPrompt] = useState(false);
+  const [forceShowInstallGuide, setForceShowInstallGuide] = useState(false);
 
   // Initialize data on mount
   useEffect(() => {
@@ -653,6 +655,7 @@ export default function HomePage() {
   };
 
   const handleSaveEditedGame = (updatedGame: Game) => {
+    const prevGame = editingGame;
     const nextGames = games.map((g) => (g.id === updatedGame.id ? updatedGame : g));
     setGames(nextGames);
     saveGames(nextGames);
@@ -660,6 +663,74 @@ export default function HomePage() {
     if (selectedGame && selectedGame.id === updatedGame.id) {
       setSelectedGame(updatedGame);
     }
+
+    // Two-way sync: push edited game details (name, player range, playtime, notes, type) to Google Sheets
+    fetch('/api/sheets/sync', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'update_game_details',
+        previousOwnerHousehold: prevGame?.owner || updatedGame.owner,
+        previousGameTitle: prevGame?.title || updatedGame.title,
+        updatedGame,
+      }),
+    }).catch((err) => console.warn('Failed to sync game details to Google Sheets:', err));
+  };
+
+  const handleSyncGamesFromSheets = (sheetGames: any[]) => {
+    if (!sheetGames || sheetGames.length === 0) return;
+    setGames((prevGames) => {
+      let changed = false;
+      const updated = prevGames.map((game) => {
+        const match = sheetGames.find(
+          (sg) =>
+            isSameHousehold(sg.household, game.owner, friends) &&
+            (matchesFuzzy(sg.title, game.title) || normalizeName(sg.title) === normalizeName(game.title))
+        );
+        if (!match) return game;
+
+        let gameChanged = false;
+        const newTitle = match.title || game.title;
+        const newMinP = match.minPlayers ?? game.minPlayers;
+        const newMaxP = match.maxPlayers ?? game.maxPlayers;
+        const newType = match.type || game.type;
+        const newPlaytime = match.playtime ?? game.minPlaytime;
+        const newNotes = match.notes !== undefined ? match.notes : (game.notes || '');
+
+        if (
+          newTitle !== game.title ||
+          newMinP !== game.minPlayers ||
+          newMaxP !== game.maxPlayers ||
+          newType !== game.type ||
+          newPlaytime !== game.minPlaytime ||
+          newNotes !== (game.notes || '')
+        ) {
+          gameChanged = true;
+          changed = true;
+        }
+
+        if (gameChanged) {
+          return {
+            ...game,
+            title: newTitle,
+            minPlayers: newMinP,
+            maxPlayers: newMaxP,
+            type: newType,
+            minPlaytime: newPlaytime,
+            maxPlaytime: Math.max(newPlaytime, game.maxPlaytime),
+            playtimeDisplay: match.playtimeDisplay || `${newPlaytime}m`,
+            notes: newNotes,
+          };
+        }
+        return game;
+      });
+
+      if (changed) {
+        saveGames(updated);
+        saveGamesBatchToCloud(updated);
+      }
+      return changed ? updated : prevGames;
+    });
   };
 
   const handleInitiateBorrow = (game: Game) => {
@@ -836,6 +907,8 @@ export default function HomePage() {
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
         onUpdateFriends={handleUpdateFriends}
+        onSyncGames={handleSyncGamesFromSheets}
+        onTriggerInstallGuide={() => setForceShowInstallGuide(true)}
       />
 
       <EditGameModal
@@ -856,6 +929,13 @@ export default function HomePage() {
         activeHousehold={activeHousehold}
         onSelectHousehold={handleSelectHousehold}
         isInitialPrompt={isFirstIdentityPrompt}
+      />
+
+      {/* Floating PWA Install Prompt & Installation Guide */}
+      <PwaInstallPrompt
+        canShowBanner={mounted && !isIdentityModalOpen}
+        forceShowInstructions={forceShowInstallGuide}
+        onCloseInstructions={() => setForceShowInstallGuide(false)}
       />
 
       {/* Mobile Bottom Navigation Bar (thumb-friendly on phones) */}
