@@ -181,8 +181,9 @@ export default function HomePage() {
     });
   }, [requests, activeHousehold]);
 
-  // Active exchange count for this profile: incoming actions needed + outgoing waiting on friends
-  const pendingRequestsCount = myActionableRequests.length + myWaitingRequests.length;
+  // Badge counter strictly reflects actionable requests requiring YOUR attention (Scenario A)
+  // Scenario B (outgoing requests waiting on friends) is excluded from badge numbers
+  const pendingRequestsCount = myActionableRequests.length;
 
   useEffect(() => {
     updateHomeScreenAppBadge(pendingRequestsCount);
@@ -637,8 +638,8 @@ export default function HomePage() {
         availableCount={availableCount}
         borrowedCount={borrowedCount}
         pendingRequestsCount={pendingRequestsCount}
-        actionableCount={myActionableRequests.length}
-        waitingCount={myWaitingRequests.length}
+        actionableCount={pendingRequestsCount}
+        waitingCount={0}
         activeHousehold={activeHousehold}
         onOpenIdentityModal={() => {
           setIsFirstIdentityPrompt(false);
