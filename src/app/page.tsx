@@ -42,6 +42,7 @@ import { IdentityModal } from '@/components/IdentityModal';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { HomeNotificationBanner } from '@/components/HomeNotificationBanner';
 import { normalizeName, getCanonicalName, isSameHousehold } from '@/lib/normalize';
+import { matchesGameSearch } from '@/lib/search';
 
 const initialFilters: FilterState = {
   search: '',
@@ -201,14 +202,9 @@ export default function HomePage() {
   const filteredGames = useMemo(() => {
     return games
       .filter((game) => {
-        // Search query
-        if (filters.search) {
-          const q = filters.search.toLowerCase();
-          const matchTitle = game.title.toLowerCase().includes(q);
-          const matchType = (game.type || '').toLowerCase().includes(q);
-          const matchNotes = (game.notes || '').toLowerCase().includes(q);
-          const matchBorrower = (game.currentBorrower || '').toLowerCase().includes(q);
-          if (!matchTitle && !matchType && !matchNotes && !matchBorrower) return false;
+        // Search query with typo and spelling tolerance
+        if (filters.search && !matchesGameSearch(filters.search, game)) {
+          return false;
         }
 
         // Exact Player Count
