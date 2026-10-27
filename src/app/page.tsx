@@ -26,6 +26,7 @@ import { BggSyncModal } from '@/components/BggSyncModal';
 import { SettingsModal } from '@/components/SettingsModal';
 import { EditGameModal } from '@/components/EditGameModal';
 import { IdentityModal } from '@/components/IdentityModal';
+import { MobileBottomNav } from '@/components/MobileBottomNav';
 
 const initialFilters: FilterState = {
   search: '',
@@ -629,6 +630,20 @@ export default function HomePage() {
         activeHousehold={activeHousehold}
         onSelectHousehold={handleSelectHousehold}
         isInitialPrompt={isFirstIdentityPrompt}
+      />
+
+      {/* Mobile Bottom Navigation Bar (thumb-friendly on phones) */}
+      <MobileBottomNav
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
+        pendingRequestsCount={pendingRequestsCount}
+        activeHousehold={activeHousehold}
+        onOpenAddModal={handleOpenGeneralAdd}
+        onOpenNotifications={() => setIsNotificationsOpen(true)}
+        onOpenIdentityModal={() => {
+          setIsFirstIdentityPrompt(false);
+          setIsIdentityModalOpen(true);
+        }}
       />
 
     </div>

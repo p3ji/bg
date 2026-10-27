@@ -69,20 +69,20 @@ export const BookshelfView: React.FC<BookshelfViewProps> = ({
   }
 
   return (
-    <div className="py-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+    <div className="py-4 sm:py-6 px-3 sm:px-6 lg:px-8 max-w-7xl mx-auto pb-24 sm:pb-8">
       {/* Household Header Banner if filtered */}
       {activeHousehold && activeHousehold !== 'all' && (
-        <div className="mb-6 p-4 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+        <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 flex items-center justify-center font-bold text-sm">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 flex items-center justify-center font-bold text-xs sm:text-sm shrink-0">
               {activeHousehold.split('&').map(n => n.trim()[0]).join('&')}
             </div>
             <div>
-              <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-50">
+              <h3 className="text-xs sm:text-sm font-bold text-zinc-900 dark:text-zinc-50">
                 {activeHousehold}’s Collection
               </h3>
-              <p className="text-xs text-zinc-500">
-                {games.length} board game{games.length === 1 ? '' : 's'} available to share in this household
+              <p className="text-[11px] sm:text-xs text-zinc-500">
+                {games.length} board game{games.length === 1 ? '' : 's'} in this household
               </p>
             </div>
           </div>
@@ -90,7 +90,7 @@ export const BookshelfView: React.FC<BookshelfViewProps> = ({
             <button
               type="button"
               onClick={() => onAddForHousehold(activeHousehold)}
-              className="flex items-center justify-center gap-1.5 px-4 py-2 bg-zinc-900 dark:bg-zinc-100 hover:bg-zinc-800 dark:hover:bg-zinc-200 text-white dark:text-zinc-900 text-xs font-bold rounded-lg shadow-xs transition-colors shrink-0"
+              className="flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2 bg-zinc-900 dark:bg-zinc-100 hover:bg-zinc-800 dark:hover:bg-zinc-200 text-white dark:text-zinc-900 text-xs font-bold rounded-lg shadow-xs transition-colors shrink-0"
             >
               <PlusCircle className="w-3.5 h-3.5" />
               Add Game to {activeHousehold}
@@ -99,7 +99,7 @@ export const BookshelfView: React.FC<BookshelfViewProps> = ({
         </div>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-5">
         {games.map((game) => (
           <GameCard
             key={game.id}

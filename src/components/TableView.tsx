@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Game } from '@/types';
+import { GameBoxCover } from './GameBoxCover';
 import { 
   Users, 
   Clock, 
@@ -10,13 +11,13 @@ import {
   RotateCcw, 
   Hand, 
   SendHorizontal, 
-  Info,
-  PackageOpen,
-  PlusCircle,
-  Sparkles,
-  ArrowRightLeft,
-  Check,
-  PackageCheck
+  Info, 
+  PackageOpen, 
+  PlusCircle, 
+  Sparkles, 
+  ArrowRightLeft, 
+  Check, 
+  PackageCheck 
 } from 'lucide-react';
 
 interface TableViewProps {
@@ -82,7 +83,8 @@ export const TableView: React.FC<TableViewProps> = ({
   };
 
   return (
-    <div className="py-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+    <div className="py-4 sm:py-6 px-3 sm:px-6 lg:px-8 max-w-7xl mx-auto pb-24 sm:pb-8">
+      
       {/* Household Header Banner if filtered */}
       {activeHousehold && activeHousehold !== 'all' && (
         <div className="mb-4 p-3.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl flex items-center justify-between gap-3 shadow-xs">
@@ -95,17 +97,143 @@ export const TableView: React.FC<TableViewProps> = ({
             <button
               type="button"
               onClick={() => onAddForHousehold(activeHousehold)}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-900 dark:bg-zinc-100 hover:bg-zinc-800 dark:hover:bg-zinc-200 text-white dark:text-zinc-900 text-xs font-bold rounded-lg shadow-xs transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-900 dark:bg-zinc-100 hover:bg-zinc-800 dark:hover:bg-zinc-200 text-white dark:text-zinc-900 text-xs font-bold rounded-lg shadow-xs transition-colors shrink-0"
             >
               <PlusCircle className="w-3.5 h-3.5" />
-              Add Game to {activeHousehold}
+              <span>Add</span>
             </button>
           )}
         </div>
       )}
 
-      {/* Main High-Density Table */}
-      <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden shadow-xs">
+      {/* MOBILE LIST VIEW (sm:hidden) - High density vertical list without horizontal scroll */}
+      <div className="sm:hidden space-y-2">
+        {games.map((game) => {
+          const isAvailable = game.status === 'available';
+          const activeExchange = (game.borrowRequests || []).find(
+            (r) => r.status === 'pending' || r.status === 'accepted'
+          );
+
+          const isUserHolder = activeHouseholdUser && activeExchange && activeHouseholdUser.toLowerCase() === activeExchange.holderName.toLowerCase();
+          const isUserRequester = activeHouseholdUser && activeExchange && activeHouseholdUser.toLowerCase() === activeExchange.requesterName.toLowerCase();
+
+          return (
+            <div
+              key={game.id}
+              className="p-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-xs flex flex-col gap-2"
+            >
+              <div className="flex items-start justify-between gap-2.5">
+                <div className="flex-1 cursor-pointer" onClick={() => onSelectGame(game)}>
+                  <div className="flex items-center gap-2">
+                    <h4 className="text-xs font-bold text-zinc-900 dark:text-zinc-100 leading-tight">
+                      {game.title}
+                    </h4>
+                    {game.bggRating && (
+                      <span className="flex items-center text-amber-500 text-[11px] font-bold shrink-0">
+                        <Star className="w-2.5 h-2.5 fill-amber-400 mr-0.5" />
+                        {game.bggRating.toFixed(1)}
+                      </span>
+                    )}
+                  </div>
+
+                  <p className="text-[11px] text-zinc-500 mt-0.5 flex items-center gap-2 flex-wrap">
+                    <span>{game.owner}</span>
+                    <span>•</span>
+                    <span>{game.minPlayers === game.maxPlayers ? `${game.minPlayers}p` : `${game.minPlayers}–${game.maxPlayers}p`}</span>
+                    <span>•</span>
+                    <span>{game.playtimeDisplay}</span>
+                  </p>
+                </div>
+
+                {/* Status Pill */}
+                <div className="shrink-0">
+                  {activeExchange ? (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
+                      <ArrowRightLeft className="w-2.5 h-2.5" />
+                      Exchange
+                    </span>
+                  ) : isAvailable ? (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                      Available
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                      With {game.currentBorrower}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Action row on mobile */}
+              <div className="pt-2 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between gap-2">
+                <button
+                  type="button"
+                  onClick={() => onSelectGame(game)}
+                  className="text-[11px] text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 font-medium"
+                >
+                  View Details & History
+                </button>
+
+                <div className="flex items-center gap-1.5">
+                  {activeExchange ? (
+                    activeExchange.status === 'pending' ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (onAcceptExchange) onAcceptExchange(activeExchange.id);
+                          else onSelectGame(game);
+                        }}
+                        className="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold"
+                      >
+                        {isUserHolder ? 'Accept' : 'Pending'}
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (onConfirmExchange) onConfirmExchange(activeExchange.id);
+                          else onSelectGame(game);
+                        }}
+                        className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold"
+                      >
+                        {isUserRequester ? 'Confirm' : 'Awaiting'}
+                      </button>
+                    )
+                  ) : isAvailable ? (
+                    <button
+                      type="button"
+                      onClick={() => onBorrow(game)}
+                      className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold"
+                    >
+                      Borrow
+                    </button>
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => onReturn(game)}
+                        className="px-2 py-1 bg-zinc-800 text-white rounded-lg text-xs font-semibold"
+                      >
+                        Return
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => onBorrow(game)}
+                        className="px-2 py-1 bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border border-indigo-200 rounded-lg text-xs font-semibold"
+                      >
+                        Borrow
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* DESKTOP HIGH-DENSITY TABLE (hidden sm:block) */}
+      <div className="hidden sm:block bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden shadow-xs">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs">
             

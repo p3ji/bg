@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { FilterState } from '@/types';
 import { OWNER_GROUPS, GAME_TYPES } from '@/data/friends';
 import { 
@@ -12,7 +12,10 @@ import {
   ArrowUpDown, 
   RotateCcw,
   Sparkles,
-  PlusCircle
+  PlusCircle,
+  SlidersHorizontal,
+  ChevronDown,
+  Check
 } from 'lucide-react';
 
 interface FilterBarProps {
@@ -32,17 +35,18 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   resultCount,
   onAddForHousehold,
 }) => {
+  const [isExpandedMobile, setIsExpandedMobile] = useState(false);
   const availableHouseholds = friends && friends.length > 0 ? friends : OWNER_GROUPS;
 
-  const isFiltered = Boolean(
-    filters.search ||
-    filters.exactPlayers !== null ||
-    filters.maxPlaytime !== null ||
-    filters.availability !== 'all' ||
-    filters.owner !== 'all' ||
-    filters.type !== 'all' ||
-    filters.sortBy !== 'rank'
-  );
+  const activeFilterCount = [
+    Boolean(filters.search),
+    filters.exactPlayers !== null,
+    filters.maxPlaytime !== null,
+    filters.availability !== 'all',
+    filters.owner !== 'all',
+    filters.type !== 'all',
+    filters.sortBy !== 'rank',
+  ].filter(Boolean).length;
 
   const playerOptions = [
     { label: 'Any', value: null },
@@ -64,11 +68,11 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   ];
 
   return (
-    <div className="bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 py-3.5 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto space-y-3">
+    <div className="bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 py-2.5 sm:py-3.5 px-3 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto space-y-2.5">
         
-        {/* Top Row: Search Input + Sorting */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+        {/* Row 1: Search Bar + Filter Trigger & Sort on Mobile */}
+        <div className="flex items-center gap-2">
           
           {/* Search bar */}
           <div className="relative flex-1">
@@ -77,23 +81,42 @@ export const FilterBar: React.FC<FilterBarProps> = ({
               type="text"
               value={filters.search}
               onChange={(e) => onChange({ ...filters, search: e.target.value })}
-              placeholder="Search by game title, category, or notes..."
-              className="w-full pl-9 pr-8 py-2 text-sm bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 rounded-lg text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-hidden focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition-all"
+              placeholder="Search title, category, notes..."
+              className="w-full pl-9 pr-8 py-2 text-sm bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 rounded-xl text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-hidden focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition-all text-xs sm:text-sm"
             />
             {filters.search && (
               <button
                 type="button"
                 onClick={() => onChange({ ...filters, search: '' })}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
             )}
           </div>
 
-          {/* Quick Sort Dropdown */}
-          <div className="flex items-center gap-2 shrink-0">
-            <span className="text-xs text-zinc-500 font-medium hidden sm:inline flex items-center gap-1">
+          {/* Mobile Filter Toggle Button */}
+          <button
+            type="button"
+            onClick={() => setIsExpandedMobile(!isExpandedMobile)}
+            className={`sm:hidden flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-xl border transition-colors shrink-0 ${
+              isExpandedMobile || activeFilterCount > 0
+                ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 border-zinc-900 dark:border-zinc-100'
+                : 'bg-zinc-50 dark:bg-zinc-950 text-zinc-700 dark:text-zinc-300 border-zinc-300 dark:border-zinc-800'
+            }`}
+          >
+            <SlidersHorizontal className="w-3.5 h-3.5" />
+            <span>Filters</span>
+            {activeFilterCount > 0 && (
+              <span className="w-4 h-4 rounded-full bg-rose-500 text-white flex items-center justify-center text-[10px] font-bold">
+                {activeFilterCount}
+              </span>
+            )}
+          </button>
+
+          {/* Desktop Sort Dropdown */}
+          <div className="hidden sm:flex items-center gap-2 shrink-0">
+            <span className="text-xs text-zinc-500 font-medium flex items-center gap-1">
               <ArrowUpDown className="w-3.5 h-3.5" />
               Sort:
             </span>
@@ -110,165 +133,195 @@ export const FilterBar: React.FC<FilterBarProps> = ({
               <option value="players">Max Player Count</option>
             </select>
           </div>
+
         </div>
 
-        {/* Bottom Row: Filter Pills & Selectors */}
-        <div className="flex flex-wrap items-center gap-2 pt-1">
+        {/* Row 2: Fast Horizontal Scrollable Quick Chips (Thumb-friendly on mobile) */}
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar scroll-smooth py-0.5">
           
-          {/* Player Count Chips */}
-          <div className="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800/80 p-1 rounded-lg border border-zinc-200 dark:border-zinc-700/60">
-            <span className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 px-1.5 flex items-center gap-1">
-              <Users className="w-3 h-3" />
-              Players:
-            </span>
-            {playerOptions.map((opt) => {
-              const active = filters.exactPlayers === opt.value;
-              return (
+          {/* Availability pills */}
+          <button
+            type="button"
+            onClick={() => onChange({ ...filters, availability: 'all' })}
+            className={`px-2.5 py-1 text-xs font-semibold rounded-lg shrink-0 transition-all ${
+              filters.availability === 'all'
+                ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 shadow-xs'
+                : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200'
+            }`}
+          >
+            All
+          </button>
+          <button
+            type="button"
+            onClick={() => onChange({ ...filters, availability: 'available' })}
+            className={`px-2.5 py-1 text-xs font-semibold rounded-lg shrink-0 transition-all ${
+              filters.availability === 'available'
+                ? 'bg-emerald-600 text-white shadow-xs'
+                : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:text-emerald-600'
+            }`}
+          >
+            Available Now
+          </button>
+          <button
+            type="button"
+            onClick={() => onChange({ ...filters, availability: 'borrowed' })}
+            className={`px-2.5 py-1 text-xs font-semibold rounded-lg shrink-0 transition-all ${
+              filters.availability === 'borrowed'
+                ? 'bg-amber-600 text-white shadow-xs'
+                : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:text-amber-600'
+            }`}
+          >
+            Loaned
+          </button>
+
+          <span className="w-px h-4 bg-zinc-300 dark:bg-zinc-700 shrink-0 mx-0.5" />
+
+          {/* Quick Player counts */}
+          {[1, 2, 3, 4, 5, 6].map((p) => {
+            const isSelected = filters.exactPlayers === p;
+            const label = p === 6 ? '6p+' : `${p}p`;
+            return (
+              <button
+                key={p}
+                type="button"
+                onClick={() => onChange({ ...filters, exactPlayers: isSelected ? null : p })}
+                className={`px-2.5 py-1 text-xs font-semibold rounded-lg shrink-0 transition-all ${
+                  isSelected
+                    ? 'bg-indigo-600 text-white shadow-xs'
+                    : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200'
+                }`}
+              >
+                {label}
+              </button>
+            );
+          })}
+
+          <span className="w-px h-4 bg-zinc-300 dark:bg-zinc-700 shrink-0 mx-0.5" />
+
+          {/* Quick Playtime pills */}
+          {[30, 60, 90].map((mins) => {
+            const isSelected = filters.maxPlaytime === mins;
+            return (
+              <button
+                key={mins}
+                type="button"
+                onClick={() => onChange({ ...filters, maxPlaytime: isSelected ? null : mins })}
+                className={`px-2.5 py-1 text-xs font-semibold rounded-lg shrink-0 transition-all ${
+                  isSelected
+                    ? 'bg-indigo-600 text-white shadow-xs'
+                    : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200'
+                }`}
+              >
+                ≤ {mins}m
+              </button>
+            );
+          })}
+
+          <span className="w-px h-4 bg-zinc-300 dark:bg-zinc-700 shrink-0 mx-0.5" />
+
+          {/* Household chips */}
+          {availableHouseholds.map((h) => {
+            const isSelected = filters.owner === h;
+            return (
+              <button
+                key={h}
+                type="button"
+                onClick={() => onChange({ ...filters, owner: isSelected ? 'all' : h })}
+                className={`px-2.5 py-1 text-xs font-semibold rounded-lg shrink-0 transition-all ${
+                  isSelected
+                    ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 shadow-xs'
+                    : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200'
+                }`}
+              >
+                {h}
+              </button>
+            );
+          })}
+
+        </div>
+
+        {/* Expandable Filter Panel (Mobile Accordion / Desktop Detailed Row) */}
+        <div className={`${isExpandedMobile ? 'block' : 'hidden sm:block'} pt-2 border-t border-zinc-100 dark:border-zinc-800/80 animate-in fade-in duration-150`}>
+          <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 gap-2.5 text-xs">
+            
+            {/* Household Filter */}
+            <div className="flex flex-col gap-1">
+              <label className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 flex items-center gap-1">
+                <UserCheck className="w-3 h-3" />
+                Household Collection:
+              </label>
+              <select
+                value={filters.owner}
+                onChange={(e) => onChange({ ...filters, owner: e.target.value })}
+                className="w-full py-2 px-2.5 text-xs font-medium bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 rounded-lg text-zinc-800 dark:text-zinc-200"
+              >
+                <option value="all">All Households</option>
+                {availableHouseholds.map((grp) => (
+                  <option key={grp} value={grp}>
+                    {grp}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Game Type Filter */}
+            <div className="flex flex-col gap-1">
+              <label className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 flex items-center gap-1">
+                <Sparkles className="w-3 h-3" />
+                Game Type / Category:
+              </label>
+              <select
+                value={filters.type}
+                onChange={(e) => onChange({ ...filters, type: e.target.value })}
+                className="w-full py-2 px-2.5 text-xs font-medium bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 rounded-lg text-zinc-800 dark:text-zinc-200"
+              >
+                <option value="all">All Types</option>
+                {GAME_TYPES.map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Mobile Sort Dropdown (shown only inside expanded drawer on mobile) */}
+            <div className="sm:hidden flex flex-col gap-1">
+              <label className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 flex items-center gap-1">
+                <ArrowUpDown className="w-3 h-3" />
+                Sort Order:
+              </label>
+              <select
+                value={filters.sortBy}
+                onChange={(e) => onChange({ ...filters, sortBy: e.target.value as FilterState['sortBy'] })}
+                className="w-full py-2 px-2.5 text-xs font-medium bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 rounded-lg text-zinc-800 dark:text-zinc-200"
+              >
+                <option value="rank">BGG Rank (Top)</option>
+                <option value="rating">BGG Rating (High to Low)</option>
+                <option value="title">Title (A–Z)</option>
+                <option value="playtime">Playtime (Shortest first)</option>
+                <option value="weight">Complexity (Weight)</option>
+                <option value="players">Max Player Count</option>
+              </select>
+            </div>
+
+            {/* Result count & reset */}
+            <div className="flex items-end justify-between sm:justify-end gap-2 pt-1 sm:pt-0">
+              <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">
+                {resultCount} {resultCount === 1 ? 'game' : 'games'} found
+              </span>
+              {activeFilterCount > 0 && (
                 <button
-                  key={opt.label}
                   type="button"
-                  onClick={() => onChange({ ...filters, exactPlayers: opt.value })}
-                  className={`px-2 py-0.5 text-xs font-semibold rounded-md transition-all ${
-                    active
-                      ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 shadow-xs'
-                      : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-200/50 dark:hover:bg-zinc-700/50'
-                  }`}
+                  onClick={onReset}
+                  className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/50 hover:bg-rose-100 rounded-lg transition-colors"
                 >
-                  {opt.label}
+                  <RotateCcw className="w-3 h-3" />
+                  Reset Filters
                 </button>
-              );
-            })}
+              )}
+            </div>
+
           </div>
-
-          {/* Max Playtime Filter */}
-          <div className="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800/80 p-1 rounded-lg border border-zinc-200 dark:border-zinc-700/60">
-            <span className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 px-1.5 flex items-center gap-1">
-              <Clock className="w-3 h-3" />
-              Time:
-            </span>
-            <select
-              value={filters.maxPlaytime ?? ''}
-              onChange={(e) => {
-                const val = e.target.value ? parseInt(e.target.value, 10) : null;
-                onChange({ ...filters, maxPlaytime: val });
-              }}
-              className="bg-transparent text-xs font-semibold text-zinc-800 dark:text-zinc-200 focus:outline-hidden py-0.5 px-1 cursor-pointer"
-            >
-              {playtimeOptions.map((opt) => (
-                <option key={opt.label} value={opt.value ?? ''}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Availability Filter */}
-          <div className="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800/80 p-1 rounded-lg border border-zinc-200 dark:border-zinc-700/60">
-            <button
-              type="button"
-              onClick={() => onChange({ ...filters, availability: 'all' })}
-              className={`px-2 py-0.5 text-xs font-semibold rounded-md transition-all ${
-                filters.availability === 'all'
-                  ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 shadow-xs'
-                  : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
-              }`}
-            >
-              All
-            </button>
-            <button
-              type="button"
-              onClick={() => onChange({ ...filters, availability: 'available' })}
-              className={`px-2 py-0.5 text-xs font-semibold rounded-md transition-all ${
-                filters.availability === 'available'
-                  ? 'bg-emerald-600 text-white shadow-xs'
-                  : 'text-zinc-600 dark:text-zinc-400 hover:text-emerald-600 dark:hover:text-emerald-400'
-              }`}
-            >
-              Available
-            </button>
-            <button
-              type="button"
-              onClick={() => onChange({ ...filters, availability: 'borrowed' })}
-              className={`px-2 py-0.5 text-xs font-semibold rounded-md transition-all ${
-                filters.availability === 'borrowed'
-                  ? 'bg-amber-600 text-white shadow-xs'
-                  : 'text-zinc-600 dark:text-zinc-400 hover:text-amber-600 dark:hover:text-amber-400'
-              }`}
-            >
-              Loaned
-            </button>
-          </div>
-
-          {/* Owner Filter */}
-          <div className="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800/80 p-1 rounded-lg border border-zinc-200 dark:border-zinc-700/60">
-            <span className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 px-1.5 flex items-center gap-1">
-              <UserCheck className="w-3 h-3" />
-              Owner:
-            </span>
-            <select
-              value={filters.owner}
-              onChange={(e) => onChange({ ...filters, owner: e.target.value })}
-              className="bg-transparent text-xs font-semibold text-zinc-800 dark:text-zinc-200 focus:outline-hidden py-0.5 px-1 cursor-pointer max-w-[140px]"
-            >
-              <option value="all">All Households</option>
-              {availableHouseholds.map((grp) => (
-                <option key={grp} value={grp}>
-                  {grp}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Quick Add Game for Household Button (when filtered by a household) */}
-          {filters.owner !== 'all' && onAddForHousehold && (
-            <button
-              type="button"
-              onClick={() => onAddForHousehold(filters.owner)}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors shadow-xs animate-in fade-in"
-              title={`Search and add a board game to ${filters.owner}'s library`}
-            >
-              <PlusCircle className="w-3.5 h-3.5" />
-              <span>Add to {filters.owner}</span>
-            </button>
-          )}
-
-          {/* Game Type Filter */}
-          <div className="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800/80 p-1 rounded-lg border border-zinc-200 dark:border-zinc-700/60">
-            <span className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 px-1.5 flex items-center gap-1">
-              <Sparkles className="w-3 h-3" />
-              Type:
-            </span>
-            <select
-              value={filters.type}
-              onChange={(e) => onChange({ ...filters, type: e.target.value })}
-              className="bg-transparent text-xs font-semibold text-zinc-800 dark:text-zinc-200 focus:outline-hidden py-0.5 px-1 cursor-pointer max-w-[130px]"
-            >
-              <option value="all">All Types</option>
-              {GAME_TYPES.map((t) => (
-                <option key={t} value={t}>
-                  {t}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Reset Filters button if any active */}
-          {isFiltered && (
-            <button
-              type="button"
-              onClick={onReset}
-              className="flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 rounded-lg transition-colors ml-auto"
-            >
-              <RotateCcw className="w-3 h-3" />
-              Reset filters
-            </button>
-          )}
-
-          {/* Result Count */}
-          <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400 ml-auto sm:ml-0">
-            Showing <strong className="text-zinc-900 dark:text-zinc-100">{resultCount}</strong> games
-          </span>
-
         </div>
 
       </div>
