@@ -71,7 +71,7 @@ export const BookshelfView: React.FC<BookshelfViewProps> = ({
   }
 
   return (
-    <div className="py-4 sm:py-6 px-3 sm:px-6 lg:px-8 max-w-7xl mx-auto pb-24 sm:pb-8">
+    <div className="py-3 sm:py-5 px-2 sm:px-5 lg:px-6 max-w-7xl mx-auto pb-24 sm:pb-8">
       {/* Household Header Banner if filtered */}
       {activeHousehold && activeHousehold !== 'all' && (
         <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
@@ -101,7 +101,7 @@ export const BookshelfView: React.FC<BookshelfViewProps> = ({
         </div>
       )}
 
-      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-5">
+      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3.5">
         {games.map((game) => (
           <GameCard
             key={game.id}

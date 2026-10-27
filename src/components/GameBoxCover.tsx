@@ -12,6 +12,7 @@ interface GameBoxCoverProps {
   maxPlayers?: number;
   playtimeDisplay?: string;
   className?: string;
+  fullBleedCard?: boolean;
 }
 
 export const GameBoxCover: React.FC<GameBoxCoverProps> = ({
@@ -23,11 +24,14 @@ export const GameBoxCover: React.FC<GameBoxCoverProps> = ({
   maxPlayers = 4,
   playtimeDisplay = '45 min',
   className = '',
+  fullBleedCard = false,
 }) => {
-  const [triedProxy, setTriedProxy] = useState(false);
-  const [hasError, setHasError] = useState(false);
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
+  const [proxySrc, setProxySrc] = useState<string | null>(null);
 
-  const rawSrc = image || thumbnail;
+  const rawSrc = image || thumbnail || null;
+  const triedProxy = Boolean(rawSrc && proxySrc === rawSrc);
+  const hasError = Boolean(rawSrc && failedSrc === rawSrc);
   
   // Choose source: raw first, then proxy if raw fails
   let activeSrc: string | null = null;
@@ -47,9 +51,9 @@ export const GameBoxCover: React.FC<GameBoxCoverProps> = ({
   const handleImageError = () => {
     if (!triedProxy && rawSrc && rawSrc.startsWith('http')) {
       // Try again through the internal proxy before giving up
-      setTriedProxy(true);
-    } else {
-      setHasError(true);
+      setProxySrc(rawSrc);
+    } else if (rawSrc) {
+      setFailedSrc(rawSrc);
     }
   };
 
@@ -112,6 +116,24 @@ export const GameBoxCover: React.FC<GameBoxCoverProps> = ({
   }
 
   // Elegant stylized box cover fallback
+  if (fullBleedCard) {
+    return (
+      <div
+        className={`relative overflow-hidden bg-gradient-to-br ${theme.bg} p-4 flex flex-col items-center justify-center select-none ${className}`}
+      >
+        <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:12px_12px] pointer-events-none" />
+        <div className="relative z-10 flex flex-col items-center text-center px-2 -mt-4">
+          <span className={`text-[9px] sm:text-[10px] font-semibold uppercase tracking-widest px-2 py-0.5 rounded border mb-2 ${theme.badge}`}>
+            {type}
+          </span>
+          <h3 className="text-white font-extrabold text-base sm:text-lg leading-snug line-clamp-3 tracking-tight drop-shadow-md">
+            {title}
+          </h3>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       className={`relative overflow-hidden bg-gradient-to-br ${theme.bg} p-4 flex flex-col justify-between border border-white/10 select-none ${className}`}
