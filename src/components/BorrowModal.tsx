@@ -52,7 +52,7 @@ export const BorrowModal: React.FC<BorrowModalProps> = ({
 
   useEffect(() => {
     if (isOpen) {
-      if (activeHousehold && activeHousehold.toLowerCase() !== currentHolder.toLowerCase()) {
+      if (activeHousehold) {
         setBorrower(activeHousehold);
       } else {
         setBorrower('');
@@ -64,7 +64,7 @@ export const BorrowModal: React.FC<BorrowModalProps> = ({
       setSubmittedRequester('');
       setCopied(false);
     }
-  }, [isOpen, activeHousehold, currentHolder]);
+  }, [isOpen, activeHousehold]);
 
   if (!isOpen || !game) return null;
 
@@ -275,22 +275,19 @@ export const BorrowModal: React.FC<BorrowModalProps> = ({
                     <button
                       key={f}
                       type="button"
-                      disabled={isCurrentHolder}
                       onClick={() => {
                         setBorrower(f);
                         setCustomName('');
                       }}
                       className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all ${
-                        isCurrentHolder
-                          ? 'opacity-40 cursor-not-allowed bg-zinc-100 dark:bg-zinc-800 text-zinc-400 border-dashed border-zinc-300 dark:border-zinc-700'
-                          : isSelected
-                            ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 border-zinc-900 dark:border-zinc-100 shadow-xs'
-                            : 'bg-zinc-50 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700 hover:border-zinc-400'
+                        isSelected
+                          ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 border-zinc-900 dark:border-zinc-100 shadow-xs'
+                          : 'bg-zinc-50 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700 hover:border-zinc-400'
                       }`}
-                      title={isCurrentHolder ? `${f} already has this game` : undefined}
+                      title={isCurrentHolder ? `${f} currently holds this game (select to test handshake)` : undefined}
                     >
                       {f}
-                      {isCurrentHolder && <span className="text-[10px] ml-1 font-normal">(Has game)</span>}
+                      {isCurrentHolder && <span className="text-[10px] opacity-75 ml-1 font-normal">(Current holder)</span>}
                     </button>
                   );
                 })}

@@ -83,7 +83,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
           <div className="relative">
             <Bell className="w-4 h-4 mb-0.5" />
             {pendingRequestsCount > 0 && (
-              <span className="absolute -top-1 -right-2 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-rose-600 text-[9px] font-bold text-white shadow-xs animate-pulse">
+              <span className="absolute -top-1 -right-2 flex h-3.5 min-w-3.5 px-0.5 items-center justify-center rounded-full bg-rose-600 text-[9px] font-bold text-white shadow-xs ring-1 ring-white dark:ring-zinc-950 animate-pulse">
                 {pendingRequestsCount}
               </span>
             )}

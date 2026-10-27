@@ -64,8 +64,19 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Logo & Quick Stats */}
           <div className="flex items-center gap-3 sm:gap-6 shrink-0">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 flex items-center justify-center shadow-xs shrink-0">
-                <Dices className="w-4 h-4 sm:w-5 sm:h-5" />
+              <div 
+                className="relative cursor-pointer"
+                onClick={onOpenNotifications}
+                title={pendingRequestsCount > 0 ? `${pendingRequestsCount} active borrow exchanges` : 'GameShare'}
+              >
+                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 flex items-center justify-center shadow-xs shrink-0">
+                  <Dices className="w-4 h-4 sm:w-5 sm:h-5" />
+                </div>
+                {pendingRequestsCount > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 px-1 items-center justify-center rounded-full bg-rose-600 text-[10px] font-bold text-white shadow-md ring-2 ring-white dark:ring-zinc-950 animate-pulse">
+                    {pendingRequestsCount}
+                  </span>
+                )}
               </div>
               <div>
                 <h1 className="text-sm sm:text-base font-bold text-zinc-900 dark:text-zinc-50 leading-tight tracking-tight">
@@ -156,7 +167,7 @@ export const Header: React.FC<HeaderProps> = ({
             >
               <Bell className="w-4 h-4" />
               {pendingRequestsCount > 0 && (
-                <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-rose-600 text-[10px] font-bold text-white shadow-xs animate-pulse">
+                <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 px-1 items-center justify-center rounded-full bg-rose-600 text-[10px] font-bold text-white shadow-md ring-2 ring-white dark:ring-zinc-950 animate-pulse">
                   {pendingRequestsCount}
                 </span>
               )}
