@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { BorrowRequest, Game } from '@/types';
+import { normalizeName } from '@/lib/normalize';
 import { 
   X, 
   Bell, 
@@ -46,11 +47,6 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
 }) => {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'active' | 'completed'>('active');
-
-  const normalizeName = (name?: string | null) => {
-    if (!name) return '';
-    return name.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]/g, '');
-  };
 
   if (!isOpen) return null;
 

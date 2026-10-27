@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Game, BorrowRequest } from '@/types';
+import { normalizeName } from '@/lib/normalize';
 import { GameBoxCover } from './GameBoxCover';
 import { 
   Users, 
@@ -62,11 +63,6 @@ export const GameCard: React.FC<GameCardProps> = ({
     } catch {
       return '';
     }
-  };
-
-  const normalizeName = (name?: string | null) => {
-    if (!name) return '';
-    return name.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]/g, '');
   };
 
   const isSelfTest = Boolean(activeExchange && normalizeName(activeExchange.holderName) === normalizeName(activeExchange.requesterName));

@@ -41,6 +41,7 @@ import { EditGameModal } from '@/components/EditGameModal';
 import { IdentityModal } from '@/components/IdentityModal';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { HomeNotificationBanner } from '@/components/HomeNotificationBanner';
+import { normalizeName } from '@/lib/normalize';
 
 const initialFilters: FilterState = {
   search: '',
@@ -140,11 +141,6 @@ export default function HomePage() {
       window.removeEventListener('bg_identity_updated', handleIdentityUpdate);
     };
   }, []);
-
-  const normalizeName = (name?: string | null) => {
-    if (!name) return '';
-    return name.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]/g, '');
-  };
 
   // Profile-specific actionable requests:
   // - Step 1: Active profile is holder of a pending request (action needed: Accept & Hand Off)

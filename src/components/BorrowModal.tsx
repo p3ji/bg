@@ -19,6 +19,7 @@ import {
   Bell
 } from 'lucide-react';
 import { requestBadgeNotificationPermission, getNotificationPermissionStatus } from '@/lib/badgeManager';
+import { normalizeName } from '@/lib/normalize';
 
 interface BorrowModalProps {
   game: Game | null;
@@ -47,11 +48,6 @@ export const BorrowModal: React.FC<BorrowModalProps> = ({
   const [submittedRequester, setSubmittedRequester] = useState('');
   const [copied, setCopied] = useState(false);
   const [permissionStatus, setPermissionStatus] = useState<string>('default');
-
-  const normalizeName = (name?: string | null) => {
-    if (!name) return '';
-    return name.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]/g, '');
-  };
 
   // Group that currently holds the game
   const currentHolder = game

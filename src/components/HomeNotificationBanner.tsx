@@ -16,6 +16,7 @@ import {
   SendHorizontal
 } from 'lucide-react';
 import { requestBadgeNotificationPermission, getNotificationPermissionStatus } from '@/lib/badgeManager';
+import { normalizeName } from '@/lib/normalize';
 
 interface HomeNotificationBannerProps {
   requests: BorrowRequest[];
@@ -23,11 +24,6 @@ interface HomeNotificationBannerProps {
   onAcceptExchange: (requestId: string) => void;
   onConfirmExchange: (requestId: string) => void;
   onOpenNotifications: () => void;
-}
-
-function normalizeName(name?: string | null): string {
-  if (!name) return '';
-  return name.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]/g, '');
 }
 
 export const HomeNotificationBanner: React.FC<HomeNotificationBannerProps> = ({

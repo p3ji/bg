@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Game } from '@/types';
+import { normalizeName } from '@/lib/normalize';
 import { 
   X, 
   SendHorizontal, 
@@ -35,11 +36,6 @@ export const RequestBorrowModal: React.FC<RequestBorrowModalProps> = ({
   const [note, setNote] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [copied, setCopied] = useState(false);
-
-  const normalizeName = (name?: string | null) => {
-    if (!name) return '';
-    return name.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]/g, '');
-  };
 
   useEffect(() => {
     if (isOpen) {

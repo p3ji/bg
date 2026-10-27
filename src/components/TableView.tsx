@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Game, BorrowRequest } from '@/types';
+import { normalizeName } from '@/lib/normalize';
 import { GameBoxCover } from './GameBoxCover';
 import { 
   Users, 
@@ -51,11 +52,6 @@ export const TableView: React.FC<TableViewProps> = ({
   onAddForHousehold,
   onEdit,
 }) => {
-  const normalizeName = (name?: string | null) => {
-    if (!name) return '';
-    return name.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]/g, '');
-  };
-
   if (games.length === 0) {
     return (
       <div className="py-20 text-center flex flex-col items-center justify-center px-4">
