@@ -333,7 +333,20 @@ export default function HomePage() {
     saveGames(updatedGames);
 
     const updatedGame = updatedGames.find((g) => g.id === gameId);
-    if (updatedGame) saveGameToCloud(updatedGame);
+    if (updatedGame) {
+      saveGameToCloud(updatedGame);
+      // Synchronize Google Sheets "Borrowed by" column in owner's tab (cleared)
+      fetch('/api/sheets/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'update_borrow',
+          ownerHousehold: targetGame.owner,
+          gameTitle: targetGame.title,
+          borrowerName: null,
+        }),
+      }).catch(() => {});
+    }
 
     if (selectedGame?.id === gameId) {
       setSelectedGame(updatedGames.find((g) => g.id === gameId) || null);
@@ -386,7 +399,20 @@ export default function HomePage() {
     saveGames(updatedGames);
 
     const updatedGame = updatedGames.find((g) => g.id === gameId);
-    if (updatedGame) saveGameToCloud(updatedGame);
+    if (updatedGame) {
+      saveGameToCloud(updatedGame);
+      // Synchronize Google Sheets "Borrowed by" column in owner's tab (cleared)
+      fetch('/api/sheets/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'update_borrow',
+          ownerHousehold: targetGame.owner,
+          gameTitle: targetGame.title,
+          borrowerName: null,
+        }),
+      }).catch(() => {});
+    }
 
     if (selectedGame?.id === gameId) {
       setSelectedGame(updatedGames.find((g) => g.id === gameId) || null);
@@ -512,6 +538,18 @@ export default function HomePage() {
     if (updatedReq) saveRequestToCloud(updatedReq);
     saveGameToCloud(updatedGame);
 
+    // Synchronize Google Sheets "Borrowed by" column in owner's tab
+    fetch('/api/sheets/sync', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'update_borrow',
+        ownerHousehold: targetGame.owner,
+        gameTitle: targetGame.title,
+        borrowerName: isReturningToOwner ? null : req.requesterName,
+      }),
+    }).catch(() => {});
+
     if (selectedGame?.id === targetGame.id) {
       setSelectedGame(updatedGame);
     }
@@ -561,6 +599,17 @@ export default function HomePage() {
     setGames(updated);
     saveGames(updated);
     saveGameToCloud(newGame);
+
+    // Synchronize Google Sheets by appending new game row
+    fetch('/api/sheets/sync', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'add_game',
+        ownerHousehold: newGame.owner,
+        game: newGame,
+      }),
+    }).catch(() => {});
   };
 
   const handleBatchImportGames = (importedGames: Omit<Game, 'id' | 'status' | 'history'>[]) => {

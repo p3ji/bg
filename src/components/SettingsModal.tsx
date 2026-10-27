@@ -38,6 +38,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const [permissionStatus, setPermissionStatus] = useState<string>('default');
   const [isSyncingBadge, setIsSyncingBadge] = useState(false);
   const [badgeSynced, setBadgeSynced] = useState(false);
+  const [isSyncingSheets, setIsSyncingSheets] = useState(false);
+  const [syncStatusText, setSyncStatusText] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -45,6 +47,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       setHouseholdToRemove(null);
       setAdminPassword('');
       setAdminError('');
+      setSyncStatusText(null);
     }
   }, [isOpen]);
 
@@ -61,15 +64,49 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     setIsSyncingBadge(false);
   };
 
-  const handleRefreshImages = () => {
-    forceRefreshAllImages();
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new Event('bg_games_updated'));
-      window.dispatchEvent(new Event('bg_requests_updated'));
-      window.dispatchEvent(new Event('bg_friends_updated'));
+  const handleManualSync = async () => {
+    setIsSyncingSheets(true);
+    setSyncStatusText(null);
+    try {
+      forceRefreshAllImages();
+
+      const res = await fetch('/api/sheets/sync');
+      const data = await res.json();
+
+      if (data.success) {
+        if (Array.isArray(data.households) && data.households.length > 0) {
+          const newHouseholds = data.households.filter(
+            (h: string) => !friends.some((f) => isSameHousehold(f, h, friends))
+          );
+          if (newHouseholds.length > 0) {
+            onUpdateFriends([...friends, ...newHouseholds]);
+          }
+        }
+
+        setSyncStatusText(
+          data.serviceAccountConfigured
+            ? `Google Sheets synced! (${data.totalGames} games across ${data.households.length} households)`
+            : `Spreadsheet connected (${data.totalGames} games). Add Service Account for full 2-way write access.`
+        );
+      } else {
+        setSyncStatusText('Covers refreshed. Google Sheets: ' + (data.error || 'Check service account'));
+      }
+
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event('bg_games_updated'));
+        window.dispatchEvent(new Event('bg_requests_updated'));
+        window.dispatchEvent(new Event('bg_friends_updated'));
+      }
+      setImagesRefreshed(true);
+      setTimeout(() => setImagesRefreshed(false), 4000);
+    } catch (err: any) {
+      console.warn('Manual sync notice:', err);
+      setSyncStatusText('Covers refreshed.');
+      setImagesRefreshed(true);
+      setTimeout(() => setImagesRefreshed(false), 3000);
+    } finally {
+      setIsSyncingSheets(false);
     }
-    setImagesRefreshed(true);
-    setTimeout(() => setImagesRefreshed(false), 3000);
   };
 
   const handleAddFriend = (e: React.FormEvent) => {
@@ -78,6 +115,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     if (!trimmed || friends.some((f) => isSameHousehold(f, trimmed, friends))) return;
     onUpdateFriends([...friends, trimmed]);
     setNewFriend('');
+
+    // Trigger tab creation in Google Sheets
+    fetch('/api/sheets/sync', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'add_household', householdName: trimmed }),
+    }).catch(() => {});
   };
 
   const handleConfirmRemoveHousehold = (e: React.FormEvent) => {
@@ -247,20 +291,30 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             </p>
             <button
               type="button"
-              onClick={handleRefreshImages}
-              className="flex items-center gap-2 px-3 py-2 text-xs font-semibold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 border border-indigo-200 dark:border-indigo-900 rounded-lg transition-colors shadow-xs"
+              disabled={isSyncingSheets}
+              onClick={handleManualSync}
+              className="flex items-center gap-2 px-3 py-2 text-xs font-semibold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 border border-indigo-200 dark:border-indigo-900 rounded-lg transition-colors shadow-xs disabled:opacity-50"
             >
-              {imagesRefreshed ? (
+              {isSyncingSheets ? (
+                <RefreshCw className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400 animate-spin" />
+              ) : imagesRefreshed ? (
                 <Check className="w-3.5 h-3.5 text-emerald-500" />
               ) : (
                 <RefreshCw className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
               )}
               <span>
-                {imagesRefreshed
+                {isSyncingSheets
+                  ? 'Syncing with Google Sheets & covers...'
+                  : imagesRefreshed
                   ? 'Sync Complete!'
                   : 'Manual sync (refresh BGG game covers, sync with google sheets, latest app version)'}
               </span>
             </button>
+            {syncStatusText && (
+              <p className="mt-2 text-[11px] text-emerald-700 dark:text-emerald-400 font-medium">
+                {syncStatusText}
+              </p>
+            )}
           </div>
 
           {/* Phone Home Screen App Badges */}
