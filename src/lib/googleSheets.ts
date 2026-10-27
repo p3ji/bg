@@ -6,6 +6,27 @@ import { matchesFuzzy } from './search';
 
 export const DEFAULT_SHEET_ID = '1wtXMkKkA1lq7rxSRAvux9T8vi1Kt8MZUzgsUrNSPWlE';
 
+/**
+ * Escapes a sheet title for use in A1 notation (e.g. 'Sheet Name'!A1:G).
+ */
+export function escapeSheetTitle(title: string): string {
+  return `'${title.replace(/'/g, "''")}'`;
+}
+
+/**
+ * Sanitizes a string value to prevent Google Sheets formula injection (CSV/formula injection).
+ * Prepends a single quote if string begins with =, +, -, @, \t, or \r.
+ */
+export function sanitizeCellValue(val: unknown): string | number {
+  if (typeof val === 'number') return val;
+  if (val === null || val === undefined) return '';
+  const str = String(val);
+  if (/^[=+\-@\t\r]/.test(str)) {
+    return `'${str}`;
+  }
+  return str;
+}
+
 export function getSpreadsheetId(): string {
   return process.env.GOOGLE_SHEET_ID || DEFAULT_SHEET_ID;
 }
@@ -109,7 +130,7 @@ export async function readAllGamesFromSheets(): Promise<{
       const title = sheet.properties?.title;
       if (!title || !isHouseholdTabName(title)) continue;
 
-      const range = `${title}!A1:G`;
+      const range = `${escapeSheetTitle(title)}!A1:G`;
       const res = await sheets.spreadsheets.values.get({ spreadsheetId, range });
       const rows = res.data.values || [];
       if (rows.length < 2) continue;
@@ -266,7 +287,7 @@ export async function updateGameBorrowInSheets(
   }
 
   // Fetch current rows in that tab
-  const range = `${targetTabTitle}!A1:G`;
+  const range = `${escapeSheetTitle(targetTabTitle)}!A1:G`;
   const res = await sheets.spreadsheets.values.get({ spreadsheetId, range });
   const rows = res.data.values || [];
   if (rows.length < 2) {
@@ -277,19 +298,31 @@ export async function updateGameBorrowInSheets(
   if (!rows[0][6] || rows[0][6] !== 'Borrowed by') {
     await sheets.spreadsheets.values.update({
       spreadsheetId,
-      range: `${targetTabTitle}!G1`,
-      valueInputOption: 'USER_ENTERED',
+      range: `${escapeSheetTitle(targetTabTitle)}!G1`,
+      valueInputOption: 'RAW',
       requestBody: { values: [['Borrowed by']] },
     });
   }
 
-  // Find game row index
+  // Find game row index (exact normalized match first to avoid fuzzy prefix collisions)
   let targetRowIndex = -1;
+  const targetNorm = normalizeName(gameTitle);
   for (let i = 1; i < rows.length; i++) {
     const rowTitle = String(rows[i][0] || '').trim();
-    if (matchesFuzzy(gameTitle, rowTitle) || normalizeName(gameTitle) === normalizeName(rowTitle)) {
-      targetRowIndex = i + 1; // 1-based index in sheet
+    if (normalizeName(rowTitle) === targetNorm) {
+      targetRowIndex = i + 1;
       break;
+    }
+  }
+
+  // Fallback to fuzzy matching if exact normalized match fails
+  if (targetRowIndex === -1) {
+    for (let i = 1; i < rows.length; i++) {
+      const rowTitle = String(rows[i][0] || '').trim();
+      if (matchesFuzzy(gameTitle, rowTitle)) {
+        targetRowIndex = i + 1;
+        break;
+      }
     }
   }
 
@@ -297,12 +330,12 @@ export async function updateGameBorrowInSheets(
     return { success: false, message: `Game "${gameTitle}" not found in tab "${targetTabTitle}".` };
   }
 
-  const valueToWrite = borrowerName ? borrowerName.trim() : '';
+  const valueToWrite = borrowerName ? sanitizeCellValue(borrowerName.trim()) : '';
 
   await sheets.spreadsheets.values.update({
     spreadsheetId,
-    range: `${targetTabTitle}!G${targetRowIndex}`,
-    valueInputOption: 'USER_ENTERED',
+    range: `${escapeSheetTitle(targetTabTitle)}!G${targetRowIndex}`,
+    valueInputOption: 'RAW',
     requestBody: {
       values: [[valueToWrite]],
     },
@@ -351,27 +384,50 @@ export async function updateGameDetailsInSheets(
   }
 
   // 2. Fetch current rows in that tab
-  const range = `${targetTabTitle}!A1:G`;
+  const range = `${escapeSheetTitle(targetTabTitle)}!A1:G`;
   const res = await sheets.spreadsheets.values.get({ spreadsheetId, range });
   const rows = res.data.values || [];
   if (rows.length < 2) {
     return { success: false, message: `No game rows found in tab: ${targetTabTitle}` };
   }
 
-  // 3. Find matching row index
+  // 3. Find matching row index (exact normalized match first to avoid prefix collisions)
   let targetRowIndex = -1;
+  const prevNorm = normalizeName(previousGameTitle);
   for (let i = 1; i < rows.length; i++) {
     const rowTitle = String(rows[i][0] || '').trim();
-    if (matchesFuzzy(previousGameTitle, rowTitle) || normalizeName(previousGameTitle) === normalizeName(rowTitle)) {
+    if (normalizeName(rowTitle) === prevNorm) {
       targetRowIndex = i + 1; // 1-based index in sheet
       break;
     }
   }
 
   if (targetRowIndex === -1 && updatedGame.title) {
+    const updateNorm = normalizeName(updatedGame.title);
     for (let i = 1; i < rows.length; i++) {
       const rowTitle = String(rows[i][0] || '').trim();
-      if (matchesFuzzy(updatedGame.title, rowTitle) || normalizeName(updatedGame.title) === normalizeName(rowTitle)) {
+      if (normalizeName(rowTitle) === updateNorm) {
+        targetRowIndex = i + 1;
+        break;
+      }
+    }
+  }
+
+  // Fallback to fuzzy matching if exact normalized match failed
+  if (targetRowIndex === -1) {
+    for (let i = 1; i < rows.length; i++) {
+      const rowTitle = String(rows[i][0] || '').trim();
+      if (matchesFuzzy(previousGameTitle, rowTitle)) {
+        targetRowIndex = i + 1;
+        break;
+      }
+    }
+  }
+
+  if (targetRowIndex === -1 && updatedGame.title) {
+    for (let i = 1; i < rows.length; i++) {
+      const rowTitle = String(rows[i][0] || '').trim();
+      if (matchesFuzzy(updatedGame.title, rowTitle)) {
         targetRowIndex = i + 1;
         break;
       }
@@ -446,10 +502,20 @@ export async function updateGameDetailsInSheets(
   // Update row in current tab
   await sheets.spreadsheets.values.update({
     spreadsheetId,
-    range: `${targetTabTitle}!A${targetRowIndex}:G${targetRowIndex}`,
-    valueInputOption: 'USER_ENTERED',
+    range: `${escapeSheetTitle(targetTabTitle)}!A${targetRowIndex}:G${targetRowIndex}`,
+    valueInputOption: 'RAW',
     requestBody: {
-      values: [[newTitle, newMin, newMax, newType, playtimeStr, newNotes, newBorrowedBy]],
+      values: [
+        [
+          sanitizeCellValue(newTitle),
+          sanitizeCellValue(newMin),
+          sanitizeCellValue(newMax),
+          sanitizeCellValue(newType),
+          sanitizeCellValue(playtimeStr),
+          sanitizeCellValue(newNotes),
+          sanitizeCellValue(newBorrowedBy),
+        ],
+      ],
     },
   });
 
@@ -493,19 +559,19 @@ export async function addGameToSheets(
   }
 
   const newRow = [
-    game.title || '',
-    game.minPlayers || '',
-    game.maxPlayers || '',
-    game.type || 'Strategy',
-    game.minPlaytime || '',
-    game.notes || '',
-    game.currentBorrower || '',
+    sanitizeCellValue(game.title || ''),
+    sanitizeCellValue(game.minPlayers || ''),
+    sanitizeCellValue(game.maxPlayers || ''),
+    sanitizeCellValue(game.type || 'Strategy'),
+    sanitizeCellValue(game.minPlaytime || ''),
+    sanitizeCellValue(game.notes || ''),
+    sanitizeCellValue(game.currentBorrower || ''),
   ];
 
   await sheets.spreadsheets.values.append({
     spreadsheetId,
-    range: `${targetTabTitle}!A:G`,
-    valueInputOption: 'USER_ENTERED',
+    range: `${escapeSheetTitle(targetTabTitle)}!A:G`,
+    valueInputOption: 'RAW',
     insertDataOption: 'INSERT_ROWS',
     requestBody: {
       values: [newRow],
@@ -578,8 +644,8 @@ export async function createHouseholdTabInSheets(
 
     await sheets.spreadsheets.values.update({
       spreadsheetId,
-      range: `${cleanTabName}!A1:G1`,
-      valueInputOption: 'USER_ENTERED',
+      range: `${escapeSheetTitle(cleanTabName)}!A1:G1`,
+      valueInputOption: 'RAW',
       requestBody: {
         values: [
           [

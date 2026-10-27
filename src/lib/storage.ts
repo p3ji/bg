@@ -45,13 +45,16 @@ export function getInitialGames(): Game[] {
         const merged = parsed.map((game: Game) => {
           const seed = seedMapById.get(game.id) || seedMapByTitle.get((game.title || '').toLowerCase().trim());
           if (seed) {
-            // Update to verified official seed metadata while preserving user loan history and borrow states
+            // Keep user edits and dynamic state as primary; only backfill missing metadata or images from seed
             return {
               ...seed,
-              status: game.status || seed.status,
-              currentBorrower: game.currentBorrower !== undefined ? game.currentBorrower : seed.currentBorrower,
-              borrowDate: game.borrowDate !== undefined ? game.borrowDate : seed.borrowDate,
-              expectedReturnDate: game.expectedReturnDate !== undefined ? game.expectedReturnDate : seed.expectedReturnDate,
+              ...game,
+              image: game.image || seed.image,
+              thumbnail: game.thumbnail || seed.thumbnail,
+              bggId: game.bggId ?? seed.bggId,
+              bggRating: game.bggRating ?? seed.bggRating,
+              bggRank: game.bggRank ?? seed.bggRank,
+              weight: game.weight ?? seed.weight,
               history: Array.isArray(game.history) && game.history.length > 0 ? game.history : (seed.history || []),
               borrowRequests: Array.isArray(game.borrowRequests) && game.borrowRequests.length > 0 ? game.borrowRequests : (seed.borrowRequests || []),
               notes: game.notes !== undefined && game.notes !== '' ? game.notes : (seed.notes || ''),

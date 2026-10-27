@@ -403,17 +403,6 @@ export default function HomePage() {
     const updatedGame = updatedGames.find((g) => g.id === gameId);
     if (updatedGame) {
       saveGameToCloud(updatedGame);
-      // Synchronize Google Sheets "Borrowed by" column in owner's tab (cleared)
-      fetch('/api/sheets/sync', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'update_borrow',
-          ownerHousehold: targetGame.owner,
-          gameTitle: targetGame.title,
-          borrowerName: null,
-        }),
-      }).catch(() => {});
     }
 
     if (selectedGame?.id === gameId) {
