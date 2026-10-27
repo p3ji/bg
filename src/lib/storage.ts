@@ -2,8 +2,8 @@ import { Game, BorrowRequest } from '@/types';
 import seedData from '@/data/seedGames.json';
 import { DEFAULT_FRIENDS } from '@/data/friends';
 
-const GAMES_STORAGE_KEY = 'bg_share_games_v5';
-const REQUESTS_STORAGE_KEY = 'bg_share_requests_v3';
+const GAMES_STORAGE_KEY = 'bg_share_games_v6';
+const REQUESTS_STORAGE_KEY = 'bg_share_requests_v4';
 const FRIENDS_STORAGE_KEY = 'bg_share_households_v1';
 const BGG_TOKEN_KEY = 'bg_share_bgg_token_v1';
 const ACTIVE_HOUSEHOLD_KEY = 'bg_active_user_household_v1';
