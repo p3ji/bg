@@ -146,6 +146,35 @@ export function registerServiceWorker(): void {
   });
 }
 
+export async function sendLocalSystemNotification(title: string, body: string, url: string = '/'): Promise<void> {
+  if (typeof window === 'undefined' || typeof Notification === 'undefined') return;
+  if (Notification.permission !== 'granted') return;
+
+  try {
+    if ('serviceWorker' in navigator) {
+      const reg = await navigator.serviceWorker.ready;
+      if (reg && reg.showNotification) {
+        await reg.showNotification(title, {
+          body,
+          icon: '/icon-192.png',
+          badge: '/icon-192.png',
+          tag: 'gameshare-request',
+          data: { url },
+        });
+        return;
+      }
+    }
+    new Notification(title, {
+      body,
+      icon: '/icon-192.png',
+      badge: '/icon-192.png',
+      tag: 'gameshare-request',
+    });
+  } catch (err) {
+    console.debug('Failed to display system notification:', err);
+  }
+}
+
 export function getNotificationPermissionStatus(): NotificationPermission | 'unsupported' {
   if (typeof window === 'undefined' || typeof Notification === 'undefined') {
     return 'unsupported';

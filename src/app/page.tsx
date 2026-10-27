@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Game, BorrowRequest, ViewMode, FilterState } from '@/types';
 import { 
   getInitialGames, 
@@ -25,7 +25,7 @@ import {
   seedCloudDatabaseIfNeeded
 } from '@/lib/firebase';
 import { DEFAULT_FRIENDS } from '@/data/friends';
-import { registerServiceWorker, updateHomeScreenAppBadge } from '@/lib/badgeManager';
+import { registerServiceWorker, updateHomeScreenAppBadge, sendLocalSystemNotification } from '@/lib/badgeManager';
 import { Header } from '@/components/Header';
 import { FilterBar } from '@/components/FilterBar';
 import { BookshelfView } from '@/components/BookshelfView';
@@ -180,10 +180,22 @@ export default function HomePage() {
   // Badge counter strictly reflects actionable requests requiring YOUR attention (Scenario A)
   // Scenario B (outgoing requests waiting on friends) is excluded from badge numbers
   const pendingRequestsCount = myActionableRequests.length;
+  const notifiedReqsRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     updateHomeScreenAppBadge(pendingRequestsCount);
-  }, [pendingRequestsCount]);
+    if (pendingRequestsCount > 0) {
+      const unnotified = myActionableRequests.filter((r) => !notifiedReqsRef.current.has(r.id));
+      if (unnotified.length > 0) {
+        unnotified.forEach((r) => notifiedReqsRef.current.add(r.id));
+        const latest = unnotified[0];
+        sendLocalSystemNotification(
+          `🎲 Borrow Request from ${latest.requesterName}`,
+          `Action needed: ${latest.requesterName} requested "${latest.gameTitle}". Tap to view & accept.`
+        );
+      }
+    }
+  }, [pendingRequestsCount, myActionableRequests]);
 
   // Filtered & Sorted Games List
   const filteredGames = useMemo(() => {
