@@ -212,7 +212,8 @@ export default function HomePage() {
 
         // Max Playtime
         if (filters.maxPlaytime !== null) {
-          if (game.minPlaytime > filters.maxPlaytime) return false;
+          const effectiveMinPlaytime = game.minPlaytime > 0 ? game.minPlaytime : (game.maxPlaytime || 0);
+          if (effectiveMinPlaytime > filters.maxPlaytime) return false;
         }
 
         // Availability

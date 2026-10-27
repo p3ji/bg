@@ -199,7 +199,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           <span className="w-px h-4 bg-zinc-300 dark:bg-zinc-700 shrink-0 mx-0.5" />
 
           {/* Quick Playtime pills */}
-          {[30, 60, 90].map((mins) => {
+          {[15, 30, 60, 90].map((mins) => {
             const isSelected = filters.maxPlaytime === mins;
             return (
               <button
