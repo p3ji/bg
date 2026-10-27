@@ -141,10 +141,48 @@ export default function HomePage() {
     };
   }, []);
 
-  // Update favicon, document title, and app badge with pending & accepted active requests badge
-  const pendingRequestsCount = useMemo(() => {
-    return requests.filter((r) => r.status === 'pending' || r.status === 'accepted').length;
-  }, [requests]);
+  const normalizeName = (name?: string | null) => {
+    if (!name) return '';
+    return name.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]/g, '');
+  };
+
+  // Profile-specific actionable requests:
+  // - Step 1: Active profile is holder of a pending request (action needed: Accept & Hand Off)
+  // - Step 2: Active profile is requester of an accepted request (action needed: Confirm Receipt)
+  // - Self-borrow test mode counts for both steps
+  // If no profile is active, count is 0
+  const myActionableRequests = useMemo(() => {
+    if (!activeHousehold) return [];
+    return requests.filter((r) => {
+      const isSelfTest = normalizeName(r.holderName) === normalizeName(r.requesterName);
+      if (r.status === 'pending') {
+        return isSelfTest || normalizeName(r.holderName) === normalizeName(activeHousehold);
+      }
+      if (r.status === 'accepted') {
+        return isSelfTest || normalizeName(r.requesterName) === normalizeName(activeHousehold);
+      }
+      return false;
+    });
+  }, [requests, activeHousehold]);
+
+  // Outgoing requests submitted by this profile that are waiting on friends
+  const myWaitingRequests = useMemo(() => {
+    if (!activeHousehold) return [];
+    return requests.filter((r) => {
+      const isSelfTest = normalizeName(r.holderName) === normalizeName(r.requesterName);
+      if (isSelfTest) return false;
+      if (r.status === 'pending') {
+        return normalizeName(r.requesterName) === normalizeName(activeHousehold);
+      }
+      if (r.status === 'accepted') {
+        return normalizeName(r.holderName) === normalizeName(activeHousehold);
+      }
+      return false;
+    });
+  }, [requests, activeHousehold]);
+
+  // Badge counter strictly reflects the active profile's required actions
+  const pendingRequestsCount = myActionableRequests.length;
 
   useEffect(() => {
     updateHomeScreenAppBadge(pendingRequestsCount);

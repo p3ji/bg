@@ -53,11 +53,20 @@ export const HomeNotificationBanner: React.FC<HomeNotificationBannerProps> = ({
     setIsSyncingBadge(false);
   };
 
-  const activeRequests = requests.filter(
-    (r) => r.status === 'pending' || r.status === 'accepted'
-  );
+  // Only show requests where activeHousehold needs to take action
+  const actionableRequests = requests.filter((r) => {
+    if (!activeHousehold) return false;
+    const isSelfTest = normalizeName(r.holderName) === normalizeName(r.requesterName);
+    if (r.status === 'pending') {
+      return isSelfTest || normalizeName(r.holderName) === normalizeName(activeHousehold);
+    }
+    if (r.status === 'accepted') {
+      return isSelfTest || normalizeName(r.requesterName) === normalizeName(activeHousehold);
+    }
+    return false;
+  });
 
-  if (activeRequests.length === 0) return null;
+  if (actionableRequests.length === 0) return null;
 
   return (
     <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-3 sm:pt-4">
@@ -73,7 +82,7 @@ export const HomeNotificationBanner: React.FC<HomeNotificationBannerProps> = ({
             <div className="flex items-center gap-1.5">
               <Bell className="w-4 h-4 text-rose-600 dark:text-rose-400" />
               <h3 className="text-xs sm:text-sm font-bold text-zinc-900 dark:text-zinc-100">
-                Action Needed: {activeRequests.length} Borrow Exchange Request{activeRequests.length === 1 ? '' : 's'}
+                Action Needed for {activeHousehold}: {actionableRequests.length} Request{actionableRequests.length === 1 ? '' : 's'}
               </h3>
             </div>
           </div>
@@ -129,7 +138,7 @@ export const HomeNotificationBanner: React.FC<HomeNotificationBannerProps> = ({
 
         {/* Requests List */}
         <div className="mt-2.5 space-y-2">
-          {activeRequests.map((req) => {
+          {actionableRequests.map((req) => {
             const isSelfTest = normalizeName(req.requesterName) === normalizeName(req.holderName);
             const isHolder = isSelfTest || !activeHousehold || normalizeName(activeHousehold) === normalizeName(req.holderName);
             const isRequester = isSelfTest || !activeHousehold || normalizeName(activeHousehold) === normalizeName(req.requesterName);
