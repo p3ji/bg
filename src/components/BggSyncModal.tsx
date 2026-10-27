@@ -52,6 +52,7 @@ export const BggSyncModal: React.FC<BggSyncModalProps> = ({
   // Search tab state
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [searchOwner, setSearchOwner] = useState(initialHousehold || availableHouseholds[0]);
   const [searchAddedIds, setSearchAddedIds] = useState<Set<string>>(new Set());
@@ -138,6 +139,7 @@ export const BggSyncModal: React.FC<BggSyncModalProps> = ({
     if (!searchQuery.trim()) return;
 
     setIsSearching(true);
+    setHasSearched(true);
     try {
       const res = await fetch(`/api/bgg/search?q=${encodeURIComponent(searchQuery.trim())}`);
       const data = await res.json();
@@ -168,6 +170,29 @@ export const BggSyncModal: React.FC<BggSyncModalProps> = ({
       thumbnail: result.thumbnail || null,
     });
     setSearchAddedIds((prev) => new Set(prev).add(String(result.bggId || result.title)));
+  };
+
+  const handleAddCustomGame = () => {
+    const title = searchQuery.trim();
+    if (!title) return;
+    onAddGame({
+      title,
+      owner: searchOwner,
+      minPlayers: 2,
+      maxPlayers: 4,
+      minPlaytime: 30,
+      maxPlaytime: 60,
+      playtimeDisplay: '30-60 min',
+      type: 'Board Game',
+      notes: 'Custom title',
+      bggId: null,
+      bggRating: null,
+      bggRank: null,
+      weight: null,
+      image: null,
+      thumbnail: null,
+    });
+    setSearchAddedIds((prev) => new Set(prev).add(title));
   };
 
   return (
@@ -420,23 +445,50 @@ export const BggSyncModal: React.FC<BggSyncModalProps> = ({
                 <div className="divide-y divide-zinc-100 dark:divide-zinc-800 border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden">
                   {searchResults.map((res, idx) => {
                     const isAdded = searchAddedIds.has(String(res.bggId || res.title));
+                    const imgUrl = res.thumbnail || res.image;
                     return (
-                      <div key={idx} className="p-3 flex items-center justify-between gap-3 hover:bg-zinc-50 dark:hover:bg-zinc-800/50">
-                        <div>
-                          <h4 className="text-xs font-bold text-zinc-900 dark:text-zinc-100">
-                            {res.title} {res.year && <span className="font-normal text-zinc-400">({res.year})</span>}
-                          </h4>
-                          <p className="text-[11px] text-zinc-500">
-                            {res.minPlayers ? `${res.minPlayers}–${res.maxPlayers}p` : 'Standard box'} • {res.type || 'Board Game'}
-                          </p>
+                      <div key={idx} className="p-3 flex items-center justify-between gap-3 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors">
+                        <div className="flex items-center gap-3 min-w-0">
+                          {imgUrl ? (
+                            <div className="w-12 h-12 relative rounded-lg overflow-hidden shrink-0 border border-zinc-200 dark:border-zinc-700 bg-zinc-950">
+                              <Image 
+                                src={imgUrl} 
+                                alt={res.title} 
+                                fill 
+                                className="object-cover" 
+                                unoptimized
+                              />
+                            </div>
+                          ) : (
+                            <div className="w-12 h-12 rounded-lg bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-base shrink-0">
+                              🎲
+                            </div>
+                          )}
+                          <div className="min-w-0">
+                            <h4 className="text-xs font-bold text-zinc-900 dark:text-zinc-100 truncate">
+                              {res.title} {res.year && <span className="font-normal text-zinc-400">({res.year})</span>}
+                            </h4>
+                            <p className="text-[11px] text-zinc-500 flex items-center gap-2 mt-0.5">
+                              <span>{res.minPlayers ? `${res.minPlayers}–${res.maxPlayers} players` : '2–4 players'}</span>
+                              <span>•</span>
+                              <span>{res.playtimeDisplay || `${res.minPlaytime || 30}-${res.maxPlaytime || 60}m`}</span>
+                              {res.bggRating && (
+                                <>
+                                  <span>•</span>
+                                  <span className="text-amber-500 font-bold">★ {res.bggRating}</span>
+                                </>
+                              )}
+                            </p>
+                          </div>
                         </div>
+
                         <button
                           type="button"
                           onClick={() => handleAddSearchResult(res)}
                           disabled={isAdded}
-                          className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold shrink-0 transition-colors ${
                             isAdded
-                              ? 'bg-zinc-100 text-zinc-400 cursor-not-allowed'
+                              ? 'bg-zinc-100 dark:bg-zinc-800 text-emerald-600 dark:text-emerald-400 cursor-not-allowed'
                               : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs'
                           }`}
                         >
@@ -446,6 +498,33 @@ export const BggSyncModal: React.FC<BggSyncModalProps> = ({
                       </div>
                     );
                   })}
+                </div>
+              )}
+
+              {/* Direct / Custom Addition Fallback Card */}
+              {hasSearched && (
+                <div className="p-3.5 bg-zinc-50 dark:bg-zinc-800/40 border border-dashed border-zinc-300 dark:border-zinc-700 rounded-xl flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-bold text-zinc-800 dark:text-zinc-200">
+                      {searchResults.length === 0 ? `No BGG matches for "${searchQuery}"` : "Don't see your specific edition?"}
+                    </p>
+                    <p className="text-[11px] text-zinc-500">
+                      Add &quot;{searchQuery}&quot; directly as a game to <strong>{searchOwner}</strong>.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleAddCustomGame}
+                    disabled={searchAddedIds.has(searchQuery.trim())}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold shrink-0 flex items-center gap-1 transition-colors ${
+                      searchAddedIds.has(searchQuery.trim())
+                        ? 'bg-zinc-100 dark:bg-zinc-800 text-emerald-600 dark:text-emerald-400'
+                        : 'bg-zinc-900 dark:bg-zinc-100 hover:bg-zinc-800 dark:hover:bg-zinc-200 text-white dark:text-zinc-900 shadow-xs'
+                    }`}
+                  >
+                    {searchAddedIds.has(searchQuery.trim()) ? <Check className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
+                    {searchAddedIds.has(searchQuery.trim()) ? 'Added' : `Add "${searchQuery}"`}
+                  </button>
                 </div>
               )}
             </div>
