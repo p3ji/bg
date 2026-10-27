@@ -60,14 +60,9 @@ export const Header: React.FC<HeaderProps> = ({
               <div className="w-9 h-9 rounded-lg bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 flex items-center justify-center shadow-xs shrink-0">
                 <Dices className="w-5 h-5" />
               </div>
-              <div>
-                <h1 className="text-base font-bold text-zinc-900 dark:text-zinc-50 leading-tight tracking-tight">
-                  GameShare
-                </h1>
-                <p className="text-[11px] text-zinc-500 dark:text-zinc-400 font-medium">
-                  Friend Circle Library
-                </p>
-              </div>
+              <h1 className="text-base font-bold text-zinc-900 dark:text-zinc-50 leading-none tracking-tight">
+                GameShare
+              </h1>
             </div>
 
             {/* Quick Stats Pill */}
