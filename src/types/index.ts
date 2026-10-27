@@ -6,15 +6,20 @@ export interface LoanHistoryRecord {
   notes?: string;
 }
 
+export type BorrowRequestStatus = 'pending' | 'accepted' | 'fulfilled' | 'cancelled';
+
 export interface BorrowRequest {
   id: string;
   gameId: string;
   gameTitle: string;
   requesterName: string;
-  holderName: string; // Current borrower
+  holderName: string; // Current borrower or owner who currently holds the game
   requestedAt: string;
-  status: 'pending' | 'fulfilled' | 'cancelled';
+  acceptedAt?: string;
+  confirmedAt?: string;
+  status: BorrowRequestStatus;
   note?: string;
+  expectedReturnDate?: string;
 }
 
 export interface Game {

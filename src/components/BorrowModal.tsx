@@ -2,7 +2,21 @@
 
 import React, { useState, useEffect } from 'react';
 import { Game } from '@/types';
-import { X, Hand, Calendar, User, Clock, Check } from 'lucide-react';
+import { 
+  X, 
+  SendHorizontal, 
+  Calendar, 
+  User, 
+  Check, 
+  CheckCircle2, 
+  ArrowRight,
+  MessageCircle, 
+  Smartphone, 
+  Copy,
+  Zap,
+  ShieldCheck,
+  PackageCheck
+} from 'lucide-react';
 
 interface BorrowModalProps {
   game: Game | null;
@@ -10,7 +24,8 @@ interface BorrowModalProps {
   isOpen: boolean;
   activeHousehold?: string | null;
   onClose: () => void;
-  onConfirm: (gameId: string, borrower: string, returnDate?: string, notes?: string) => void;
+  onRequestExchange: (gameId: string, requester: string, returnDate?: string, notes?: string) => void;
+  onDirectBorrow?: (gameId: string, borrower: string, returnDate?: string, notes?: string) => void;
 }
 
 export const BorrowModal: React.FC<BorrowModalProps> = ({
@@ -19,16 +34,25 @@ export const BorrowModal: React.FC<BorrowModalProps> = ({
   isOpen,
   activeHousehold,
   onClose,
-  onConfirm,
+  onRequestExchange,
+  onDirectBorrow,
 }) => {
   const [borrower, setBorrower] = useState('');
   const [customName, setCustomName] = useState('');
   const [returnDate, setReturnDate] = useState('');
   const [notes, setNotes] = useState('');
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [submittedRequester, setSubmittedRequester] = useState('');
+  const [copied, setCopied] = useState(false);
+
+  // Group that currently holds the game
+  const currentHolder = game
+    ? (game.status === 'borrowed' && game.currentBorrower ? game.currentBorrower : game.owner)
+    : '';
 
   useEffect(() => {
     if (isOpen) {
-      if (activeHousehold && activeHousehold !== game?.owner) {
+      if (activeHousehold && activeHousehold.toLowerCase() !== currentHolder.toLowerCase()) {
         setBorrower(activeHousehold);
       } else {
         setBorrower('');
@@ -36,10 +60,15 @@ export const BorrowModal: React.FC<BorrowModalProps> = ({
       setCustomName('');
       setReturnDate('');
       setNotes('');
+      setIsSubmitted(false);
+      setSubmittedRequester('');
+      setCopied(false);
     }
-  }, [isOpen, activeHousehold, game]);
+  }, [isOpen, activeHousehold, currentHolder]);
 
   if (!isOpen || !game) return null;
+
+  const effectiveRequester = (borrower === 'other' ? customName : borrower).trim();
 
   const handleQuickDuration = (days: number) => {
     const target = new Date();
@@ -47,15 +76,38 @@ export const BorrowModal: React.FC<BorrowModalProps> = ({
     setReturnDate(target.toISOString().split('T')[0]);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmitRequest = (e: React.FormEvent) => {
     e.preventDefault();
-    const finalBorrower = (borrower === 'other' ? customName : borrower).trim();
-    if (!finalBorrower) return;
-    onConfirm(game.id, finalBorrower, returnDate || undefined, notes || undefined);
+    if (!effectiveRequester) return;
+
+    onRequestExchange(game.id, effectiveRequester, returnDate || undefined, notes || undefined);
+    setSubmittedRequester(effectiveRequester);
+    setIsSubmitted(true);
+  };
+
+  const handleDirectLend = () => {
+    if (!effectiveRequester || !onDirectBorrow) return;
+    onDirectBorrow(game.id, effectiveRequester, returnDate || undefined, notes || undefined);
     onClose();
   };
 
-  const selectedName = borrower === 'other' ? customName : borrower;
+  const nudgeMessage = `Hey ${currentHolder}! ${submittedRequester || effectiveRequester} requested to borrow "${game.title}" from our game library. Please accept the exchange in the app to coordinate hand-off! 🎲`;
+
+  const handleCopyMessage = () => {
+    navigator.clipboard.writeText(nudgeMessage);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleWhatsApp = () => {
+    const url = `https://wa.me/?text=${encodeURIComponent(nudgeMessage)}`;
+    window.open(url, '_blank');
+  };
+
+  const handleSMS = () => {
+    const url = `sms:?&body=${encodeURIComponent(nudgeMessage)}`;
+    window.location.href = url;
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
@@ -67,14 +119,14 @@ export const BorrowModal: React.FC<BorrowModalProps> = ({
         <div className="p-4 sm:p-5 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 flex items-center justify-center">
-              <Hand className="w-4 h-4" />
+              <SendHorizontal className="w-4 h-4" />
             </div>
             <div>
               <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-50">
-                Borrow Game
+                Borrow Game & Exchange
               </h3>
               <p className="text-xs text-zinc-500 font-medium">
-                {game.title} (Owned by {game.owner})
+                {game.title}
               </p>
             </div>
           </div>
@@ -87,137 +139,280 @@ export const BorrowModal: React.FC<BorrowModalProps> = ({
           </button>
         </div>
 
-        {/* Form Body */}
-        <form onSubmit={handleSubmit} className="p-4 sm:p-5 space-y-4">
-          
-          {/* Household Selector */}
-          <div>
-            <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-2">
-              Which household is borrowing this game?
-            </label>
-            <div className="flex flex-wrap gap-1.5 mb-2">
-              {friends.map((f) => {
-                const isSelected = borrower === f;
-                return (
-                  <button
-                    key={f}
-                    type="button"
-                    onClick={() => {
-                      setBorrower(f);
-                      setCustomName('');
-                    }}
-                    className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all ${
-                      isSelected
-                        ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 border-zinc-900 dark:border-zinc-100 shadow-xs'
-                        : 'bg-zinc-50 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700 hover:border-zinc-400'
-                    }`}
-                  >
-                    {f}
-                  </button>
-                );
-              })}
+        {/* Body */}
+        {isSubmitted ? (
+          /* Step 1 Confirmed Screen: Request Sent */
+          <div className="p-5 sm:p-6 space-y-4">
+            <div className="flex flex-col items-center text-center">
+              <div className="w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-3 shadow-xs">
+                <CheckCircle2 className="w-6 h-6" />
+              </div>
+              <h4 className="text-sm font-bold text-zinc-900 dark:text-zinc-100">
+                Borrow Request Sent to {currentHolder}!
+              </h4>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 max-w-sm">
+                A notification was sent to <strong>{currentHolder}</strong>. The exchange will complete once they accept and you confirm receipt.
+              </p>
+            </div>
+
+            {/* Handshake Progress indicator */}
+            <div className="p-3 bg-zinc-50 dark:bg-zinc-800/60 rounded-xl border border-zinc-200 dark:border-zinc-800 text-xs space-y-2">
+              <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-semibold">
+                <span className="w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[11px] font-bold">1</span>
+                <span>Request sent by {submittedRequester}</span>
+              </div>
+              <div className="flex items-center gap-2 text-zinc-500 pl-7">
+                <span className="w-1.5 h-1.5 rounded-full bg-zinc-300 dark:bg-zinc-600" />
+                <span>Waiting for <strong>{currentHolder}</strong> to accept (execute exchange)</span>
+              </div>
+              <div className="flex items-center gap-2 text-zinc-400 pl-7">
+                <span className="w-1.5 h-1.5 rounded-full bg-zinc-300 dark:bg-zinc-600" />
+                <span>{submittedRequester} confirms receipt & game transfers</span>
+              </div>
+            </div>
+
+            {/* Quick Nudge Actions */}
+            <div>
+              <p className="text-[11px] font-semibold text-zinc-600 dark:text-zinc-400 mb-2">
+                Ping {currentHolder} to coordinate handoff:
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={handleWhatsApp}
+                  className="flex items-center justify-center gap-1.5 py-2 px-3 bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-900 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 rounded-lg text-xs font-semibold transition-colors"
+                >
+                  <MessageCircle className="w-3.5 h-3.5" />
+                  WhatsApp
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSMS}
+                  className="flex items-center justify-center gap-1.5 py-2 px-3 bg-blue-50 dark:bg-blue-950/50 hover:bg-blue-100 dark:hover:bg-blue-900 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 rounded-lg text-xs font-semibold transition-colors"
+                >
+                  <Smartphone className="w-3.5 h-3.5" />
+                  iMessage / SMS
+                </button>
+              </div>
+
               <button
                 type="button"
-                onClick={() => setBorrower('other')}
-                className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all ${
-                  borrower === 'other'
-                    ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 border-zinc-900 dark:border-zinc-100'
-                    : 'bg-zinc-50 dark:bg-zinc-800 text-zinc-500 border-zinc-200 dark:border-zinc-700 hover:text-zinc-800'
-                }`}
+                onClick={handleCopyMessage}
+                className="mt-2 w-full flex items-center justify-center gap-1.5 py-2 px-3 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 rounded-lg text-xs font-medium transition-colors"
               >
-                + Other
+                {copied ? (
+                  <>
+                    <Check className="w-3.5 h-3.5 text-emerald-600" />
+                    Copied Nudge to Clipboard!
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-3.5 h-3.5" />
+                    Copy Nudge Message
+                  </>
+                )}
               </button>
             </div>
 
-            {borrower === 'other' && (
-              <div className="relative mt-2">
-                <User className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
+            <div className="pt-2 flex justify-end">
+              <button
+                type="button"
+                onClick={onClose}
+                className="w-full py-2 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 rounded-lg text-xs font-semibold hover:bg-zinc-800 transition-colors"
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        ) : (
+          /* Form: Configure Borrow Request */
+          <form onSubmit={handleSubmitRequest} className="p-4 sm:p-5 space-y-4">
+            
+            {/* Current Holder banner */}
+            <div className="p-3 bg-indigo-50 dark:bg-indigo-950/40 rounded-xl border border-indigo-100 dark:border-indigo-900/60 flex items-center justify-between text-xs">
+              <div>
+                <span className="text-indigo-600 dark:text-indigo-400 font-semibold block text-[11px] uppercase tracking-wider">
+                  Currently Held By
+                </span>
+                <span className="font-bold text-zinc-900 dark:text-zinc-100 text-sm">
+                  {currentHolder}
+                </span>
+                <span className="text-[11px] text-zinc-500 ml-1.5">
+                  ({game.status === 'borrowed' ? 'Current Borrower' : 'Owner'})
+                </span>
+              </div>
+              <div className="w-8 h-8 rounded-full bg-white dark:bg-zinc-900 border border-indigo-200 dark:border-indigo-800 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0">
+                <PackageCheck className="w-4 h-4" />
+              </div>
+            </div>
+
+            {/* Handshake flow explainer */}
+            <div className="p-2.5 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg border border-zinc-200 dark:border-zinc-800 text-[11px] text-zinc-600 dark:text-zinc-400">
+              <div className="flex items-center gap-1.5 font-semibold text-zinc-800 dark:text-zinc-200 mb-1">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+                <span>2-Step Verified Exchange Flow:</span>
+              </div>
+              <p>
+                1. Clicking <strong>Send Borrow Request</strong> notifies <strong>{currentHolder}</strong>.
+                <br />
+                2. Once they accept (execute exchange) and you confirm receipt, the game will be transferred to you.
+              </p>
+            </div>
+
+            {/* Household Selector */}
+            <div>
+              <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-2">
+                Who wants to borrow this game?
+              </label>
+              <div className="flex flex-wrap gap-1.5 mb-2">
+                {friends.map((f) => {
+                  const isCurrentHolder = f.toLowerCase() === currentHolder.toLowerCase();
+                  const isSelected = borrower === f;
+                  return (
+                    <button
+                      key={f}
+                      type="button"
+                      disabled={isCurrentHolder}
+                      onClick={() => {
+                        setBorrower(f);
+                        setCustomName('');
+                      }}
+                      className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all ${
+                        isCurrentHolder
+                          ? 'opacity-40 cursor-not-allowed bg-zinc-100 dark:bg-zinc-800 text-zinc-400 border-dashed border-zinc-300 dark:border-zinc-700'
+                          : isSelected
+                            ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 border-zinc-900 dark:border-zinc-100 shadow-xs'
+                            : 'bg-zinc-50 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700 hover:border-zinc-400'
+                      }`}
+                      title={isCurrentHolder ? `${f} already has this game` : undefined}
+                    >
+                      {f}
+                      {isCurrentHolder && <span className="text-[10px] ml-1 font-normal">(Has game)</span>}
+                    </button>
+                  );
+                })}
+                <button
+                  type="button"
+                  onClick={() => setBorrower('other')}
+                  className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all ${
+                    borrower === 'other'
+                      ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 border-zinc-900 dark:border-zinc-100'
+                      : 'bg-zinc-50 dark:bg-zinc-800 text-zinc-500 border-zinc-200 dark:border-zinc-700 hover:text-zinc-800'
+                  }`}
+                >
+                  + Other
+                </button>
+              </div>
+
+              {borrower === 'other' && (
+                <div className="relative mt-2">
+                  <User className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
+                  <input
+                    type="text"
+                    required
+                    value={customName}
+                    onChange={(e) => setCustomName(e.target.value)}
+                    placeholder="Enter borrower / household name..."
+                    autoFocus
+                    className="w-full pl-9 pr-3 py-2 text-xs bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 rounded-lg text-zinc-900 dark:text-zinc-100 focus:outline-hidden focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100"
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Target Return Date */}
+            <div>
+              <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1.5">
+                Target return date (optional)
+              </label>
+              <div className="flex items-center gap-1.5 mb-2">
+                <button
+                  type="button"
+                  onClick={() => handleQuickDuration(7)}
+                  className="px-2.5 py-1 text-[11px] font-medium bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded text-zinc-700 dark:text-zinc-300"
+                >
+                  1 Week
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleQuickDuration(14)}
+                  className="px-2.5 py-1 text-[11px] font-medium bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded text-zinc-700 dark:text-zinc-300"
+                >
+                  2 Weeks
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleQuickDuration(30)}
+                  className="px-2.5 py-1 text-[11px] font-medium bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded text-zinc-700 dark:text-zinc-300"
+                >
+                  1 Month
+                </button>
+              </div>
+              <div className="relative">
+                <Calendar className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
                 <input
-                  type="text"
-                  required
-                  value={customName}
-                  onChange={(e) => setCustomName(e.target.value)}
-                  placeholder="Enter household or borrower name..."
-                  autoFocus
+                  type="date"
+                  value={returnDate}
+                  onChange={(e) => setReturnDate(e.target.value)}
                   className="w-full pl-9 pr-3 py-2 text-xs bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 rounded-lg text-zinc-900 dark:text-zinc-100 focus:outline-hidden focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100"
                 />
               </div>
-            )}
-          </div>
-
-          {/* Target Return Date */}
-          <div>
-            <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1.5">
-              Target return date (optional)
-            </label>
-            <div className="flex items-center gap-1.5 mb-2">
-              <button
-                type="button"
-                onClick={() => handleQuickDuration(7)}
-                className="px-2.5 py-1 text-[11px] font-medium bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded text-zinc-700 dark:text-zinc-300"
-              >
-                1 Week
-              </button>
-              <button
-                type="button"
-                onClick={() => handleQuickDuration(14)}
-                className="px-2.5 py-1 text-[11px] font-medium bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded text-zinc-700 dark:text-zinc-300"
-              >
-                2 Weeks
-              </button>
-              <button
-                type="button"
-                onClick={() => handleQuickDuration(30)}
-                className="px-2.5 py-1 text-[11px] font-medium bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded text-zinc-700 dark:text-zinc-300"
-              >
-                1 Month
-              </button>
             </div>
-            <div className="relative">
-              <Calendar className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
+
+            {/* Optional notes */}
+            <div>
+              <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">
+                Note to {currentHolder} (optional)
+              </label>
               <input
-                type="date"
-                value={returnDate}
-                onChange={(e) => setReturnDate(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 text-xs bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 rounded-lg text-zinc-900 dark:text-zinc-100 focus:outline-hidden focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100"
+                type="text"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="e.g. Planning for Saturday family game night!"
+                className="w-full px-3 py-2 text-xs bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 rounded-lg text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-hidden focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100"
               />
             </div>
-          </div>
 
-          {/* Optional notes */}
-          <div>
-            <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">
-              Note (optional)
-            </label>
-            <input
-              type="text"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="e.g. Taking it for Saturday family game night"
-              className="w-full px-3 py-2 text-xs bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 rounded-lg text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-hidden focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100"
-            />
-          </div>
+            {/* Submit buttons */}
+            <div className="pt-2 flex flex-col gap-2">
+              <div className="flex items-center justify-between gap-2">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="px-3 py-2 text-xs font-semibold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors"
+                >
+                  Cancel
+                </button>
 
-          {/* Submit buttons */}
-          <div className="pt-2 flex items-center justify-end gap-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-3 py-2 text-xs font-semibold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={!selectedName}
-              className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded-lg text-xs font-semibold shadow-xs transition-colors"
-            >
-              <Check className="w-3.5 h-3.5" />
-              Confirm Borrow
-            </button>
-          </div>
+                <button
+                  type="submit"
+                  disabled={!effectiveRequester}
+                  className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded-lg text-xs font-semibold shadow-xs transition-colors"
+                >
+                  <SendHorizontal className="w-3.5 h-3.5" />
+                  Send Borrow Request to {currentHolder}
+                </button>
+              </div>
 
-        </form>
+              {/* Direct Lend option if in-person */}
+              {onDirectBorrow && (
+                <div className="pt-2 border-t border-zinc-100 dark:border-zinc-800 text-center">
+                  <button
+                    type="button"
+                    onClick={handleDirectLend}
+                    disabled={!effectiveRequester}
+                    className="inline-flex items-center gap-1 text-[11px] text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300 disabled:opacity-40 transition-colors"
+                    title="Directly mark as handed over right now without awaiting handshake"
+                  >
+                    <Zap className="w-3 h-3 text-amber-500" />
+                    <span>In person right now? Skip handshake & direct mark</span>
+                  </button>
+                </div>
+              )}
+            </div>
+
+          </form>
+        )}
 
       </div>
     </div>

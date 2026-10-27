@@ -8,10 +8,13 @@ import { PackageOpen, Sparkles, PlusCircle } from 'lucide-react';
 interface BookshelfViewProps {
   games: Game[];
   activeHousehold?: string;
+  activeHouseholdUser?: string | null;
   onSelectGame: (game: Game) => void;
   onBorrow: (game: Game) => void;
   onReturn: (game: Game) => void;
-  onRequestBorrow: (game: Game) => void;
+  onRequestBorrow?: (game: Game) => void;
+  onAcceptExchange?: (requestId: string) => void;
+  onConfirmExchange?: (requestId: string) => void;
   onResetFilters: () => void;
   onAddForHousehold?: (household: string) => void;
   onEdit?: (game: Game) => void;
@@ -20,10 +23,13 @@ interface BookshelfViewProps {
 export const BookshelfView: React.FC<BookshelfViewProps> = ({
   games,
   activeHousehold,
+  activeHouseholdUser,
   onSelectGame,
   onBorrow,
   onReturn,
   onRequestBorrow,
+  onAcceptExchange,
+  onConfirmExchange,
   onResetFilters,
   onAddForHousehold,
   onEdit,
@@ -98,10 +104,13 @@ export const BookshelfView: React.FC<BookshelfViewProps> = ({
           <GameCard
             key={game.id}
             game={game}
+            activeHousehold={activeHouseholdUser}
             onSelectGame={onSelectGame}
             onBorrow={onBorrow}
             onReturn={onReturn}
             onRequestBorrow={onRequestBorrow}
+            onAcceptExchange={onAcceptExchange}
+            onConfirmExchange={onConfirmExchange}
             onEdit={onEdit}
           />
         ))}

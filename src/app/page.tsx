@@ -95,9 +95,9 @@ export default function HomePage() {
     };
   }, []);
 
-  // Update favicon / document title with pending requests badge
+  // Update favicon / document title with pending & accepted active requests badge
   const pendingRequestsCount = useMemo(() => {
-    return requests.filter((r) => r.status === 'pending').length;
+    return requests.filter((r) => r.status === 'pending' || r.status === 'accepted').length;
   }, [requests]);
 
   useEffect(() => {
@@ -200,8 +200,8 @@ export default function HomePage() {
 
     // Also mark any pending requests by this borrower as fulfilled
     const updatedRequests = requests.map((r) => {
-      if (r.gameId === gameId && r.requesterName.toLowerCase() === borrower.toLowerCase() && r.status === 'pending') {
-        return { ...r, status: 'fulfilled' as const };
+      if (r.gameId === gameId && r.requesterName.toLowerCase() === borrower.toLowerCase() && (r.status === 'pending' || r.status === 'accepted')) {
+        return { ...r, status: 'fulfilled' as const, confirmedAt: new Date().toISOString() };
       }
       return r;
     });
@@ -249,19 +249,25 @@ export default function HomePage() {
     }
   };
 
-  const handleRequestBorrowSubmit = (gameId: string, requester: string, note?: string) => {
+  // Step 1: Send Borrow Request to the group that currently has it
+  const handleRequestExchange = (gameId: string, requester: string, returnDate?: string, notes?: string) => {
     const targetGame = games.find((g) => g.id === gameId);
     if (!targetGame) return;
+
+    const currentHolder = (targetGame.status === 'borrowed' && targetGame.currentBorrower)
+      ? targetGame.currentBorrower
+      : targetGame.owner;
 
     const newRequest: BorrowRequest = {
       id: `req-${Date.now()}`,
       gameId: targetGame.id,
       gameTitle: targetGame.title,
       requesterName: requester,
-      holderName: targetGame.currentBorrower || targetGame.owner,
+      holderName: currentHolder,
       requestedAt: new Date().toISOString(),
       status: 'pending',
-      note: note || undefined,
+      expectedReturnDate: returnDate || undefined,
+      note: notes || undefined,
     };
 
     const updatedRequests = [newRequest, ...requests];
@@ -272,7 +278,7 @@ export default function HomePage() {
       if (g.id !== gameId) return g;
       return {
         ...g,
-        borrowRequests: [newRequest, ...(g.borrowRequests || [])],
+        borrowRequests: [newRequest, ...(g.borrowRequests || []).filter((r) => r.status === 'fulfilled' || r.status === 'cancelled')],
       };
     });
 
@@ -284,18 +290,82 @@ export default function HomePage() {
     }
   };
 
-  const handleFulfillRequest = (requestId: string) => {
+  // Step 2: Holder accepts & executes the exchange
+  const handleAcceptExchange = (requestId: string) => {
     const req = requests.find((r) => r.id === requestId);
     if (!req) return;
 
-    const updatedRequests = requests.map((r) => (r.id === requestId ? { ...r, status: 'fulfilled' as const } : r));
+    const nowIso = new Date().toISOString();
+    const updatedRequests = requests.map((r) =>
+      r.id === requestId ? { ...r, status: 'accepted' as const, acceptedAt: nowIso } : r
+    );
     setRequests(updatedRequests);
     saveRequests(updatedRequests);
 
-    // If game is still with the holder, hand it over to requester!
+    const updatedGames = games.map((g) => {
+      if (g.id !== req.gameId) return g;
+      return {
+        ...g,
+        borrowRequests: (g.borrowRequests || []).map((r) =>
+          r.id === requestId ? { ...r, status: 'accepted' as const, acceptedAt: nowIso } : r
+        ),
+      };
+    });
+    setGames(updatedGames);
+    saveGames(updatedGames);
+
+    if (selectedGame?.id === req.gameId) {
+      setSelectedGame(updatedGames.find((g) => g.id === req.gameId) || null);
+    }
+  };
+
+  // Step 3: Requester confirms receipt -> exchange is complete and marked with new holder!
+  const handleConfirmExchange = (requestId: string) => {
+    const req = requests.find((r) => r.id === requestId);
+    if (!req) return;
+
     const targetGame = games.find((g) => g.id === req.gameId);
-    if (targetGame) {
-      handleBorrowConfirm(targetGame.id, req.requesterName, undefined, 'Handed off from request');
+    if (!targetGame) return;
+
+    const nowIso = new Date().toISOString();
+    const historyUpdates = [...(targetGame.history || [])];
+
+    // If the game was previously with another borrower, close out that loan record
+    if (targetGame.status === 'borrowed' && targetGame.currentBorrower) {
+      historyUpdates.unshift({
+        id: `hist-${Date.now()}`,
+        borrower: targetGame.currentBorrower,
+        borrowDate: targetGame.borrowDate || req.requestedAt,
+        returnDate: nowIso,
+        notes: `Transferred to ${req.requesterName}`,
+      });
+    }
+
+    const updatedGame: Game = {
+      ...targetGame,
+      status: 'borrowed' as const,
+      currentBorrower: req.requesterName,
+      borrowDate: nowIso,
+      expectedReturnDate: req.expectedReturnDate || null,
+      notes: req.note ? (targetGame.notes ? `${targetGame.notes} | ${req.note}` : req.note) : targetGame.notes,
+      history: historyUpdates,
+      borrowRequests: (targetGame.borrowRequests || []).map((r) =>
+        r.id === requestId ? { ...r, status: 'fulfilled' as const, confirmedAt: nowIso } : r
+      ),
+    };
+
+    const updatedGames = games.map((g) => (g.id === targetGame.id ? updatedGame : g));
+    const updatedRequests = requests.map((r) =>
+      r.id === requestId ? { ...r, status: 'fulfilled' as const, confirmedAt: nowIso } : r
+    );
+
+    setGames(updatedGames);
+    saveGames(updatedGames);
+    setRequests(updatedRequests);
+    saveRequests(updatedRequests);
+
+    if (selectedGame?.id === targetGame.id) {
+      setSelectedGame(updatedGame);
     }
   };
 
@@ -303,6 +373,25 @@ export default function HomePage() {
     const updatedRequests = requests.map((r) => (r.id === requestId ? { ...r, status: 'cancelled' as const } : r));
     setRequests(updatedRequests);
     saveRequests(updatedRequests);
+
+    const req = requests.find((r) => r.id === requestId);
+    if (req) {
+      const updatedGames = games.map((g) => {
+        if (g.id !== req.gameId) return g;
+        return {
+          ...g,
+          borrowRequests: (g.borrowRequests || []).map((r) =>
+            r.id === requestId ? { ...r, status: 'cancelled' as const } : r
+          ),
+        };
+      });
+      setGames(updatedGames);
+      saveGames(updatedGames);
+
+      if (selectedGame?.id === req.gameId) {
+        setSelectedGame(updatedGames.find((g) => g.id === req.gameId) || null);
+      }
+    }
   };
 
   const handleAddGame = (newGameData: Omit<Game, 'id' | 'status' | 'history'>) => {
@@ -420,10 +509,13 @@ export default function HomePage() {
           <BookshelfView
             games={filteredGames}
             activeHousehold={filters.owner}
+            activeHouseholdUser={activeHousehold}
             onSelectGame={setSelectedGame}
             onBorrow={setBorrowingGame}
             onReturn={setReturningGame}
-            onRequestBorrow={setRequestingGame}
+            onRequestBorrow={setBorrowingGame}
+            onAcceptExchange={handleAcceptExchange}
+            onConfirmExchange={handleConfirmExchange}
             onResetFilters={() => setFilters(initialFilters)}
             onAddForHousehold={handleOpenAddForHousehold}
             onEdit={setEditingGame}
@@ -432,10 +524,13 @@ export default function HomePage() {
           <TableView
             games={filteredGames}
             activeHousehold={filters.owner}
+            activeHouseholdUser={activeHousehold}
             onSelectGame={setSelectedGame}
             onBorrow={setBorrowingGame}
             onReturn={setReturningGame}
-            onRequestBorrow={setRequestingGame}
+            onRequestBorrow={setBorrowingGame}
+            onAcceptExchange={handleAcceptExchange}
+            onConfirmExchange={handleConfirmExchange}
             onResetFilters={() => setFilters(initialFilters)}
             onAddForHousehold={handleOpenAddForHousehold}
             onEdit={setEditingGame}
@@ -446,11 +541,14 @@ export default function HomePage() {
       {/* Modals */}
       <GameDetailModal
         game={selectedGame}
+        activeHousehold={activeHousehold}
         isOpen={Boolean(selectedGame)}
         onClose={() => setSelectedGame(null)}
         onBorrow={setBorrowingGame}
         onReturn={setReturningGame}
-        onRequestBorrow={setRequestingGame}
+        onRequestBorrow={setBorrowingGame}
+        onAcceptExchange={handleAcceptExchange}
+        onConfirmExchange={handleConfirmExchange}
         onEdit={setEditingGame}
       />
 
@@ -460,7 +558,8 @@ export default function HomePage() {
         isOpen={Boolean(borrowingGame)}
         activeHousehold={activeHousehold}
         onClose={() => setBorrowingGame(null)}
-        onConfirm={handleBorrowConfirm}
+        onRequestExchange={handleRequestExchange}
+        onDirectBorrow={handleBorrowConfirm}
       />
 
       <ReturnModal
@@ -476,15 +575,17 @@ export default function HomePage() {
         isOpen={Boolean(requestingGame)}
         activeHousehold={activeHousehold}
         onClose={() => setRequestingGame(null)}
-        onSubmitRequest={handleRequestBorrowSubmit}
+        onSubmitRequest={(gameId, requester, note) => handleRequestExchange(gameId, requester, undefined, note)}
       />
 
       <NotificationsModal
         requests={requests}
         games={games}
         isOpen={isNotificationsOpen}
+        activeHousehold={activeHousehold}
         onClose={() => setIsNotificationsOpen(false)}
-        onFulfillRequest={handleFulfillRequest}
+        onAcceptExchange={handleAcceptExchange}
+        onConfirmExchange={handleConfirmExchange}
         onDismissRequest={handleDismissRequest}
         onSelectGame={setSelectedGame}
       />

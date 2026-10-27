@@ -18,32 +18,44 @@ import {
   CheckCircle2,
   Sparkles,
   UserCheck,
-  Edit3
+  Edit3,
+  ArrowRightLeft,
+  Check,
+  ShieldCheck,
+  PackageCheck
 } from 'lucide-react';
 
 interface GameDetailModalProps {
   game: Game | null;
+  activeHousehold?: string | null;
   isOpen: boolean;
   onClose: () => void;
   onBorrow: (game: Game) => void;
   onReturn: (game: Game) => void;
-  onRequestBorrow: (game: Game) => void;
+  onRequestBorrow?: (game: Game) => void;
+  onAcceptExchange?: (requestId: string) => void;
+  onConfirmExchange?: (requestId: string) => void;
   onEdit?: (game: Game) => void;
 }
 
 export const GameDetailModal: React.FC<GameDetailModalProps> = ({
   game,
+  activeHousehold,
   isOpen,
   onClose,
   onBorrow,
   onReturn,
   onRequestBorrow,
+  onAcceptExchange,
+  onConfirmExchange,
   onEdit,
 }) => {
   if (!isOpen || !game) return null;
 
   const isAvailable = game.status === 'available';
-  const pendingRequests = (game.borrowRequests || []).filter((r) => r.status === 'pending');
+  const activeExchange = (game.borrowRequests || []).find(
+    (r) => r.status === 'pending' || r.status === 'accepted'
+  );
 
   const formatDate = (isoStr?: string | null) => {
     if (!isoStr) return '—';
@@ -69,6 +81,9 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
       return '';
     }
   };
+
+  const isUserHolder = activeHousehold && activeExchange && activeHousehold.toLowerCase() === activeExchange.holderName.toLowerCase();
+  const isUserRequester = activeHousehold && activeExchange && activeHousehold.toLowerCase() === activeExchange.requesterName.toLowerCase();
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
@@ -98,24 +113,12 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
                   onClose();
                   onEdit(game);
                 }}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 rounded-lg border border-indigo-200 dark:border-indigo-800 transition-colors"
-                title="Edit Game & Link BGG Cover"
+                className="flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-zinc-600 dark:text-zinc-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors"
+                title="Edit game or link BGG box art cover"
               >
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>Edit / Link BGG</span>
+                <Edit3 className="w-3.5 h-3.5" />
+                <span>Edit & Link Cover</span>
               </button>
-            )}
-
-            {game.bggId && (
-              <a
-                href={`https://boardgamegeek.com/boardgame/${game.bggId}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1 px-2 py-1 rounded bg-indigo-50 dark:bg-indigo-950/50"
-              >
-                <span>BGG</span>
-                <ExternalLink className="w-3.5 h-3.5" />
-              </a>
             )}
 
             <button
@@ -123,19 +126,19 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
               onClick={onClose}
               className="p-1.5 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4" />
             </button>
           </div>
         </div>
 
-        {/* Modal Content */}
-        <div className="p-4 sm:p-6 space-y-6 max-h-[75vh] overflow-y-auto">
+        {/* Scrollable Body */}
+        <div className="p-4 sm:p-6 overflow-y-auto space-y-6">
           
-          {/* Top Section: Box Cover & Key Metrics */}
-          <div className="grid grid-cols-1 sm:grid-cols-12 gap-5">
+          {/* Top Hero Layout: Box Art + Title & Key Metadata */}
+          <div className="flex flex-col sm:flex-row gap-5">
             
-            {/* Box Cover */}
-            <div className="sm:col-span-5 aspect-square relative rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-800 shadow-xs">
+            {/* Box Cover Thumbnail with BGG Link */}
+            <div className="w-full sm:w-48 aspect-4/3 sm:aspect-square shrink-0 rounded-xl overflow-hidden shadow-md border border-zinc-200 dark:border-zinc-800 relative group">
               <GameBoxCover
                 title={game.title}
                 image={game.image}
@@ -146,110 +149,172 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
                 playtimeDisplay={game.playtimeDisplay}
                 className="w-full h-full"
               />
+              {game.bggId && (
+                <a
+                  href={`https://boardgamegeek.com/boardgame/${game.bggId}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="absolute bottom-2 right-2 bg-black/75 hover:bg-black text-white p-1.5 rounded-lg text-xs opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1"
+                  title="Open on BoardGameGeek"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </a>
+              )}
             </div>
 
-            {/* Game Specs & Live Loan Status */}
-            <div className="sm:col-span-7 flex flex-col justify-between gap-4">
-              
-              {/* Specs Grid */}
-              <div className="grid grid-cols-2 gap-2.5">
-                
-                <div className="p-2.5 bg-zinc-50 dark:bg-zinc-800/60 rounded-xl border border-zinc-200 dark:border-zinc-800">
-                  <span className="text-[10px] uppercase font-bold text-zinc-400 flex items-center gap-1 mb-0.5">
-                    <Users className="w-3 h-3" />
-                    Players
-                  </span>
-                  <p className="text-sm font-bold text-zinc-900 dark:text-zinc-100">
-                    {game.minPlayers === game.maxPlayers ? `${game.minPlayers} players` : `${game.minPlayers}–${game.maxPlayers} players`}
-                  </p>
-                </div>
-
-                <div className="p-2.5 bg-zinc-50 dark:bg-zinc-800/60 rounded-xl border border-zinc-200 dark:border-zinc-800">
-                  <span className="text-[10px] uppercase font-bold text-zinc-400 flex items-center gap-1 mb-0.5">
-                    <Clock className="w-3 h-3" />
-                    Playtime
-                  </span>
-                  <p className="text-sm font-bold text-zinc-900 dark:text-zinc-100">
-                    {game.playtimeDisplay}
-                  </p>
-                </div>
-
-                <div className="p-2.5 bg-zinc-50 dark:bg-zinc-800/60 rounded-xl border border-zinc-200 dark:border-zinc-800">
-                  <span className="text-[10px] uppercase font-bold text-zinc-400 flex items-center gap-1 mb-0.5">
-                    <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
-                    BGG Score
-                  </span>
-                  <p className="text-sm font-bold text-zinc-900 dark:text-zinc-100">
-                    {game.bggRating ? `${game.bggRating.toFixed(1)} / 10` : '—'}
-                    {game.bggRank && <span className="text-xs font-normal text-zinc-400 ml-1">Rank #{game.bggRank}</span>}
-                  </p>
-                </div>
-
-                <div className="p-2.5 bg-zinc-50 dark:bg-zinc-800/60 rounded-xl border border-zinc-200 dark:border-zinc-800">
-                  <span className="text-[10px] uppercase font-bold text-zinc-400 flex items-center gap-1 mb-0.5">
-                    <Gauge className="w-3 h-3" />
-                    Weight / Complexity
-                  </span>
-                  <p className="text-sm font-bold text-zinc-900 dark:text-zinc-100">
-                    {game.weight ? `${game.weight} / 5.0` : '—'}
-                  </p>
-                </div>
-
-              </div>
-
-              {/* Status Box */}
-              <div className="p-3.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/30">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">
-                    Current Availability
-                  </span>
-                  {isAvailable ? (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300">
-                      <CheckCircle2 className="w-3.5 h-3.5" />
-                      Available to borrow
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300">
-                      <Clock className="w-3.5 h-3.5" />
-                      Currently on loan
+            {/* Title & Specs */}
+            <div className="flex-1 flex flex-col justify-between">
+              <div>
+                <div className="flex items-start justify-between gap-2">
+                  <h3 className="text-xl font-bold text-zinc-900 dark:text-zinc-50 leading-tight">
+                    {game.title}
+                  </h3>
+                  {game.year && (
+                    <span className="text-xs font-mono text-zinc-400">
+                      ({game.year})
                     </span>
                   )}
                 </div>
 
-                {!isAvailable && (
-                  <div className="text-xs space-y-1 text-zinc-600 dark:text-zinc-300">
-                    <p className="flex items-center gap-1.5">
-                      <UserCheck className="w-3.5 h-3.5 text-zinc-400" />
-                      <span>Held by: <strong className="text-zinc-900 dark:text-zinc-100">{game.currentBorrower}</strong></span>
-                    </p>
-                    <p className="flex items-center gap-1.5 text-zinc-500">
-                      <Calendar className="w-3.5 h-3.5 text-zinc-400" />
-                      <span>Borrowed on: {formatDate(game.borrowDate)} ({calculateDuration(game.borrowDate || '')})</span>
-                    </p>
-                    {game.expectedReturnDate && (
-                      <p className="text-zinc-500 pl-5">
-                        Target return: {formatDate(game.expectedReturnDate)}
+                {/* Rating & Rank Pills */}
+                <div className="flex flex-wrap items-center gap-2 mt-2">
+                  {game.bggRating && (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800/60">
+                      <Star className="w-3 h-3 fill-amber-400" />
+                      {game.bggRating.toFixed(1)} / 10
+                    </span>
+                  )}
+                  {game.bggRank && (
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-mono font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">
+                      BGG Rank #{game.bggRank}
+                    </span>
+                  )}
+                  {game.weight && (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">
+                      <Gauge className="w-3 h-3 text-zinc-400" />
+                      Weight: {game.weight} / 5
+                    </span>
+                  )}
+                </div>
+
+                {/* Quick specs grid */}
+                <div className="grid grid-cols-2 gap-2 mt-3.5 text-xs text-zinc-600 dark:text-zinc-400">
+                  <div className="flex items-center gap-1.5">
+                    <Users className="w-4 h-4 text-zinc-400" />
+                    <span>
+                      Players: <strong>{game.minPlayers === game.maxPlayers ? `${game.minPlayers}` : `${game.minPlayers}–${game.maxPlayers}`}</strong>
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Clock className="w-4 h-4 text-zinc-400" />
+                    <span>
+                      Playtime: <strong>{game.playtimeDisplay}</strong>
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Status and Action Panel */}
+              <div className="mt-4 pt-3 border-t border-zinc-100 dark:border-zinc-800">
+                
+                {/* Active Exchange in progress */}
+                {activeExchange ? (
+                  <div className="p-3 rounded-xl border bg-indigo-50/70 dark:bg-indigo-950/30 border-indigo-200 dark:border-indigo-800/60 space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <span className="inline-flex items-center gap-1 text-xs font-bold text-indigo-700 dark:text-indigo-300">
+                        <ArrowRightLeft className="w-3.5 h-3.5" />
+                        Exchange In Progress
+                      </span>
+                      <span className="text-[10px] font-mono text-zinc-400">
+                        {activeExchange.status === 'pending' ? 'Step 1 of 2' : 'Step 2 of 2'}
+                      </span>
+                    </div>
+
+                    <div className="text-xs text-zinc-700 dark:text-zinc-300 space-y-1">
+                      <p>
+                        From: <strong>{activeExchange.holderName}</strong> ➔ To: <strong>{activeExchange.requesterName}</strong>
                       </p>
+                      {activeExchange.note && (
+                        <p className="italic text-[11px] text-zinc-500">&ldquo;{activeExchange.note}&rdquo;</p>
+                      )}
+                    </div>
+
+                    {/* Step guidance & action */}
+                    {activeExchange.status === 'pending' ? (
+                      <div className="pt-1 flex items-center justify-between gap-2">
+                        <span className="text-[11px] text-amber-700 dark:text-amber-300 font-medium">
+                          Waiting for <strong>{activeExchange.holderName}</strong> to accept
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (onAcceptExchange) {
+                              onAcceptExchange(activeExchange.id);
+                            }
+                          }}
+                          className="flex items-center gap-1 px-3 py-1.5 bg-zinc-900 dark:bg-zinc-100 hover:bg-zinc-800 dark:hover:bg-zinc-200 text-white dark:text-zinc-900 rounded-lg text-xs font-semibold shadow-xs transition-colors"
+                        >
+                          <ArrowRightLeft className="w-3.5 h-3.5 text-indigo-400 dark:text-indigo-600" />
+                          Accept & Execute Exchange
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="pt-1 flex items-center justify-between gap-2">
+                        <span className="text-[11px] text-emerald-700 dark:text-emerald-300 font-medium">
+                          <strong>{activeExchange.holderName}</strong> accepted! Confirm receipt:
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (onConfirmExchange) {
+                              onConfirmExchange(activeExchange.id);
+                            }
+                          }}
+                          className="flex items-center gap-1 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold shadow-xs transition-colors"
+                        >
+                          <Check className="w-3.5 h-3.5" />
+                          Confirm Received
+                        </button>
+                      </div>
                     )}
                   </div>
-                )}
+                ) : isAvailable ? (
+                  /* Available loan status */
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                      <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400">
+                        Available at {game.owner}&apos;s household
+                      </span>
+                    </div>
 
-                {/* Actions */}
-                <div className="pt-2 flex items-center gap-2">
-                  {isAvailable ? (
                     <button
                       type="button"
                       onClick={() => {
                         onClose();
                         onBorrow(game);
                       }}
-                      className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold shadow-xs transition-colors"
+                      className="flex items-center justify-center gap-1.5 py-2 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold shadow-xs transition-colors"
                     >
                       <Hand className="w-3.5 h-3.5" />
                       Borrow This Game
                     </button>
-                  ) : (
-                    <>
+                  </div>
+                ) : (
+                  /* Borrowed loan status */
+                  <div className="space-y-2">
+                    <div className="text-xs space-y-1 text-zinc-600 dark:text-zinc-300">
+                      <p className="flex items-center gap-1.5">
+                        <UserCheck className="w-3.5 h-3.5 text-zinc-400" />
+                        <span>Currently held by: <strong className="text-zinc-900 dark:text-zinc-100">{game.currentBorrower}</strong></span>
+                      </p>
+                      <p className="flex items-center gap-1.5 text-zinc-500">
+                        <Calendar className="w-3.5 h-3.5 text-zinc-400" />
+                        <span>Borrowed on: {formatDate(game.borrowDate)} ({calculateDuration(game.borrowDate || '')})</span>
+                      </p>
+                    </div>
+
+                    <div className="pt-2 flex items-center gap-2">
                       <button
                         type="button"
                         onClick={() => {
@@ -259,23 +324,23 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
                         className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg text-xs font-semibold transition-colors"
                       >
                         <RotateCcw className="w-3.5 h-3.5" />
-                        Mark as Returned
+                        Mark as Returned to Owner
                       </button>
 
                       <button
                         type="button"
                         onClick={() => {
                           onClose();
-                          onRequestBorrow(game);
+                          onBorrow(game);
                         }}
                         className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold shadow-xs transition-colors"
                       >
                         <SendHorizontal className="w-3.5 h-3.5" />
-                        Request Borrow
+                        Borrow from {game.currentBorrower}
                       </button>
-                    </>
-                  )}
-                </div>
+                    </div>
+                  </div>
+                )}
 
               </div>
 
@@ -286,23 +351,8 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
           {/* Notes & Description */}
           {game.notes && (
             <div className="p-3.5 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded-xl text-xs text-amber-900 dark:text-amber-200">
-              <span className="font-bold block mb-0.5">Owner Notes:</span>
+              <span className="font-bold block mb-0.5">Notes:</span>
               &ldquo;{game.notes}&rdquo;
-            </div>
-          )}
-
-          {/* Pending Requests on this game */}
-          {pendingRequests.length > 0 && (
-            <div className="p-3.5 bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-200 dark:border-indigo-800/60 rounded-xl text-xs text-indigo-950 dark:text-indigo-200 space-y-1.5">
-              <span className="font-bold block">Pending Borrow Requests:</span>
-              {pendingRequests.map((req) => (
-                <div key={req.id} className="flex justify-between items-center py-1 border-t border-indigo-200/60 dark:border-indigo-800/40">
-                  <div>
-                    <strong>{req.requesterName}</strong> requested this on {formatDate(req.requestedAt)}
-                    {req.note && <p className="italic text-indigo-700 dark:text-indigo-300 text-[11px]">&quot;{req.note}&quot;</p>}
-                  </div>
-                </div>
-              ))}
             </div>
           )}
 
@@ -346,10 +396,10 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
                         <td className="py-2.5 px-3 text-zinc-600 dark:text-zinc-400">
                           {formatDate(record.returnDate)}
                         </td>
-                        <td className="py-2.5 px-3 font-mono text-zinc-500">
+                        <td className="py-2.5 px-3 text-zinc-500 font-mono text-[11px]">
                           {calculateDuration(record.borrowDate, record.returnDate)}
                         </td>
-                        <td className="py-2.5 px-3 text-zinc-500 italic">
+                        <td className="py-2.5 px-3 text-zinc-400 italic">
                           {record.notes || '—'}
                         </td>
                       </tr>
@@ -358,11 +408,24 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
                 </table>
               </div>
             )}
+
           </div>
 
         </div>
 
+        {/* Footer */}
+        <div className="p-3 px-6 bg-zinc-50 dark:bg-zinc-950 border-t border-zinc-100 dark:border-zinc-800 flex justify-end">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-1.5 bg-zinc-200 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 text-xs font-semibold rounded-lg hover:bg-zinc-300 dark:hover:bg-zinc-700 transition-colors"
+          >
+            Close
+          </button>
+        </div>
+
       </div>
+
     </div>
   );
 };

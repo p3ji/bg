@@ -13,16 +13,22 @@ import {
   Info,
   PackageOpen,
   PlusCircle,
-  Sparkles
+  Sparkles,
+  ArrowRightLeft,
+  Check,
+  PackageCheck
 } from 'lucide-react';
 
 interface TableViewProps {
   games: Game[];
   activeHousehold?: string;
+  activeHouseholdUser?: string | null;
   onSelectGame: (game: Game) => void;
   onBorrow: (game: Game) => void;
   onReturn: (game: Game) => void;
-  onRequestBorrow: (game: Game) => void;
+  onRequestBorrow?: (game: Game) => void;
+  onAcceptExchange?: (requestId: string) => void;
+  onConfirmExchange?: (requestId: string) => void;
   onResetFilters: () => void;
   onAddForHousehold?: (household: string) => void;
   onEdit?: (game: Game) => void;
@@ -31,10 +37,13 @@ interface TableViewProps {
 export const TableView: React.FC<TableViewProps> = ({
   games,
   activeHousehold,
+  activeHouseholdUser,
   onSelectGame,
   onBorrow,
   onReturn,
   onRequestBorrow,
+  onAcceptExchange,
+  onConfirmExchange,
   onResetFilters,
   onAddForHousehold,
   onEdit,
@@ -98,19 +107,20 @@ export const TableView: React.FC<TableViewProps> = ({
       {/* Main High-Density Table */}
       <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden shadow-xs">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs whitespace-nowrap">
+          <table className="w-full text-left border-collapse text-xs">
             
             {/* Table Header */}
-            <thead className="bg-zinc-50 dark:bg-zinc-950/80 border-b border-zinc-200 dark:border-zinc-800 text-[11px] font-bold uppercase text-zinc-500 dark:text-zinc-400 tracking-wider">
-              <tr>
+            <thead>
+              <tr className="border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950/70 text-[11px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
                 <th className="py-3 px-4">Title</th>
-                <th className="py-3 px-3">Category</th>
+                <th className="py-3 px-3">BGG Rank</th>
+                <th className="py-3 px-3">Rating</th>
                 <th className="py-3 px-3">Players</th>
                 <th className="py-3 px-3">Playtime</th>
-                <th className="py-3 px-3">BGG Score</th>
+                <th className="py-3 px-3">Type</th>
                 <th className="py-3 px-3">Weight</th>
                 <th className="py-3 px-3">Owner</th>
-                <th className="py-3 px-3">Availability</th>
+                <th className="py-3 px-3">Status</th>
                 <th className="py-3 px-4 text-right">Actions</th>
               </tr>
             </thead>
@@ -119,83 +129,77 @@ export const TableView: React.FC<TableViewProps> = ({
             <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
               {games.map((game) => {
                 const isAvailable = game.status === 'available';
-                const hasPendingRequest = (game.borrowRequests || []).some((r) => r.status === 'pending');
+                const activeExchange = (game.borrowRequests || []).find(
+                  (r) => r.status === 'pending' || r.status === 'accepted'
+                );
+
+                const isUserHolder = activeHouseholdUser && activeExchange && activeHouseholdUser.toLowerCase() === activeExchange.holderName.toLowerCase();
+                const isUserRequester = activeHouseholdUser && activeExchange && activeHouseholdUser.toLowerCase() === activeExchange.requesterName.toLowerCase();
 
                 return (
                   <tr 
-                    key={game.id} 
-                    className="hover:bg-zinc-50/70 dark:hover:bg-zinc-800/40 transition-colors"
+                    key={game.id}
+                    className="hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40 transition-colors group"
                   >
-                    {/* Game Title with BGG link icon */}
-                    <td className="py-3 px-4">
-                      <div className="flex items-center gap-2">
-                        <button
-                          type="button"
+                    
+                    {/* Title & Notes */}
+                    <td className="py-3 px-4 font-medium text-zinc-900 dark:text-zinc-100">
+                      <div className="flex flex-col">
+                        <span 
                           onClick={() => onSelectGame(game)}
-                          className="font-bold text-zinc-900 dark:text-zinc-100 hover:text-indigo-600 dark:hover:text-indigo-400 text-left transition-colors truncate max-w-xs"
-                          title={game.title}
+                          className="font-bold text-xs hover:text-indigo-600 dark:hover:text-indigo-400 cursor-pointer inline-flex items-center gap-1.5"
                         >
                           {game.title}
-                        </button>
-                        {game.bggId && (
-                          <a
-                            href={`https://boardgamegeek.com/boardgame/${game.bggId}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-zinc-400 hover:text-indigo-500 transition-colors"
-                            title={`BGG ID: ${game.bggId}`}
-                          >
-                            <ExternalLink className="w-3 h-3" />
-                          </a>
+                          {game.year && (
+                            <span className="text-zinc-400 font-normal text-[10px]">({game.year})</span>
+                          )}
+                        </span>
+                        {game.notes && (
+                          <span className="text-[10px] text-zinc-400 italic line-clamp-1 mt-0.5">
+                            &ldquo;{game.notes}&rdquo;
+                          </span>
                         )}
                       </div>
-                      {game.notes && (
-                        <p className="text-[10px] text-zinc-400 italic truncate max-w-xs mt-0.5">
-                          {game.notes}
-                        </p>
+                    </td>
+
+                    {/* BGG Rank */}
+                    <td className="py-3 px-3 text-zinc-500 font-mono">
+                      {game.bggRank ? `#${game.bggRank}` : '—'}
+                    </td>
+
+                    {/* Rating */}
+                    <td className="py-3 px-3">
+                      {game.bggRating ? (
+                        <span className="inline-flex items-center gap-1 font-bold text-amber-600 dark:text-amber-400">
+                          <Star className="w-3 h-3 fill-amber-500" />
+                          {game.bggRating.toFixed(1)}
+                        </span>
+                      ) : (
+                        <span className="text-zinc-400">—</span>
                       )}
                     </td>
 
-                    {/* Category */}
-                    <td className="py-3 px-3">
-                      <span className="px-2 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-[10px] font-medium text-zinc-600 dark:text-zinc-300">
-                        {game.type}
-                      </span>
-                    </td>
-
-                    {/* Player Count */}
-                    <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300">
-                      <span className="flex items-center gap-1 font-mono">
+                    {/* Players */}
+                    <td className="py-3 px-3 text-zinc-600 dark:text-zinc-300">
+                      <span className="flex items-center gap-1">
                         <Users className="w-3 h-3 text-zinc-400" />
                         {game.minPlayers === game.maxPlayers ? `${game.minPlayers}p` : `${game.minPlayers}–${game.maxPlayers}p`}
                       </span>
                     </td>
 
                     {/* Playtime */}
-                    <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 font-mono">
+                    <td className="py-3 px-3 text-zinc-600 dark:text-zinc-300">
                       <span className="flex items-center gap-1">
                         <Clock className="w-3 h-3 text-zinc-400" />
                         {game.playtimeDisplay}
                       </span>
                     </td>
 
-                    {/* BGG Rating & Rank */}
+                    {/* Type badge */}
                     <td className="py-3 px-3">
-                      {game.bggRating ? (
-                        <div className="flex items-center gap-1">
-                          <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
-                          <span className="font-bold text-zinc-800 dark:text-zinc-200">
-                            {game.bggRating.toFixed(1)}
-                          </span>
-                          {game.bggRank && (
-                            <span className="text-[10px] text-zinc-400 font-mono ml-0.5">
-                              (#{game.bggRank})
-                            </span>
-                          )}
-                        </div>
-                      ) : (
-                        <span className="text-zinc-400">—</span>
-                      )}
+                      <span className="inline-block px-2 py-0.5 rounded text-[10px] font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300">
+                        {game.type}
+                      </span>
                     </td>
 
                     {/* Complexity Weight */}
@@ -210,7 +214,19 @@ export const TableView: React.FC<TableViewProps> = ({
 
                     {/* Status & Borrower */}
                     <td className="py-3 px-3">
-                      {isAvailable ? (
+                      {activeExchange ? (
+                        activeExchange.status === 'pending' ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 dark:bg-indigo-950/80 text-indigo-800 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/60">
+                            <ArrowRightLeft className="w-3 h-3" />
+                            Exchange: With {activeExchange.holderName} ➔ {activeExchange.requesterName}
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 animate-pulse">
+                            <PackageCheck className="w-3 h-3" />
+                            Ready for {activeExchange.requesterName} confirm
+                          </span>
+                        )
+                      ) : isAvailable ? (
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60">
                           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                           Available
@@ -225,11 +241,6 @@ export const TableView: React.FC<TableViewProps> = ({
                               Since {formatBorrowDate(game.borrowDate)}
                             </span>
                           )}
-                          {hasPendingRequest && (
-                            <span className="text-[10px] font-semibold text-indigo-600 dark:text-indigo-400 pl-1">
-                              • Borrow requested
-                            </span>
-                          )}
                         </div>
                       )}
                     </td>
@@ -237,7 +248,49 @@ export const TableView: React.FC<TableViewProps> = ({
                     {/* Action buttons */}
                     <td className="py-3 px-4 text-right">
                       <div className="flex items-center justify-end gap-1">
-                        {isAvailable ? (
+                        {activeExchange ? (
+                          activeExchange.status === 'pending' ? (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (onAcceptExchange) {
+                                  onAcceptExchange(activeExchange.id);
+                                } else {
+                                  onSelectGame(game);
+                                }
+                              }}
+                              className={`inline-flex items-center gap-1 px-2.5 py-1 rounded text-xs font-semibold shadow-xs transition-colors ${
+                                isUserHolder
+                                  ? 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                                  : 'bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300'
+                              }`}
+                              title="Accept exchange hand-off"
+                            >
+                              <ArrowRightLeft className="w-3 h-3" />
+                              {isUserHolder ? 'Accept Exchange' : 'Pending Accept'}
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (onConfirmExchange) {
+                                  onConfirmExchange(activeExchange.id);
+                                } else {
+                                  onSelectGame(game);
+                                }
+                              }}
+                              className={`inline-flex items-center gap-1 px-2.5 py-1 rounded text-xs font-semibold shadow-xs transition-colors ${
+                                isUserRequester
+                                  ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                                  : 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300'
+                              }`}
+                              title="Confirm receipt of game"
+                            >
+                              <Check className="w-3 h-3" />
+                              {isUserRequester ? 'Confirm Received' : 'Awaiting Receipt'}
+                            </button>
+                          )
+                        ) : isAvailable ? (
                           <button
                             type="button"
                             onClick={() => onBorrow(game)}
@@ -252,22 +305,23 @@ export const TableView: React.FC<TableViewProps> = ({
                               type="button"
                               onClick={() => onReturn(game)}
                               className="inline-flex items-center gap-1 px-2 py-1 bg-zinc-800 hover:bg-zinc-700 text-white rounded text-xs font-semibold transition-colors"
-                              title="Mark as returned"
+                              title="Mark as returned to owner"
                             >
                               <RotateCcw className="w-3 h-3" />
                               Return
                             </button>
                             <button
                               type="button"
-                              onClick={() => onRequestBorrow(game)}
+                              onClick={() => onBorrow(game)}
                               className="inline-flex items-center gap-1 px-2 py-1 bg-indigo-50 dark:bg-indigo-950 hover:bg-indigo-100 dark:hover:bg-indigo-900 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 rounded text-xs font-semibold transition-colors"
-                              title="Ping current holder to request"
+                              title="Request to borrow from current holder"
                             >
                               <SendHorizontal className="w-3 h-3" />
-                              Ping
+                              Borrow
                             </button>
                           </>
                         )}
+
                         {onEdit && (
                           <button
                             type="button"
@@ -278,6 +332,7 @@ export const TableView: React.FC<TableViewProps> = ({
                             <Sparkles className="w-3.5 h-3.5" />
                           </button>
                         )}
+
                         <button
                           type="button"
                           onClick={() => onSelectGame(game)}

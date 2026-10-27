@@ -12,15 +12,23 @@ import {
   CheckCircle2, 
   Trash2,
   Clock,
-  ArrowRight
+  ArrowRight,
+  Handshake,
+  PackageCheck,
+  ShieldAlert,
+  ArrowRightLeft,
+  Sparkles,
+  History
 } from 'lucide-react';
 
 interface NotificationsModalProps {
   requests: BorrowRequest[];
   games: Game[];
   isOpen: boolean;
+  activeHousehold?: string | null;
   onClose: () => void;
-  onFulfillRequest: (requestId: string) => void;
+  onAcceptExchange: (requestId: string) => void;
+  onConfirmExchange: (requestId: string) => void;
   onDismissRequest: (requestId: string) => void;
   onSelectGame: (game: Game) => void;
 }
@@ -29,31 +37,42 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
   requests,
   games,
   isOpen,
+  activeHousehold,
   onClose,
-  onFulfillRequest,
+  onAcceptExchange,
+  onConfirmExchange,
   onDismissRequest,
   onSelectGame,
 }) => {
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'active' | 'completed'>('active');
 
   if (!isOpen) return null;
 
-  const pendingRequests = requests.filter((r) => r.status === 'pending');
+  const activeRequests = requests.filter((r) => r.status === 'pending' || r.status === 'accepted');
+  const completedRequests = requests.filter((r) => r.status === 'fulfilled');
+
+  const getNudgeText = (req: BorrowRequest) => {
+    if (req.status === 'pending') {
+      return `Hey ${req.holderName}! ${req.requesterName} requested to borrow "${req.gameTitle}" from our game library. Please accept the exchange in the app to coordinate hand-off! 🎲`;
+    }
+    return `Hey ${req.requesterName}! ${req.holderName} has accepted and executed the exchange for "${req.gameTitle}". Please confirm in the app once you have received it! 🎲`;
+  };
 
   const handleCopyNudge = (req: BorrowRequest) => {
-    const text = `Hey ${req.holderName}! ${req.requesterName} requested to borrow "${req.gameTitle}" from our game library. Let them know when you're done with it! 🎲`;
+    const text = getNudgeText(req);
     navigator.clipboard.writeText(text);
     setCopiedId(req.id);
     setTimeout(() => setCopiedId(null), 2000);
   };
 
   const handleWhatsApp = (req: BorrowRequest) => {
-    const text = `Hey ${req.holderName}! ${req.requesterName} requested to borrow "${req.gameTitle}" from our game library. Let them know when you're done with it! 🎲`;
+    const text = getNudgeText(req);
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   };
 
   const handleSMS = (req: BorrowRequest) => {
-    const text = `Hey ${req.holderName}! ${req.requesterName} requested to borrow "${req.gameTitle}" from our game library. Let them know when you're done with it! 🎲`;
+    const text = getNudgeText(req);
     window.location.href = `sms:?&body=${encodeURIComponent(text)}`;
   };
 
@@ -73,21 +92,21 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
       <div 
-        className="w-full max-w-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+        className="w-full max-w-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150 flex flex-col max-h-[85vh]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="p-4 sm:p-5 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
+        <div className="p-4 sm:p-5 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-400 flex items-center justify-center">
-              <Bell className="w-4 h-4" />
+              <Handshake className="w-4 h-4" />
             </div>
             <div>
               <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-50">
-                Borrow Requests & Activity
+                Borrow Exchanges & Activity
               </h3>
               <p className="text-xs text-zinc-500 font-medium">
-                {pendingRequests.length} pending request{pendingRequests.length === 1 ? '' : 's'}
+                {activeRequests.length} active exchange{activeRequests.length === 1 ? '' : 's'} in progress
               </p>
             </div>
           </div>
@@ -100,113 +119,246 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
           </button>
         </div>
 
-        {/* Requests List */}
-        <div className="p-4 sm:p-5 space-y-3 max-h-[60vh] overflow-y-auto">
-          {pendingRequests.length === 0 ? (
-            <div className="py-12 text-center text-zinc-400 text-xs">
-              <CheckCircle2 className="w-8 h-8 mx-auto mb-2 text-emerald-500" />
-              <p className="font-bold text-zinc-700 dark:text-zinc-300">No pending borrow requests</p>
-              <p className="mt-1">All borrowed games are in good hands with no waitlist.</p>
-            </div>
+        {/* Tab switch */}
+        <div className="px-4 sm:px-5 pt-3 pb-2 border-b border-zinc-100 dark:border-zinc-800 flex items-center gap-2 shrink-0 bg-zinc-50/50 dark:bg-zinc-900">
+          <button
+            type="button"
+            onClick={() => setActiveTab('active')}
+            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
+              activeTab === 'active'
+                ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 shadow-xs'
+                : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
+            }`}
+          >
+            Active Exchanges ({activeRequests.length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('completed')}
+            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
+              activeTab === 'completed'
+                ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 shadow-xs'
+                : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
+            }`}
+          >
+            Completed ({completedRequests.length})
+          </button>
+        </div>
+
+        {/* Content list */}
+        <div className="p-4 sm:p-5 space-y-3 overflow-y-auto flex-1">
+          {activeTab === 'active' ? (
+            activeRequests.length === 0 ? (
+              <div className="py-12 text-center text-zinc-400 text-xs">
+                <CheckCircle2 className="w-8 h-8 mx-auto mb-2 text-emerald-500" />
+                <p className="font-bold text-zinc-700 dark:text-zinc-300 text-sm">No pending borrow exchanges</p>
+                <p className="mt-1">All borrowed games are currently with their holders with no pending requests.</p>
+              </div>
+            ) : (
+              activeRequests.map((req) => {
+                const matchedGame = games.find((g) => g.id === req.gameId);
+                const isPendingHolder = req.status === 'pending';
+                const isAwaitingRequester = req.status === 'accepted';
+
+                const isCurrentUserHolder = activeHousehold && activeHousehold.toLowerCase() === req.holderName.toLowerCase();
+                const isCurrentUserRequester = activeHousehold && activeHousehold.toLowerCase() === req.requesterName.toLowerCase();
+
+                return (
+                  <div
+                    key={req.id}
+                    className={`p-4 rounded-xl border transition-all ${
+                      isAwaitingRequester
+                        ? 'bg-emerald-50/60 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800/60'
+                        : 'bg-zinc-50 dark:bg-zinc-800/60 border-zinc-200 dark:border-zinc-800'
+                    }`}
+                  >
+                    {/* Header: Game Title and Time */}
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <h4 
+                          onClick={() => {
+                            if (matchedGame) {
+                              onClose();
+                              onSelectGame(matchedGame);
+                            }
+                          }}
+                          className="text-sm font-bold text-zinc-900 dark:text-zinc-100 hover:text-indigo-600 dark:hover:text-indigo-400 cursor-pointer transition-colors"
+                        >
+                          {req.gameTitle}
+                        </h4>
+                      </div>
+                      <span className="text-[10px] text-zinc-400 font-mono shrink-0 flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        {formatTimeAgo(req.requestedAt)}
+                      </span>
+                    </div>
+
+                    {/* Exchange Flow Visualizer */}
+                    <div className="mt-2.5 p-2.5 bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200/80 dark:border-zinc-800 flex items-center justify-between text-xs">
+                      <div className="flex flex-col">
+                        <span className="text-[10px] text-zinc-400 uppercase font-semibold">Current Holder</span>
+                        <span className="font-bold text-zinc-800 dark:text-zinc-200">
+                          {req.holderName}
+                        </span>
+                      </div>
+
+                      <div className="flex flex-col items-center px-2">
+                        <div className="flex items-center gap-1 text-zinc-400">
+                          <span className="h-px w-6 bg-zinc-300 dark:bg-zinc-700" />
+                          <ArrowRight className="w-3.5 h-3.5 text-indigo-500" />
+                          <span className="h-px w-6 bg-zinc-300 dark:bg-zinc-700" />
+                        </div>
+                        <span className="text-[10px] font-medium text-indigo-600 dark:text-indigo-400 mt-0.5">
+                          {isPendingHolder ? 'Step 1: Accept' : 'Step 2: Confirm'}
+                        </span>
+                      </div>
+
+                      <div className="flex flex-col text-right">
+                        <span className="text-[10px] text-zinc-400 uppercase font-semibold">Borrower</span>
+                        <span className="font-bold text-zinc-800 dark:text-zinc-200">
+                          {req.requesterName}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Step Status Banner */}
+                    <div className="mt-2.5">
+                      {isPendingHolder ? (
+                        <div className="p-2 rounded bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-xs text-amber-900 dark:text-amber-200 flex items-center justify-between gap-2">
+                          <div>
+                            <span className="font-bold">Step 1:</span> Waiting for <strong>{req.holderName}</strong> to accept & execute exchange.
+                          </div>
+                          {isCurrentUserHolder && (
+                            <span className="px-1.5 py-0.5 rounded bg-amber-500 text-white font-bold text-[10px] shrink-0">
+                              Your Action Needed
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="p-2 rounded bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 text-xs text-emerald-900 dark:text-emerald-200 flex items-center justify-between gap-2">
+                          <div>
+                            <span className="font-bold">Step 2:</span> <strong>{req.holderName}</strong> executed exchange! Waiting for <strong>{req.requesterName}</strong> to confirm receipt.
+                          </div>
+                          {isCurrentUserRequester && (
+                            <span className="px-1.5 py-0.5 rounded bg-emerald-500 text-white font-bold text-[10px] shrink-0">
+                              Your Action Needed
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Note if provided */}
+                    {req.note && (
+                      <p className="mt-2 text-[11px] text-zinc-500 italic bg-white dark:bg-zinc-900 p-2 rounded border border-zinc-100 dark:border-zinc-800">
+                        &ldquo;{req.note}&rdquo;
+                      </p>
+                    )}
+
+                    {/* Actions Toolbar */}
+                    <div className="mt-3 pt-2.5 flex items-center justify-between gap-2 border-t border-zinc-200/70 dark:border-zinc-700/70">
+                      
+                      {/* Nudge Ping Buttons */}
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => handleWhatsApp(req)}
+                          className="p-1.5 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-950/60 rounded transition-colors"
+                          title={isPendingHolder ? `WhatsApp ${req.holderName}` : `WhatsApp ${req.requesterName}`}
+                        >
+                          <MessageCircle className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleSMS(req)}
+                          className="p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-950/60 rounded transition-colors"
+                          title={isPendingHolder ? `iMessage / SMS ${req.holderName}` : `iMessage / SMS ${req.requesterName}`}
+                        >
+                          <Smartphone className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleCopyNudge(req)}
+                          className="p-1.5 text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded transition-colors"
+                          title="Copy nudge link & message"
+                        >
+                          {copiedId === req.id ? (
+                            <Check className="w-3.5 h-3.5 text-emerald-500" />
+                          ) : (
+                            <Copy className="w-3.5 h-3.5" />
+                          )}
+                        </button>
+                      </div>
+
+                      {/* Main Action Buttons */}
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => onDismissRequest(req.id)}
+                          className="p-1.5 text-zinc-400 hover:text-rose-600 rounded transition-colors"
+                          title="Cancel exchange request"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+
+                        {isPendingHolder ? (
+                          <button
+                            type="button"
+                            onClick={() => onAcceptExchange(req.id)}
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-900 dark:bg-zinc-100 hover:bg-zinc-800 dark:hover:bg-zinc-200 text-white dark:text-zinc-900 rounded-lg text-xs font-semibold shadow-xs transition-colors"
+                          >
+                            <ArrowRightLeft className="w-3.5 h-3.5 text-indigo-400 dark:text-indigo-600" />
+                            Accept & Execute Exchange
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => onConfirmExchange(req.id)}
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold shadow-xs transition-colors"
+                          >
+                            <Check className="w-3.5 h-3.5" />
+                            Confirm Received & Transfer
+                          </button>
+                        )}
+                      </div>
+
+                    </div>
+
+                  </div>
+                );
+              })
+            )
           ) : (
-            pendingRequests.map((req) => {
-              const matchedGame = games.find((g) => g.id === req.gameId);
-              return (
+            /* Completed exchanges tab */
+            completedRequests.length === 0 ? (
+              <div className="py-12 text-center text-zinc-400 text-xs">
+                <History className="w-8 h-8 mx-auto mb-2 text-zinc-400" />
+                <p className="font-semibold text-zinc-600 dark:text-zinc-400">No completed exchanges yet</p>
+              </div>
+            ) : (
+              completedRequests.map((req) => (
                 <div
                   key={req.id}
-                  className="p-3.5 bg-zinc-50 dark:bg-zinc-800/60 rounded-xl border border-zinc-200 dark:border-zinc-800 space-y-2.5"
+                  className="p-3 bg-zinc-50 dark:bg-zinc-800/40 rounded-xl border border-zinc-200 dark:border-zinc-800 text-xs flex items-center justify-between"
                 >
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <h4 
-                        onClick={() => {
-                          if (matchedGame) {
-                            onClose();
-                            onSelectGame(matchedGame);
-                          }
-                        }}
-                        className="text-xs font-bold text-zinc-900 dark:text-zinc-100 hover:text-indigo-600 cursor-pointer"
-                      >
-                        {req.gameTitle}
-                      </h4>
-                      <p className="text-[11px] text-zinc-600 dark:text-zinc-400 flex items-center gap-1 mt-0.5">
-                        <strong className="text-zinc-900 dark:text-zinc-200">{req.requesterName}</strong>
-                        <span>wants to borrow from</span>
-                        <strong className="text-zinc-900 dark:text-zinc-200">{req.holderName}</strong>
-                      </p>
-                    </div>
-                    <span className="text-[10px] text-zinc-400 font-mono shrink-0 flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
-                      {formatTimeAgo(req.requestedAt)}
-                    </span>
-                  </div>
-
-                  {req.note && (
-                    <p className="text-[11px] text-zinc-500 italic bg-white dark:bg-zinc-900 p-2 rounded border border-zinc-100 dark:border-zinc-800">
-                      &ldquo;{req.note}&rdquo;
+                  <div>
+                    <h5 className="font-bold text-zinc-900 dark:text-zinc-100">{req.gameTitle}</h5>
+                    <p className="text-[11px] text-zinc-500 mt-0.5">
+                      Transferred from <strong>{req.holderName}</strong> to <strong>{req.requesterName}</strong>
                     </p>
-                  )}
-
-                  {/* Actions toolbar */}
-                  <div className="pt-1 flex items-center justify-between gap-2 border-t border-zinc-200/60 dark:border-zinc-700/60">
-                    <div className="flex items-center gap-1">
-                      <button
-                        type="button"
-                        onClick={() => handleWhatsApp(req)}
-                        className="p-1.5 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/60 rounded"
-                        title={`WhatsApp ${req.holderName}`}
-                      >
-                        <MessageCircle className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleSMS(req)}
-                        className="p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/60 rounded"
-                        title={`iMessage / SMS ${req.holderName}`}
-                      >
-                        <Smartphone className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleCopyNudge(req)}
-                        className="p-1.5 text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded"
-                        title="Copy nudge message"
-                      >
-                        {copiedId === req.id ? (
-                          <Check className="w-3.5 h-3.5 text-emerald-500" />
-                        ) : (
-                          <Copy className="w-3.5 h-3.5" />
-                        )}
-                      </button>
-                    </div>
-
-                    <div className="flex items-center gap-1.5">
-                      <button
-                        type="button"
-                        onClick={() => onDismissRequest(req.id)}
-                        className="p-1.5 text-zinc-400 hover:text-rose-600 rounded"
-                        title="Dismiss request"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => onFulfillRequest(req.id)}
-                        className="flex items-center gap-1 px-2.5 py-1 bg-zinc-900 dark:bg-zinc-100 hover:bg-zinc-800 text-white dark:text-zinc-900 rounded text-[11px] font-semibold transition-colors"
-                      >
-                        <Check className="w-3 h-3" />
-                        Handed Off
-                      </button>
-                    </div>
                   </div>
-
+                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    Completed
+                  </span>
                 </div>
-              );
-            })
+              ))
+            )
           )}
         </div>
 
-        <div className="p-3 bg-zinc-50 dark:bg-zinc-950 border-t border-zinc-100 dark:border-zinc-800 flex justify-end">
+        {/* Footer */}
+        <div className="p-3 bg-zinc-50 dark:bg-zinc-950 border-t border-zinc-100 dark:border-zinc-800 flex justify-end shrink-0">
           <button
             type="button"
             onClick={onClose}

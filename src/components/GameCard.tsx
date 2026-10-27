@@ -12,28 +12,41 @@ import {
   RotateCcw, 
   SendHorizontal, 
   Info,
-  Sparkles
+  Sparkles,
+  ArrowRightLeft,
+  Check,
+  PackageCheck
 } from 'lucide-react';
 
 interface GameCardProps {
   game: Game;
+  activeHousehold?: string | null;
   onSelectGame: (game: Game) => void;
   onBorrow: (game: Game) => void;
   onReturn: (game: Game) => void;
-  onRequestBorrow: (game: Game) => void;
+  onRequestBorrow?: (game: Game) => void;
+  onAcceptExchange?: (requestId: string) => void;
+  onConfirmExchange?: (requestId: string) => void;
   onEdit?: (game: Game) => void;
 }
 
 export const GameCard: React.FC<GameCardProps> = ({
   game,
+  activeHousehold,
   onSelectGame,
   onBorrow,
   onReturn,
   onRequestBorrow,
+  onAcceptExchange,
+  onConfirmExchange,
   onEdit,
 }) => {
   const isAvailable = game.status === 'available';
-  const hasPendingRequest = (game.borrowRequests || []).some((r) => r.status === 'pending');
+
+  // Find any active exchange (pending holder acceptance or accepted awaiting confirmation)
+  const activeExchange = (game.borrowRequests || []).find(
+    (r) => r.status === 'pending' || r.status === 'accepted'
+  );
 
   const formatBorrowDate = (isoStr?: string | null) => {
     if (!isoStr) return '';
@@ -44,6 +57,9 @@ export const GameCard: React.FC<GameCardProps> = ({
       return '';
     }
   };
+
+  const isUserHolder = activeHousehold && activeExchange && activeHousehold.toLowerCase() === activeExchange.holderName.toLowerCase();
+  const isUserRequester = activeHousehold && activeExchange && activeHousehold.toLowerCase() === activeExchange.requesterName.toLowerCase();
 
   return (
     <div className="group flex flex-col bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden hover:shadow-lg hover:border-zinc-300 dark:hover:border-zinc-700 transition-all duration-200">
@@ -83,10 +99,18 @@ export const GameCard: React.FC<GameCardProps> = ({
             </span>
           )}
 
-          {hasPendingRequest && (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-600 text-white shadow-xs">
-              Requested
-            </span>
+          {activeExchange && (
+            activeExchange.status === 'pending' ? (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-600 text-white shadow-xs">
+                <ArrowRightLeft className="w-3 h-3" />
+                Requested by {activeExchange.requesterName}
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-600 text-white shadow-xs animate-pulse">
+                <PackageCheck className="w-3 h-3" />
+                Ready for {activeExchange.requesterName}
+              </span>
+            )
           )}
         </div>
 
@@ -164,7 +188,50 @@ export const GameCard: React.FC<GameCardProps> = ({
 
         {/* Action Buttons Toolbar */}
         <div className="pt-2 border-t border-zinc-100 dark:border-zinc-800 flex items-center gap-1.5">
-          {isAvailable ? (
+          {activeExchange ? (
+            /* Active Exchange Actions */
+            activeExchange.status === 'pending' ? (
+              <button
+                type="button"
+                onClick={() => {
+                  if (onAcceptExchange) {
+                    onAcceptExchange(activeExchange.id);
+                  } else {
+                    onSelectGame(game);
+                  }
+                }}
+                className={`flex-1 flex items-center justify-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold shadow-xs transition-colors ${
+                  isUserHolder
+                    ? 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                    : 'bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800'
+                }`}
+                title="Holder can accept and execute exchange"
+              >
+                <ArrowRightLeft className="w-3.5 h-3.5" />
+                {isUserHolder ? 'Accept Exchange' : 'Exchange Pending'}
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => {
+                  if (onConfirmExchange) {
+                    onConfirmExchange(activeExchange.id);
+                  } else {
+                    onSelectGame(game);
+                  }
+                }}
+                className={`flex-1 flex items-center justify-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold shadow-xs transition-colors ${
+                  isUserRequester
+                    ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                    : 'bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
+                }`}
+                title="Borrower confirms receipt to complete exchange"
+              >
+                <Check className="w-3.5 h-3.5" />
+                {isUserRequester ? 'Confirm Received' : 'Awaiting Receipt'}
+              </button>
+            )
+          ) : isAvailable ? (
             <button
               type="button"
               onClick={() => onBorrow(game)}
@@ -187,12 +254,12 @@ export const GameCard: React.FC<GameCardProps> = ({
 
               <button
                 type="button"
-                onClick={() => onRequestBorrow(game)}
+                onClick={() => onBorrow(game)}
                 className="flex items-center justify-center gap-1 px-2.5 py-1.5 bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/80 text-indigo-700 dark:text-indigo-300 rounded-lg text-xs font-semibold border border-indigo-200 dark:border-indigo-800 transition-colors"
-                title="Ping current borrower to request this game"
+                title="Send borrow request to current holder"
               >
                 <SendHorizontal className="w-3.5 h-3.5" />
-                Request
+                Borrow
               </button>
             </>
           )}
