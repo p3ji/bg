@@ -17,22 +17,37 @@ export function getSpreadsheetId(): string {
  *  - GOOGLE_APPLICATION_CREDENTIALS_JSON (full JSON content)
  */
 export function getGoogleSheetsAuth() {
-  const jsonCreds = process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON;
+  const jsonCreds =
+    process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON ||
+    process.env.SERVICE_ACCOUNT_KEY ||
+    process.env.GOOGLE_CREDENTIALS ||
+    process.env.FIREBASE_SERVICE_ACCOUNT;
+
   if (jsonCreds) {
     try {
-      const parsed = JSON.parse(jsonCreds);
+      const parsed = typeof jsonCreds === 'string' ? JSON.parse(jsonCreds) : jsonCreds;
       return new google.auth.JWT({
         email: parsed.client_email,
-        key: parsed.private_key,
+        key: (parsed.private_key || '').replace(/\\n/g, '\n'),
         scopes: ['https://www.googleapis.com/auth/spreadsheets'],
       });
     } catch (err) {
-      console.warn('Failed to parse GOOGLE_APPLICATION_CREDENTIALS_JSON:', err);
+      console.warn('Failed to parse Google credentials JSON:', err);
     }
   }
 
-  const clientEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
-  let privateKey = process.env.GOOGLE_PRIVATE_KEY;
+  const clientEmail =
+    process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL ||
+    process.env.GOOGLE_CLIENT_EMAIL ||
+    process.env.SERVICE_ACCOUNT_EMAIL ||
+    process.env.CLIENT_EMAIL ||
+    process.env.FIREBASE_CLIENT_EMAIL;
+
+  let privateKey =
+    process.env.GOOGLE_PRIVATE_KEY ||
+    process.env.PRIVATE_KEY ||
+    process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY ||
+    process.env.FIREBASE_PRIVATE_KEY;
 
   if (!clientEmail || !privateKey) {
     return null;
@@ -42,8 +57,8 @@ export function getGoogleSheetsAuth() {
   privateKey = privateKey.replace(/\\n/g, '\n');
 
   return new google.auth.JWT({
-    email: clientEmail,
-    key: privateKey,
+    email: clientEmail.trim(),
+    key: privateKey.trim(),
     scopes: ['https://www.googleapis.com/auth/spreadsheets'],
   });
 }
