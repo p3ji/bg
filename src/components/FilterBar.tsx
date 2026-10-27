@@ -17,6 +17,7 @@ import {
 
 interface FilterBarProps {
   filters: FilterState;
+  friends?: string[];
   onChange: (filters: FilterState) => void;
   onReset: () => void;
   resultCount: number;
@@ -25,11 +26,14 @@ interface FilterBarProps {
 
 export const FilterBar: React.FC<FilterBarProps> = ({
   filters,
+  friends,
   onChange,
   onReset,
   resultCount,
   onAddForHousehold,
 }) => {
+  const availableHouseholds = friends && friends.length > 0 ? friends : OWNER_GROUPS;
+
   const isFiltered = Boolean(
     filters.search ||
     filters.exactPlayers !== null ||
@@ -207,7 +211,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
               className="bg-transparent text-xs font-semibold text-zinc-800 dark:text-zinc-200 focus:outline-hidden py-0.5 px-1 cursor-pointer max-w-[140px]"
             >
               <option value="all">All Households</option>
-              {OWNER_GROUPS.map((grp) => (
+              {availableHouseholds.map((grp) => (
                 <option key={grp} value={grp}>
                   {grp}
                 </option>

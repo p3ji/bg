@@ -20,6 +20,7 @@ import {
 
 interface EditGameModalProps {
   game: Game | null;
+  friends?: string[];
   isOpen: boolean;
   onClose: () => void;
   onSave: (updatedGame: Game) => void;
@@ -39,10 +40,12 @@ interface BggSearchResult {
 
 export const EditGameModal: React.FC<EditGameModalProps> = ({
   game,
+  friends,
   isOpen,
   onClose,
   onSave,
 }) => {
+  const availableHouseholds = friends && friends.length > 0 ? friends : OWNER_GROUPS;
   const [title, setTitle] = useState('');
   const [owner, setOwner] = useState('');
   const [type, setType] = useState('Strategy');
@@ -406,7 +409,7 @@ export const EditGameModal: React.FC<EditGameModalProps> = ({
                   onChange={(e) => setOwner(e.target.value)}
                   className="w-full px-3 py-2 text-xs rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 >
-                  {OWNER_GROUPS.map((c) => (
+                  {availableHouseholds.map((c) => (
                     <option key={c} value={c}>{c}</option>
                   ))}
                 </select>

@@ -6,6 +6,7 @@ import { OWNER_GROUPS } from '@/data/friends';
 
 interface IdentityModalProps {
   isOpen: boolean;
+  friends?: string[];
   onClose: () => void;
   activeHousehold: string | null;
   onSelectHousehold: (household: string) => void;
@@ -14,6 +15,7 @@ interface IdentityModalProps {
 
 export const IdentityModal: React.FC<IdentityModalProps> = ({
   isOpen,
+  friends,
   onClose,
   activeHousehold,
   onSelectHousehold,
@@ -21,12 +23,21 @@ export const IdentityModal: React.FC<IdentityModalProps> = ({
 }) => {
   if (!isOpen) return null;
 
+  const availableHouseholds = friends && friends.length > 0 ? friends : OWNER_GROUPS;
+
   const getInitials = (name: string) => {
-    return name
-      .split('&')
-      .map((part) => part.trim()[0])
-      .filter(Boolean)
-      .join('&');
+    if (name.includes('&')) {
+      return name
+        .split('&')
+        .map((part) => part.trim()[0])
+        .filter(Boolean)
+        .join('&');
+    }
+    const words = name.trim().split(/\s+/);
+    if (words.length > 1) {
+      return (words[0][0] + words[1][0]).toUpperCase();
+    }
+    return name.slice(0, 2).toUpperCase();
   };
 
   const getHouseholdTheme = (index: number) => {
@@ -90,7 +101,7 @@ export const IdentityModal: React.FC<IdentityModalProps> = ({
         {/* Content Body */}
         <div className="p-5 space-y-3">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {OWNER_GROUPS.map((household, idx) => {
+            {availableHouseholds.map((household, idx) => {
               const theme = getHouseholdTheme(idx);
               const isSelected = activeHousehold === household;
 

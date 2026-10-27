@@ -407,6 +407,7 @@ export default function HomePage() {
       {/* Filter and Search Bar */}
       <FilterBar
         filters={filters}
+        friends={friends}
         onChange={setFilters}
         onReset={() => setFilters(initialFilters)}
         resultCount={filteredGames.length}
@@ -490,6 +491,7 @@ export default function HomePage() {
 
       <BggSyncModal
         isOpen={isBggSyncOpen}
+        friends={friends}
         onClose={() => {
           setIsBggSyncOpen(false);
           setSelectedHouseholdForAdd(undefined);
@@ -510,6 +512,7 @@ export default function HomePage() {
 
       <EditGameModal
         game={editingGame}
+        friends={friends}
         isOpen={Boolean(editingGame)}
         onClose={() => setEditingGame(null)}
         onSave={handleSaveEditedGame}
@@ -517,6 +520,7 @@ export default function HomePage() {
 
       <IdentityModal
         isOpen={isIdentityModalOpen}
+        friends={friends}
         onClose={() => {
           setIsIdentityModalOpen(false);
           setIsFirstIdentityPrompt(false);

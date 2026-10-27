@@ -67,6 +67,13 @@ export async function GET(request: NextRequest) {
       image: g.thumbnail || null,
     }));
 
+    if (formattedGames.length === 0) {
+      return NextResponse.json({
+        success: false,
+        error: `No games found for BGG user '${username}'. Make sure games are marked as 'Owned' in your collection on BoardGameGeek.com, or use the 'Search & Add' tab to look up and add games individually.`,
+      }, { status: 404 });
+    }
+
     return NextResponse.json({
       success: true,
       username: data.username || username,

@@ -21,6 +21,7 @@ import Image from 'next/image';
 
 interface BggSyncModalProps {
   isOpen: boolean;
+  friends?: string[];
   onClose: () => void;
   onAddGame: (game: Omit<Game, 'id' | 'status' | 'history'>) => void;
   onBatchImportGames: (games: Omit<Game, 'id' | 'status' | 'history'>[]) => void;
@@ -30,17 +31,19 @@ interface BggSyncModalProps {
 
 export const BggSyncModal: React.FC<BggSyncModalProps> = ({
   isOpen,
+  friends,
   onClose,
   onAddGame,
   onBatchImportGames,
   initialHousehold,
-  initialTab = 'sync',
+  initialTab = 'search',
 }) => {
+  const availableHouseholds = friends && friends.length > 0 ? friends : OWNER_GROUPS;
   const [activeTab, setActiveTab] = useState<'sync' | 'search'>(initialTab);
   
   // Sync tab state
-  const [username, setUsername] = useState('pizzicatoz');
-  const [syncOwner, setSyncOwner] = useState(initialHousehold || OWNER_GROUPS[0]);
+  const [username, setUsername] = useState('pejiaoter');
+  const [syncOwner, setSyncOwner] = useState(initialHousehold || availableHouseholds[0]);
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncError, setSyncError] = useState<string | null>(null);
   const [syncedGames, setSyncedGames] = useState<any[]>([]);
@@ -50,20 +53,19 @@ export const BggSyncModal: React.FC<BggSyncModalProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [searchOwner, setSearchOwner] = useState(initialHousehold || OWNER_GROUPS[0]);
+  const [searchOwner, setSearchOwner] = useState(initialHousehold || availableHouseholds[0]);
   const [searchAddedIds, setSearchAddedIds] = useState<Set<string>>(new Set());
 
   React.useEffect(() => {
     if (isOpen) {
-      if (initialHousehold && OWNER_GROUPS.includes(initialHousehold)) {
-        setSearchOwner(initialHousehold);
-        setSyncOwner(initialHousehold);
-      }
+      const defaultOwner = initialHousehold || availableHouseholds[0];
+      setSearchOwner(defaultOwner);
+      setSyncOwner(defaultOwner);
       if (initialTab) {
         setActiveTab(initialTab);
       }
     }
-  }, [isOpen, initialHousehold, initialTab]);
+  }, [isOpen, initialHousehold, initialTab, availableHouseholds]);
 
   if (!isOpen) return null;
 
@@ -182,10 +184,10 @@ export const BggSyncModal: React.FC<BggSyncModalProps> = ({
             </div>
             <div>
               <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-50">
-                BoardGameGeek Integration
+                Add Games via BoardGameGeek
               </h3>
               <p className="text-xs text-zinc-500 font-medium">
-                Sync collections or search BGG titles to add into the circle
+                Search titles with official BGG artwork & stats, or import a BGG profile
               </p>
             </div>
           </div>
@@ -202,25 +204,27 @@ export const BggSyncModal: React.FC<BggSyncModalProps> = ({
         <div className="flex border-b border-zinc-200 dark:border-zinc-800 px-5 bg-zinc-50 dark:bg-zinc-950/50">
           <button
             type="button"
-            onClick={() => setActiveTab('sync')}
-            className={`py-3 px-4 text-xs font-bold border-b-2 transition-colors ${
-              activeTab === 'sync'
-                ? 'border-zinc-900 dark:border-zinc-100 text-zinc-900 dark:text-zinc-100'
-                : 'border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
-            }`}
-          >
-            Sync BGG Username Collection
-          </button>
-          <button
-            type="button"
             onClick={() => setActiveTab('search')}
-            className={`py-3 px-4 text-xs font-bold border-b-2 transition-colors ${
+            className={`py-3 px-4 text-xs font-bold border-b-2 transition-colors flex items-center gap-1.5 ${
               activeTab === 'search'
                 ? 'border-zinc-900 dark:border-zinc-100 text-zinc-900 dark:text-zinc-100'
                 : 'border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
             }`}
           >
-            Search & Add Individual Title
+            <Search className="w-3.5 h-3.5" />
+            Search & Add Game
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('sync')}
+            className={`py-3 px-4 text-xs font-bold border-b-2 transition-colors flex items-center gap-1.5 ${
+              activeTab === 'sync'
+                ? 'border-zinc-900 dark:border-zinc-100 text-zinc-900 dark:text-zinc-100'
+                : 'border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
+            }`}
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+            Import from BGG Profile
           </button>
         </div>
 
@@ -228,6 +232,16 @@ export const BggSyncModal: React.FC<BggSyncModalProps> = ({
         <div className="flex-1 overflow-y-auto p-4 sm:p-5">
           {activeTab === 'sync' ? (
             <div className="space-y-4">
+
+              {/* Explanatory Banner */}
+              <div className="bg-zinc-100 dark:bg-zinc-800/70 p-3 rounded-xl border border-zinc-200 dark:border-zinc-700 text-xs text-zinc-600 dark:text-zinc-300">
+                <p className="font-semibold text-zinc-900 dark:text-zinc-100 mb-0.5">
+                  📥 One-way import from BoardGameGeek.com:
+                </p>
+                <p>
+                  This pulls games marked as owned on BGG into your household library. (BGG does not allow 3rd-party apps to edit or write data back to your BGG account). If you just want to add a single game, use the <strong>Search & Add</strong> tab!
+                </p>
+              </div>
               
               <form onSubmit={handleBggSync} className="space-y-3 bg-zinc-50 dark:bg-zinc-800/50 p-4 rounded-xl border border-zinc-200 dark:border-zinc-800">
                 <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
@@ -240,7 +254,7 @@ export const BggSyncModal: React.FC<BggSyncModalProps> = ({
                       required
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
-                      placeholder="e.g. pizzicatoz"
+                      placeholder="e.g. pejiaoter"
                       className="w-full px-3 py-2 text-xs bg-white dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 rounded-lg text-zinc-900 dark:text-zinc-100 focus:outline-hidden focus:ring-2 focus:ring-zinc-900"
                     />
                   </div>
@@ -254,7 +268,7 @@ export const BggSyncModal: React.FC<BggSyncModalProps> = ({
                       onChange={(e) => setSyncOwner(e.target.value)}
                       className="w-full px-3 py-2 text-xs bg-white dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 rounded-lg text-zinc-900 dark:text-zinc-100 focus:outline-hidden"
                     >
-                      {OWNER_GROUPS.map((grp) => (
+                      {availableHouseholds.map((grp) => (
                         <option key={grp} value={grp}>
                           {grp}
                         </option>
@@ -270,7 +284,7 @@ export const BggSyncModal: React.FC<BggSyncModalProps> = ({
                     className="flex items-center gap-1.5 px-4 py-2 bg-zinc-900 dark:bg-zinc-100 hover:bg-zinc-800 dark:hover:bg-zinc-200 disabled:opacity-50 text-white dark:text-zinc-900 rounded-lg text-xs font-semibold transition-colors shadow-xs"
                   >
                     <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
-                    {isSyncing ? 'Fetching from BGG...' : 'Sync Collection'}
+                    {isSyncing ? 'Fetching from BGG...' : 'Import Collection'}
                   </button>
                 </div>
               </form>
@@ -373,7 +387,7 @@ export const BggSyncModal: React.FC<BggSyncModalProps> = ({
                     onChange={(e) => setSearchOwner(e.target.value)}
                     className="px-2.5 py-1 text-xs font-semibold bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-lg text-zinc-900 dark:text-zinc-100 focus:outline-hidden"
                   >
-                    {OWNER_GROUPS.map((grp) => (
+                    {availableHouseholds.map((grp) => (
                       <option key={grp} value={grp}>
                         {grp}
                       </option>

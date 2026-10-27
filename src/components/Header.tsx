@@ -42,11 +42,18 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenSettings,
 }) => {
   const getInitials = (name: string) => {
-    return name
-      .split('&')
-      .map((part) => part.trim()[0])
-      .filter(Boolean)
-      .join('&');
+    if (name.includes('&')) {
+      return name
+        .split('&')
+        .map((part) => part.trim()[0])
+        .filter(Boolean)
+        .join('&');
+    }
+    const words = name.trim().split(/\s+/);
+    if (words.length > 1) {
+      return (words[0][0] + words[1][0]).toUpperCase();
+    }
+    return name.slice(0, 2).toUpperCase();
   };
 
   return (
