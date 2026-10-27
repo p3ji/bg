@@ -11,20 +11,22 @@ import {
   Bell,
   RefreshCw,
   Lock,
-  Download
+  Download,
+  RotateCcw
 } from 'lucide-react';
-import { forceRefreshAllImages } from '@/lib/storage';
+import { forceRefreshAllImages, resetLibrary } from '@/lib/storage';
 import { requestBadgeNotificationPermission, getNotificationPermissionStatus } from '@/lib/badgeManager';
 import { isSameHousehold } from '@/lib/normalize';
-import { isAppStandalone } from './PwaInstallPrompt';
+import { isRunningStandalone } from '@/lib/pwa';
+import { useModalA11y } from '@/lib/useModalA11y';
+import { SheetRowGame } from '@/types';
 
 interface SettingsModalProps {
   friends: string[];
   isOpen: boolean;
   onClose: () => void;
   onUpdateFriends: (friends: string[]) => void;
-  onSyncGames?: (sheetGames: any[]) => void;
-  onResetLibrary?: () => void;
+  onSyncGames?: (sheetGames: SheetRowGame[], rosterOverride?: string[]) => void;
   onTriggerInstallGuide?: () => void;
 }
 
@@ -34,7 +36,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onClose,
   onUpdateFriends,
   onSyncGames,
-  onResetLibrary,
   onTriggerInstallGuide,
 }) => {
   const [newFriend, setNewFriend] = useState('');
@@ -47,6 +48,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const [badgeSynced, setBadgeSynced] = useState(false);
   const [isSyncingSheets, setIsSyncingSheets] = useState(false);
   const [syncStatusText, setSyncStatusText] = useState<string | null>(null);
+  const [confirmingReset, setConfirmingReset] = useState(false);
+
+  useModalA11y(isOpen, onClose);
 
   useEffect(() => {
     if (isOpen) {
@@ -55,6 +59,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       setAdminPassword('');
       setAdminError('');
       setSyncStatusText(null);
+      setConfirmingReset(false);
     }
   }, [isOpen]);
 
@@ -81,17 +86,19 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       const data = await res.json();
 
       if (data.success) {
-        if (Array.isArray(data.games) && data.games.length > 0 && onSyncGames) {
-          onSyncGames(data.games);
-        }
-
+        let updatedRoster = friends;
         if (Array.isArray(data.households) && data.households.length > 0) {
           const newHouseholds = data.households.filter(
             (h: string) => !friends.some((f) => isSameHousehold(f, h, friends))
           );
           if (newHouseholds.length > 0) {
-            onUpdateFriends([...friends, ...newHouseholds]);
+            updatedRoster = [...friends, ...newHouseholds];
+            onUpdateFriends(updatedRoster);
           }
+        }
+
+        if (Array.isArray(data.games) && data.games.length > 0 && onSyncGames) {
+          onSyncGames(data.games, updatedRoster);
         }
 
         setSyncStatusText(
@@ -104,15 +111,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       }
 
       if (typeof window !== 'undefined') {
-        window.dispatchEvent(new Event('bg_games_updated'));
         window.dispatchEvent(new Event('bg_requests_updated'));
         window.dispatchEvent(new Event('bg_friends_updated'));
       }
       setImagesRefreshed(true);
       setTimeout(() => setImagesRefreshed(false), 4000);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.warn('Manual sync notice:', err);
-      setSyncStatusText('Covers refreshed.');
+      setSyncStatusText('Covers refreshed locally. Could not reach Google Sheets API — check network or credentials.');
       setImagesRefreshed(true);
       setTimeout(() => setImagesRefreshed(false), 3000);
     } finally {
@@ -156,7 +162,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-xs">
+    <div 
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-xs"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="settings-modal-title"
+    >
       <div 
         className="w-full max-w-lg bg-white dark:bg-zinc-900 border-t sm:border border-zinc-200 dark:border-zinc-800 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom duration-200 sm:zoom-in-95 max-h-[92dvh] flex flex-col pb-safe sm:pb-0"
         onClick={(e) => e.stopPropagation()}
@@ -171,7 +183,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               <Settings className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-50">
+              <h3 id="settings-modal-title" className="text-sm font-bold text-zinc-900 dark:text-zinc-50">
                 Library Settings
               </h3>
               <p className="text-xs text-zinc-500 font-medium">
@@ -215,10 +227,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                       setAdminPassword('');
                       setAdminError('');
                     }}
-                    className="text-zinc-400 hover:text-rose-500 transition-colors"
-                    title={`Remove ${name} (admin required)`}
+                    className="p-1 -mr-1 text-zinc-400 hover:text-rose-500 transition-colors"
+                    title={`Remove ${name} (confirmation required)`}
+                    aria-label={`Remove ${name}`}
                   >
-                    <X className="w-3 h-3" />
+                    <X className="w-3.5 h-3.5" />
                   </button>
                 </span>
               ))}
@@ -230,22 +243,22 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 <div className="flex items-center gap-2 text-rose-700 dark:text-rose-300">
                   <Lock className="w-4 h-4 shrink-0" />
                   <span className="text-xs font-bold">
-                    Admin Password Required to Remove &quot;{householdToRemove}&quot;
+                    Confirm Removal of &quot;{householdToRemove}&quot;
                   </span>
                 </div>
                 <p className="text-[11px] text-zinc-600 dark:text-zinc-400">
-                  Please enter the admin password to confirm removing this household.
+                  Type <strong>admin</strong> below to confirm removing this household from the roster.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-2">
                   <input
-                    type="password"
+                    type="text"
                     autoFocus
                     value={adminPassword}
                     onChange={(e) => {
                       setAdminPassword(e.target.value);
                       setAdminError('');
                     }}
-                    placeholder="Enter admin password..."
+                    placeholder="Type 'admin' to confirm..."
                     className="flex-1 px-3 py-1.5 text-xs bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-lg text-zinc-900 dark:text-zinc-100 focus:outline-hidden focus:ring-2 focus:ring-rose-500"
                   />
                   <div className="flex gap-1.5 shrink-0">
@@ -350,7 +363,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     <span className="text-xs font-semibold text-zinc-900 dark:text-zinc-100">
                       App Mode:
                     </span>
-                    {isAppStandalone() ? (
+                    {isRunningStandalone() ? (
                       <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400">
                         <Check className="w-3 h-3" />
                         Installed (Standalone)
@@ -362,14 +375,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     )}
                   </div>
                   <p className="text-[11px] text-zinc-500 mt-0.5">
-                    {isAppStandalone()
+                    {isRunningStandalone()
                       ? 'GameShare is already installed and running as a standalone app.'
                       : 'Not installed yet. Install for an app-like experience.'}
                   </p>
                 </div>
               </div>
 
-              {!isAppStandalone() && onTriggerInstallGuide && (
+              {!isRunningStandalone() && onTriggerInstallGuide && (
                 <button
                   type="button"
                   onClick={() => {
@@ -470,6 +483,42 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             <p className="text-xs text-zinc-500">
               Connected to <strong className="font-mono text-zinc-800 dark:text-zinc-200">gameshare-d5fe0</strong>. Additions, borrow handshakes, and library changes sync live across all households.
             </p>
+            <div className="mt-3 pt-3 border-t border-zinc-100 dark:border-zinc-800/80 flex items-center justify-between gap-2">
+              <span className="text-[11px] text-zinc-500">
+                Need to clear local browser cache and reload seed data?
+              </span>
+              {confirmingReset ? (
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      resetLibrary();
+                      setConfirmingReset(false);
+                      setSyncStatusText('Local cache reset to seed library.');
+                    }}
+                    className="px-2.5 py-1 bg-rose-600 hover:bg-rose-700 text-white rounded-md text-[11px] font-semibold transition-colors"
+                  >
+                    Confirm Reset
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setConfirmingReset(false)}
+                    className="px-2 py-1 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 rounded-md text-[11px] font-medium transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setConfirmingReset(true)}
+                  className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium text-zinc-600 dark:text-zinc-400 hover:text-rose-600 dark:hover:text-rose-400 bg-zinc-100 dark:bg-zinc-800 rounded-md transition-colors shrink-0"
+                >
+                  <RotateCcw className="w-3 h-3" />
+                  <span>Reset Local Cache</span>
+                </button>
+              )}
+            </div>
           </div>
 
         </div>

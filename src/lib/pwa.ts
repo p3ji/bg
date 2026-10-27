@@ -86,6 +86,9 @@ export function shouldOfferInstallFirst(): boolean {
     if (urlParams.get('preview') === 'install-first') return true;
   } catch {}
 
+  // Only show the full-screen phone install gate on mobile/tablet touch devices
+  if (!isMobileDevice()) return false;
+
   // Check if user previously clicked "Continue in browser"
   try {
     if (localStorage.getItem('gameshare_continue_browser') === 'true') {

@@ -57,8 +57,8 @@ export const GameBoxCover: React.FC<GameBoxCoverProps> = ({
     }
   };
 
-  // Generate deterministic subtle color theme based on type or title
-  const getThemeColors = (gameType: string, _gameTitle: string) => {
+  // Generate deterministic subtle color theme based on type
+  const getThemeColors = (gameType: string) => {
     const t = (gameType || '').toLowerCase();
     if (t.includes('strategy')) {
       return {
@@ -95,7 +95,7 @@ export const GameBoxCover: React.FC<GameBoxCoverProps> = ({
     };
   };
 
-  const theme = getThemeColors(type, title);
+  const theme = getThemeColors(type);
 
   if (activeSrc) {
     return (

@@ -2,10 +2,10 @@
 
 import React, { useState } from 'react';
 import { BorrowRequest, Game } from '@/types';
-import { normalizeName, isSameHousehold } from '@/lib/normalize';
+import { isSameHousehold } from '@/lib/normalize';
+import { useModalA11y } from '@/lib/useModalA11y';
 import { 
   X, 
-  Bell, 
   MessageCircle, 
   Smartphone, 
   Copy, 
@@ -15,10 +15,7 @@ import {
   Clock,
   ArrowRight,
   Handshake,
-  PackageCheck,
-  ShieldAlert,
   ArrowRightLeft,
-  Sparkles,
   History
 } from 'lucide-react';
 
@@ -47,6 +44,8 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
 }) => {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'active' | 'completed'>('active');
+
+  useModalA11y(isOpen, onClose);
 
   if (!isOpen) return null;
 
@@ -309,7 +308,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
 
   const formatTimeAgo = (isoStr: string) => {
     try {
-      const diffMs = Date.now() - new Date(isoStr).getTime();
+      const diffMs = new Date().getTime() - new Date(isoStr).getTime();
       const diffHours = Math.floor(diffMs / (1000 * 3600));
       if (diffHours < 1) return 'Just now';
       if (diffHours < 24) return `${diffHours}h ago`;
@@ -321,7 +320,13 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-xs">
+    <div 
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-xs"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="notifications-modal-title"
+    >
       <div 
         className="w-full max-w-xl bg-white dark:bg-zinc-900 border-t sm:border border-zinc-200 dark:border-zinc-800 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom duration-200 sm:zoom-in-95 flex flex-col max-h-[92dvh] pb-safe sm:pb-0"
         onClick={(e) => e.stopPropagation()}
@@ -336,7 +341,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
               <Handshake className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-50">
+              <h3 id="notifications-modal-title" className="text-sm font-bold text-zinc-900 dark:text-zinc-50">
                 Borrow Exchanges & Activity
               </h3>
               <p className="text-xs text-zinc-500 font-medium">

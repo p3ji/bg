@@ -88,6 +88,33 @@ export function matchesFuzzy(query?: string | null, text?: string | null): boole
 }
 
 /**
+ * Strict entity-level title matching for syncing and deduplicating games.
+ * Matches minor punctuation, spacing, article ("the"), or 1-2 char spelling variations
+ * (e.g. "Carcassonne" vs "Carcassone", "7 Wonders: Duel" vs "7 Wonders Duel"),
+ * while NEVER conflating base games with expansions ("Catan" vs "Catan: Seafarers").
+ */
+export function matchesTitleEntity(titleA?: string | null, titleB?: string | null): boolean {
+  if (!titleA || !titleB) return false;
+  const aClean = cleanString(titleA).replace(/^the\s+/, '');
+  const bClean = cleanString(titleB).replace(/^the\s+/, '');
+  if (!aClean || !bClean) return false;
+
+  if (aClean === bClean) return true;
+  if (collapseRepeats(aClean) === collapseRepeats(bClean)) return true;
+
+  const aNoSpace = aClean.replace(/\s+/g, '');
+  const bNoSpace = bClean.replace(/\s+/g, '');
+  if (aNoSpace === bNoSpace) return true;
+  if (collapseRepeats(aNoSpace) === collapseRepeats(bNoSpace)) return true;
+
+  if (Math.abs(aClean.length - bClean.length) <= 2 && Math.min(aClean.length, bClean.length) >= 5) {
+    return levenshtein(aClean, bClean) <= 2;
+  }
+
+  return false;
+}
+
+/**
  * Searches a game across title, category, notes, owner, and current borrower
  */
 export function matchesGameSearch(query: string, game: Game): boolean {

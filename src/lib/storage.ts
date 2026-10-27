@@ -2,7 +2,7 @@ import { Game, BorrowRequest } from '@/types';
 import seedData from '@/data/seedGames.json';
 import { DEFAULT_FRIENDS } from '@/data/friends';
 
-const GAMES_STORAGE_KEY = 'bg_share_games_v6';
+const GAMES_STORAGE_KEY = 'bg_share_games_v8';
 const REQUESTS_STORAGE_KEY = 'bg_share_requests_v4';
 const FRIENDS_STORAGE_KEY = 'bg_share_households_v1';
 const BGG_TOKEN_KEY = 'bg_share_bgg_token_v1';
@@ -23,50 +23,82 @@ export function saveActiveHousehold(household: string | null): void {
   window.dispatchEvent(new Event('bg_identity_updated'));
 }
 
+function getOwnerTitleKey(owner?: string, title?: string): string {
+  return `${(owner || '').toLowerCase().trim()}::${(title || '').toLowerCase().trim()}`;
+}
+
+function sanitizeCachedPlaytime(game: Game, seed?: Game): Pick<Game, 'minPlaytime' | 'maxPlaytime' | 'playtimeDisplay'> {
+  let minPlaytime = game.minPlaytime;
+  let maxPlaytime = game.maxPlaytime;
+  let playtimeDisplay = game.playtimeDisplay;
+
+  // Repair legacy Excel date serial numbers (> 10000) cached in localStorage
+  if (minPlaytime > 10000 || maxPlaytime > 10000) {
+    minPlaytime = seed ? seed.minPlaytime : 15;
+    maxPlaytime = seed ? seed.maxPlaytime : 30;
+    playtimeDisplay = seed?.playtimeDisplay || `${minPlaytime}-${maxPlaytime}m`;
+  }
+  if (typeof minPlaytime === 'number' && typeof maxPlaytime === 'number' && maxPlaytime < minPlaytime) {
+    maxPlaytime = minPlaytime;
+  }
+  if (typeof playtimeDisplay === 'string') {
+    const clean = playtimeDisplay
+      .trim()
+      .replace(/\s*(?:mins?|minutes?|m)\s*$/i, '')
+      .replace(/^(\d+)\.0$/, '$1')
+      .replace(/--+/g, '-')
+      .trim();
+    playtimeDisplay = clean ? `${clean}m` : `${minPlaytime || 30}m`;
+  }
+  return { minPlaytime, maxPlaytime, playtimeDisplay };
+}
+
 export function getInitialGames(): Game[] {
   const seedList = seedData as unknown as Game[];
   if (typeof window === 'undefined') {
     return seedList;
   }
   try {
-    const stored =
-      localStorage.getItem(GAMES_STORAGE_KEY) ||
-      localStorage.getItem('bg_share_games_v4') ||
-      localStorage.getItem('bg_share_games_v3') ||
-      localStorage.getItem('bg_share_games_v1');
+    const stored = localStorage.getItem(GAMES_STORAGE_KEY);
 
     if (stored) {
       const parsed = JSON.parse(stored);
       if (Array.isArray(parsed) && parsed.length > 0) {
-        // Build maps for both ID and title matching
+        // Build maps for ID and composite (owner + title) matching to avoid cross-household collisions
         const seedMapById = new Map(seedList.map((g) => [g.id, g]));
-        const seedMapByTitle = new Map(seedList.map((g) => [(g.title || '').toLowerCase().trim(), g]));
+        const seedMapByOwnerTitle = new Map(seedList.map((g) => [getOwnerTitleKey(g.owner, g.title), g]));
 
         const merged = parsed.map((game: Game) => {
-          const seed = seedMapById.get(game.id) || seedMapByTitle.get((game.title || '').toLowerCase().trim());
+          const seed = seedMapById.get(game.id) || seedMapByOwnerTitle.get(getOwnerTitleKey(game.owner, game.title));
+          const cleanedPlaytime = sanitizeCachedPlaytime(game, seed);
           if (seed) {
-            // Keep user edits and dynamic state as primary; only backfill missing metadata or images from seed
+            // Keep user edits and dynamic state as primary; only backfill undefined fields from seed
             return {
               ...seed,
               ...game,
-              image: game.image || seed.image,
-              thumbnail: game.thumbnail || seed.thumbnail,
+              ...cleanedPlaytime,
+              image: game.image !== undefined ? game.image : seed.image,
+              thumbnail: game.thumbnail !== undefined ? game.thumbnail : seed.thumbnail,
               bggId: game.bggId ?? seed.bggId,
               bggRating: game.bggRating ?? seed.bggRating,
-              bggRank: game.bggRank ?? seed.bggRank,
+              bggRank: game.bggRank !== undefined ? game.bggRank : seed.bggRank,
               weight: game.weight ?? seed.weight,
-              history: Array.isArray(game.history) && game.history.length > 0 ? game.history : (seed.history || []),
-              borrowRequests: Array.isArray(game.borrowRequests) && game.borrowRequests.length > 0 ? game.borrowRequests : (seed.borrowRequests || []),
-              notes: game.notes !== undefined && game.notes !== '' ? game.notes : (seed.notes || ''),
+              history: Array.isArray(game.history) ? game.history : (seed.history || []),
+              borrowRequests: Array.isArray(game.borrowRequests) ? game.borrowRequests : (seed.borrowRequests || []),
+              notes: game.notes !== undefined ? game.notes : (seed.notes || ''),
             };
           }
-          return game;
+          return {
+            ...game,
+            ...cleanedPlaytime,
+          };
         });
 
-        // Add any seed items not present in parsed
+        // Add any seed items not present in parsed (matching by ID or owner+title)
         const existingIds = new Set(merged.map((g: Game) => g.id));
+        const existingOwnerTitles = new Set(merged.map((g: Game) => getOwnerTitleKey(g.owner, g.title)));
         for (const seed of seedList) {
-          if (!existingIds.has(seed.id)) {
+          if (!existingIds.has(seed.id) && !existingOwnerTitles.has(getOwnerTitleKey(seed.owner, seed.title))) {
             merged.push(seed);
           }
         }
@@ -90,20 +122,20 @@ export function forceRefreshAllImages(): Game[] {
   try {
     const current = getInitialGames();
     const seedMapById = new Map(seedList.map((g) => [g.id, g]));
-    const seedMapByTitle = new Map(seedList.map((g) => [(g.title || '').toLowerCase().trim(), g]));
+    const seedMapByOwnerTitle = new Map(seedList.map((g) => [getOwnerTitleKey(g.owner, g.title), g]));
 
     const refreshed = current.map((game: Game) => {
-      const seed = seedMapById.get(game.id) || seedMapByTitle.get((game.title || '').toLowerCase().trim());
+      const seed = seedMapById.get(game.id) || seedMapByOwnerTitle.get(getOwnerTitleKey(game.owner, game.title));
       if (seed) {
         return {
           ...game,
-          image: seed.image,
-          thumbnail: seed.thumbnail,
-          bggId: seed.bggId,
-          bggRating: seed.bggRating,
-          bggRank: seed.bggRank,
-          weight: seed.weight,
-          year: seed.year,
+          image: game.image || seed.image,
+          thumbnail: game.thumbnail || seed.thumbnail,
+          bggId: game.bggId ?? seed.bggId,
+          bggRating: game.bggRating ?? seed.bggRating,
+          bggRank: game.bggRank ?? seed.bggRank,
+          weight: game.weight ?? seed.weight,
+          year: game.year ?? seed.year,
         };
       }
       return game;
@@ -117,11 +149,13 @@ export function forceRefreshAllImages(): Game[] {
   }
 }
 
-export function saveGames(games: Game[]): void {
+export function saveGames(games: Game[], options?: { emitEvent?: boolean }): void {
   if (typeof window === 'undefined') return;
   try {
     localStorage.setItem(GAMES_STORAGE_KEY, JSON.stringify(games));
-    window.dispatchEvent(new Event('bg_games_updated'));
+    if (options?.emitEvent !== false) {
+      window.dispatchEvent(new Event('bg_games_updated'));
+    }
   } catch (err) {
     console.error('Failed to save games to localStorage:', err);
   }
@@ -154,11 +188,13 @@ export function getInitialRequests(): BorrowRequest[] {
   return [];
 }
 
-export function saveRequests(requests: BorrowRequest[]): void {
+export function saveRequests(requests: BorrowRequest[], options?: { emitEvent?: boolean }): void {
   if (typeof window === 'undefined') return;
   try {
     localStorage.setItem(REQUESTS_STORAGE_KEY, JSON.stringify(requests));
-    window.dispatchEvent(new Event('bg_requests_updated'));
+    if (options?.emitEvent !== false) {
+      window.dispatchEvent(new Event('bg_requests_updated'));
+    }
   } catch (err) {
     console.error('Failed to save requests to localStorage:', err);
   }
@@ -206,6 +242,7 @@ export function resetLibrary(): Game[] {
   if (typeof window === 'undefined') return seedList;
   localStorage.removeItem(GAMES_STORAGE_KEY);
   localStorage.removeItem(REQUESTS_STORAGE_KEY);
+  localStorage.removeItem('bg_share_games_v6');
   localStorage.removeItem('bg_share_games_v4');
   localStorage.removeItem('bg_share_games_v3');
   localStorage.removeItem('bg_share_games_v1');

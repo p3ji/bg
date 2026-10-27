@@ -1,11 +1,14 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Game } from '@/types';
-import { X, RotateCcw, Check, Sparkles, AlertCircle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Game, BorrowRequest } from '@/types';
+import { X, RotateCcw, Check, AlertCircle } from 'lucide-react';
+import { useModalA11y } from '@/lib/useModalA11y';
+import { isSameHousehold } from '@/lib/normalize';
 
 interface ReturnModalProps {
   game: Game | null;
+  requests?: BorrowRequest[];
   isOpen: boolean;
   onClose: () => void;
   onConfirm: (gameId: string, notes?: string) => void;
@@ -13,15 +16,29 @@ interface ReturnModalProps {
 
 export const ReturnModal: React.FC<ReturnModalProps> = ({
   game,
+  requests,
   isOpen,
   onClose,
   onConfirm,
 }) => {
   const [returnNotes, setReturnNotes] = useState('');
 
+  useModalA11y(isOpen, onClose);
+
+  useEffect(() => {
+    if (isOpen) {
+      setReturnNotes('');
+    }
+  }, [isOpen, game?.id]);
+
   if (!isOpen || !game) return null;
 
-  const pendingRequest = (game.borrowRequests || []).find((r) => r.status === 'pending');
+  const gameRequests = requests
+    ? requests.filter((r) => r.gameId === game.id)
+    : game.borrowRequests || [];
+  const pendingRequest = gameRequests.find(
+    (r) => r.status === 'pending' && !isSameHousehold(r.requesterName, game.owner)
+  );
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,7 +59,13 @@ export const ReturnModal: React.FC<ReturnModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-xs">
+    <div 
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-xs"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="return-modal-title"
+    >
       <div 
         className="w-full max-w-md bg-white dark:bg-zinc-900 border-t sm:border border-zinc-200 dark:border-zinc-800 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom duration-200 sm:zoom-in-95 max-h-[92dvh] flex flex-col pb-safe sm:pb-0"
         onClick={(e) => e.stopPropagation()}
@@ -57,7 +80,7 @@ export const ReturnModal: React.FC<ReturnModalProps> = ({
               <RotateCcw className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-50">
+              <h3 id="return-modal-title" className="text-sm font-bold text-zinc-900 dark:text-zinc-50">
                 Return to Library
               </h3>
               <p className="text-xs text-zinc-500 font-medium">

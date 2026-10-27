@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { 
   Download, 
@@ -8,10 +8,7 @@ import {
   Share, 
   PlusSquare, 
   MoreVertical, 
-  Smartphone, 
-  Check, 
-  HelpCircle,
-  ExternalLink
+  Smartphone
 } from 'lucide-react';
 
 interface BeforeInstallPromptEvent extends Event {
@@ -77,7 +74,9 @@ export const PwaInstallPrompt: React.FC<PwaInstallPromptProps> = ({
     setIsStandalone(isAppStandalone());
     setDeviceOS(detectDeviceOS());
     
-    const dismissed = localStorage.getItem(STORAGE_KEY) === 'true';
+    const dismissed =
+      localStorage.getItem(STORAGE_KEY) === 'true' ||
+      localStorage.getItem('gameshare_continue_browser') === 'true';
     setIsDismissed(dismissed);
 
     const handleBeforeInstallPrompt = (e: BeforeInstallPromptEvent) => {
@@ -153,7 +152,7 @@ export const PwaInstallPrompt: React.FC<PwaInstallPromptProps> = ({
         <aside
           role="region"
           aria-label="Install GameShare Web App"
-          className="fixed z-50 bottom-20 md:bottom-6 left-3 right-3 sm:left-auto sm:right-6 sm:max-w-md animate-in fade-in slide-in-from-bottom-5 duration-300"
+          className="fixed z-50 bottom-[calc(5.25rem+env(safe-area-inset-bottom,0px))] md:bottom-6 left-3 right-3 sm:left-auto sm:right-6 sm:max-w-md animate-in fade-in slide-in-from-bottom-5 duration-300"
         >
           <div className="bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl border border-indigo-200/80 dark:border-indigo-900/50 rounded-2xl p-4 shadow-2xl shadow-indigo-500/10 dark:shadow-black/60 flex flex-col gap-3">
             
@@ -174,7 +173,7 @@ export const PwaInstallPrompt: React.FC<PwaInstallPromptProps> = ({
                     <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100">
                       Install GameShare
                     </h3>
-                    <span className="text-[10px] font-semibold px-1.5 py-0.2 bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 rounded-md">
+                    <span className="text-[10px] font-semibold px-1.5 py-0.5 bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 rounded-md">
                       Free Web App
                     </span>
                   </div>

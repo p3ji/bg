@@ -21,7 +21,7 @@ const defaultFriends = [
   "Angel & Peter",
   "Kalissa & Allen",
   "Carissa & Brandon",
-  "Stefan & Celina"
+  "Celina & Stefan"
 ];
 
 function sanitizeForFirestore(data) {

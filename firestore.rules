@@ -1,0 +1,281 @@
+rules_version = '2';
+
+// ===============================================================
+// Assumed Data Model
+// ===============================================================
+//
+// This security rules file assumes the following data structures:
+//
+// Collection: games
+// Document ID: {gameId}
+// Fields:
+//   - id: string (required, 1..100 chars, immutable, must match gameId) - Unique game identifier
+//   - title: string (required, 1..200 chars) - Board game title
+//   - owner: string (required, 1..100 chars) - Household owner name
+//   - minPlayers: number (required, 0..100) - Minimum player count
+//   - maxPlayers: number (required, 0..100) - Maximum player count
+//   - minPlaytime: number (required, 0..10000) - Minimum playtime in minutes
+//   - maxPlaytime: number (required, 0..10000) - Maximum playtime in minutes
+//   - playtimeDisplay: string (required, 0..100 chars) - Formatted playtime label
+//   - type: string (required, 0..100 chars) - Game category/genre
+//   - status: string (required, 'available' | 'borrowed') - Current availability status
+//   - currentBorrower: string | null (optional, 0..100 chars) - Household currently borrowing the game
+//   - borrowDate: string | null (optional, 0..100 chars) - ISO 8601 borrow start timestamp
+//   - expectedReturnDate: string | null (optional, 0..100 chars) - ISO 8601 expected return date
+//   - bggId: number | null (optional, >= 0) - BoardGameGeek ID
+//   - bggRating: number | null (optional, 0..10) - BoardGameGeek average rating
+//   - bggRank: number | null (optional, >= 0) - BoardGameGeek overall rank
+//   - weight: number | null (optional, 0..5) - Complexity weight rating
+//   - image: string | null (optional, 0..2000 chars) - Full-size box art URL
+//   - thumbnail: string | null (optional, 0..2000 chars) - Thumbnail box art URL
+//   - description: string | null (optional, 0..10000 chars) - Game description
+//   - year: number | null (optional, -5000..3000) - Publication year
+//   - notes: string | null (optional, 0..2000 chars) - Owner/condition notes
+//   - history: list (optional, max 200 items) - Loan history records
+//   - borrowRequests: list (optional, max 200 items) - Embedded borrow request records
+//
+// Collection: borrow_requests
+// Document ID: {requestId}
+// Fields:
+//   - id: string (required, 1..100 chars, immutable, must match requestId) - Request identifier
+//   - gameId: string (required, 1..100 chars, immutable) - Target game ID
+//   - gameTitle: string (required, 1..200 chars) - Target game title
+//   - requesterName: string (required, 1..100 chars, immutable) - Requesting household name
+//   - holderName: string (required, 1..100 chars) - Current game holder/owner name
+//   - requestedAt: string (required, 1..100 chars, immutable) - ISO 8601 request timestamp
+//   - status: string (required, 'pending' | 'accepted' | 'fulfilled' | 'cancelled') - Request lifecycle status
+//   - acceptedAt: string | null (optional, 0..100 chars) - ISO 8601 acceptance timestamp
+//   - confirmedAt: string | null (optional, 0..100 chars) - ISO 8601 fulfillment confirmation timestamp
+//   - note: string | null (optional, 0..1000 chars) - Optional message from requester
+//   - expectedReturnDate: string | null (optional, 0..100 chars) - Optional proposed return date
+//
+// Collection: settings
+// Document ID: household_roster
+// Fields:
+//   - friends: list (optional, max 100 items) - List of friend household names
+//   - households: list (optional, max 100 items) - Alias list of friend household names
+//   - updatedAt: string (required, 1..100 chars) - ISO 8601 timestamp of last update
+//
+// Architectural Note:
+// GameShare uses a low-friction friend household selector without Firebase Auth
+// login (`request.auth == null` is supported for friend circle access). Security
+// relies on strict collection whitelisting, strict schema enforcement, field-level
+// type/bounds validation, immutability checks on updates, and client delete locks.
+// ===============================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+
+    // Check if the user is authenticated (included for standard helper completeness)
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Validate required fields exist on the incoming document
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    // Validate that the document contains only the allowed fields
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    // Validate that immutable fields have not been modified during an update
+    function areImmutableFieldsUnchanged(fields) {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(fields);
+    }
+
+    // Validate required string field with min and max length
+    function validStringLength(field, minLen, maxLen) {
+      return request.resource.data[field] is string &&
+             request.resource.data[field].size() >= minLen &&
+             request.resource.data[field].size() <= maxLen;
+    }
+
+    // Validate optional or nullable string field with max length
+    function isValidOptionalNullableString(field, maxLen) {
+      return !(field in request.resource.data) ||
+             request.resource.data[field] == null ||
+             (request.resource.data[field] is string &&
+              request.resource.data[field].size() <= maxLen);
+    }
+
+    // Validate optional or nullable number field within bounds
+    function isValidOptionalNullableNumber(field, minVal, maxVal) {
+      return !(field in request.resource.data) ||
+             request.resource.data[field] == null ||
+             (request.resource.data[field] is number &&
+              request.resource.data[field] >= minVal &&
+              request.resource.data[field] <= maxVal);
+    }
+
+    // Validate optional or nullable list field with max size
+    function isValidOptionalNullableList(field, maxSize) {
+      return !(field in request.resource.data) ||
+             request.resource.data[field] == null ||
+             (request.resource.data[field] is list &&
+              request.resource.data[field].size() <= maxSize);
+    }
+
+    // ===============================================================
+    // Domain Validators (Used in BOTH create and update rules)
+    // ===============================================================
+
+    function isValidGame(data, gameId) {
+      let requiredFields = [
+        'id',
+        'title',
+        'owner',
+        'minPlayers',
+        'maxPlayers',
+        'minPlaytime',
+        'maxPlaytime',
+        'playtimeDisplay',
+        'type',
+        'status'
+      ];
+      let allowedFields = [
+        'id',
+        'title',
+        'owner',
+        'minPlayers',
+        'maxPlayers',
+        'minPlaytime',
+        'maxPlaytime',
+        'playtimeDisplay',
+        'type',
+        'status',
+        'currentBorrower',
+        'borrowDate',
+        'expectedReturnDate',
+        'bggId',
+        'bggRating',
+        'bggRank',
+        'weight',
+        'image',
+        'thumbnail',
+        'description',
+        'year',
+        'notes',
+        'history',
+        'borrowRequests'
+      ];
+
+      return hasRequiredFields(requiredFields) &&
+             hasOnlyAllowedFields(allowedFields) &&
+             data.id is string && data.id == gameId && data.id.size() >= 1 && data.id.size() <= 100 &&
+             validStringLength('title', 1, 200) &&
+             validStringLength('owner', 1, 100) &&
+             data.minPlayers is number && data.minPlayers >= 0 && data.minPlayers <= 100 &&
+             data.maxPlayers is number && data.maxPlayers >= 0 && data.maxPlayers <= 100 &&
+             data.minPlaytime is number && data.minPlaytime >= 0 && data.minPlaytime <= 10000 &&
+             data.maxPlaytime is number && data.maxPlaytime >= 0 && data.maxPlaytime <= 10000 &&
+             validStringLength('playtimeDisplay', 0, 100) &&
+             validStringLength('type', 0, 100) &&
+             data.status in ['available', 'borrowed'] &&
+             isValidOptionalNullableString('currentBorrower', 100) &&
+             isValidOptionalNullableString('borrowDate', 100) &&
+             isValidOptionalNullableString('expectedReturnDate', 100) &&
+             isValidOptionalNullableNumber('bggId', 0, 100000000) &&
+             isValidOptionalNullableNumber('bggRating', 0, 10) &&
+             isValidOptionalNullableNumber('bggRank', 0, 100000000) &&
+             isValidOptionalNullableNumber('weight', 0, 5) &&
+             isValidOptionalNullableString('image', 2000) &&
+             isValidOptionalNullableString('thumbnail', 2000) &&
+             isValidOptionalNullableString('description', 10000) &&
+             isValidOptionalNullableNumber('year', -5000, 3000) &&
+             isValidOptionalNullableString('notes', 2000) &&
+             isValidOptionalNullableList('history', 200) &&
+             isValidOptionalNullableList('borrowRequests', 200);
+    }
+
+    function isValidBorrowRequest(data, requestId) {
+      let requiredFields = [
+        'id',
+        'gameId',
+        'gameTitle',
+        'requesterName',
+        'holderName',
+        'requestedAt',
+        'status'
+      ];
+      let allowedFields = [
+        'id',
+        'gameId',
+        'gameTitle',
+        'requesterName',
+        'holderName',
+        'requestedAt',
+        'status',
+        'acceptedAt',
+        'confirmedAt',
+        'note',
+        'expectedReturnDate'
+      ];
+
+      return hasRequiredFields(requiredFields) &&
+             hasOnlyAllowedFields(allowedFields) &&
+             data.id is string && data.id == requestId && data.id.size() >= 1 && data.id.size() <= 100 &&
+             validStringLength('gameId', 1, 100) &&
+             validStringLength('gameTitle', 1, 200) &&
+             validStringLength('requesterName', 1, 100) &&
+             validStringLength('holderName', 1, 100) &&
+             validStringLength('requestedAt', 1, 100) &&
+             data.status in ['pending', 'accepted', 'fulfilled', 'cancelled'] &&
+             isValidOptionalNullableString('acceptedAt', 100) &&
+             isValidOptionalNullableString('confirmedAt', 100) &&
+             isValidOptionalNullableString('note', 1000) &&
+             isValidOptionalNullableString('expectedReturnDate', 100);
+    }
+
+    function isValidHouseholdRoster(data) {
+      let allowedFields = ['friends', 'households', 'updatedAt'];
+      return hasRequiredFields(['updatedAt']) &&
+             hasOnlyAllowedFields(allowedFields) &&
+             validStringLength('updatedAt', 1, 100) &&
+             ('friends' in data || 'households' in data) &&
+             isValidOptionalNullableList('friends', 100) &&
+             isValidOptionalNullableList('households', 100);
+    }
+
+    // ===============================================================
+    // Collection Rules
+    // ===============================================================
+
+    // Shared board games catalog
+    match /games/{gameId} {
+      allow read: if true;
+      allow create: if isValidGame(request.resource.data, gameId);
+      allow update: if isValidGame(request.resource.data, gameId) &&
+                       areImmutableFieldsUnchanged(['id']);
+      allow delete: if false;
+    }
+
+    // Shared borrow exchange requests
+    match /borrow_requests/{requestId} {
+      allow read: if true;
+      allow create: if isValidBorrowRequest(request.resource.data, requestId);
+      allow update: if isValidBorrowRequest(request.resource.data, requestId) &&
+                       areImmutableFieldsUnchanged(['id', 'gameId', 'requesterName', 'requestedAt']);
+      allow delete: if true;
+    }
+
+    // Friend circle household roster configuration
+    match /settings/household_roster {
+      allow read: if true;
+      allow create: if isValidHouseholdRoster(request.resource.data);
+      allow update: if isValidHouseholdRoster(request.resource.data);
+      allow delete: if false;
+    }
+
+    // Explicitly deny access to all other documents and unknown collections by default
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

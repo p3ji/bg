@@ -7,16 +7,11 @@ import { isSameHousehold } from '@/lib/normalize';
 import { 
   Search, 
   X, 
-  Users, 
-  Clock, 
   UserCheck, 
   ArrowUpDown, 
   RotateCcw,
   Sparkles,
-  PlusCircle,
-  SlidersHorizontal,
-  ChevronDown,
-  Check
+  SlidersHorizontal
 } from 'lucide-react';
 
 interface FilterBarProps {
@@ -34,7 +29,6 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   onChange,
   onReset,
   resultCount,
-  onAddForHousehold,
 }) => {
   const [isExpandedMobile, setIsExpandedMobile] = useState(false);
   const availableHouseholds = friends && friends.length > 0 ? friends : OWNER_GROUPS;
@@ -46,34 +40,24 @@ export const FilterBar: React.FC<FilterBarProps> = ({
     filters.availability !== 'all',
     filters.owner !== 'all',
     filters.type !== 'all',
-    filters.sortBy !== 'rank',
   ].filter(Boolean).length;
 
-  const playerOptions = [
-    { label: 'Any', value: null },
-    { label: '1p', value: 1 },
-    { label: '2p', value: 2 },
-    { label: '3p', value: 3 },
-    { label: '4p', value: 4 },
-    { label: '5p', value: 5 },
-    { label: '6p+', value: 6 },
-  ];
+  const handleSortByChange = (newSortBy: FilterState['sortBy']) => {
+    const defaultOrder: 'asc' | 'desc' =
+      newSortBy === 'rating' || newSortBy === 'weight' || newSortBy === 'players' ? 'desc' : 'asc';
+    onChange({ ...filters, sortBy: newSortBy, sortOrder: defaultOrder });
+  };
 
-  const playtimeOptions = [
-    { label: 'Any Time', value: null },
-    { label: '≤ 30m', value: 30 },
-    { label: '≤ 45m', value: 45 },
-    { label: '≤ 60m', value: 60 },
-    { label: '≤ 90m', value: 90 },
-    { label: '≤ 120m', value: 120 },
-  ];
+  const toggleSortOrder = () => {
+    onChange({ ...filters, sortOrder: filters.sortOrder === 'asc' ? 'desc' : 'asc' });
+  };
 
   return (
     <div className="bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 py-2.5 sm:py-3.5 px-3 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto space-y-2.5">
         
-        {/* Row 1: Search Bar + Filter Trigger & Sort on Mobile */}
-        <div className="flex items-center gap-2">
+        {/* Row 1: Search Bar & Sort on Desktop (Hidden on mobile where Search lives in bottom nav) */}
+        <div className="hidden sm:flex items-center gap-2">
           
           {/* Search bar */}
           <div className="relative flex-1">
@@ -83,7 +67,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
               value={filters.search}
               onChange={(e) => onChange({ ...filters, search: e.target.value })}
               placeholder="Search title, category, notes..."
-              className="w-full pl-9 pr-8 py-2 text-sm bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 rounded-xl text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-hidden focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition-all text-xs sm:text-sm"
+              className="w-full pl-9 pr-8 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 rounded-xl text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-hidden focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition-all text-xs sm:text-sm"
             />
             {filters.search && (
               <button
@@ -96,17 +80,51 @@ export const FilterBar: React.FC<FilterBarProps> = ({
             )}
           </div>
 
+          {/* Desktop Sort Dropdown */}
+          <div className="flex items-center gap-1.5 shrink-0">
+            <span className="text-xs text-zinc-500 font-medium flex items-center gap-1">
+              <ArrowUpDown className="w-3.5 h-3.5" />
+              Sort:
+            </span>
+            <select
+              value={filters.sortBy}
+              onChange={(e) => handleSortByChange(e.target.value as FilterState['sortBy'])}
+              className="py-2 px-3 text-xs font-semibold bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 rounded-lg text-zinc-800 dark:text-zinc-200 focus:outline-hidden focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100"
+            >
+              <option value="rank">BGG Rank</option>
+              <option value="rating">BGG Rating</option>
+              <option value="title">Title</option>
+              <option value="playtime">Playtime</option>
+              <option value="weight">Complexity (Weight)</option>
+              <option value="players">Max Player Count</option>
+            </select>
+            <button
+              type="button"
+              onClick={toggleSortOrder}
+              className="p-2 text-xs font-bold bg-zinc-50 dark:bg-zinc-950 hover:bg-zinc-100 dark:hover:bg-zinc-800 border border-zinc-300 dark:border-zinc-800 rounded-lg text-zinc-700 dark:text-zinc-300 transition-colors cursor-pointer"
+              title={filters.sortOrder === 'asc' ? 'Ascending order (click to reverse)' : 'Descending order (click to reverse)'}
+              aria-label={`Sort order: ${filters.sortOrder === 'asc' ? 'Ascending' : 'Descending'}`}
+            >
+              {filters.sortOrder === 'asc' ? '↑ Asc' : '↓ Desc'}
+            </button>
+          </div>
+
+        </div>
+
+        {/* Row 2: Fast Horizontal Scrollable Quick Chips (Thumb-friendly on mobile) */}
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar scroll-smooth py-0.5">
+          
           {/* Mobile Filter Toggle Button */}
           <button
             type="button"
             onClick={() => setIsExpandedMobile(!isExpandedMobile)}
-            className={`sm:hidden flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-xl border transition-colors shrink-0 ${
+            className={`sm:hidden flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-lg border transition-colors shrink-0 ${
               isExpandedMobile || activeFilterCount > 0
                 ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 border-zinc-900 dark:border-zinc-100'
-                : 'bg-zinc-50 dark:bg-zinc-950 text-zinc-700 dark:text-zinc-300 border-zinc-300 dark:border-zinc-800'
+                : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700'
             }`}
           >
-            <SlidersHorizontal className="w-3.5 h-3.5" />
+            <SlidersHorizontal className="w-3 h-3" />
             <span>Filters</span>
             {activeFilterCount > 0 && (
               <span className="w-4 h-4 rounded-full bg-rose-500 text-white flex items-center justify-center text-[10px] font-bold">
@@ -114,31 +132,6 @@ export const FilterBar: React.FC<FilterBarProps> = ({
               </span>
             )}
           </button>
-
-          {/* Desktop Sort Dropdown */}
-          <div className="hidden sm:flex items-center gap-2 shrink-0">
-            <span className="text-xs text-zinc-500 font-medium flex items-center gap-1">
-              <ArrowUpDown className="w-3.5 h-3.5" />
-              Sort:
-            </span>
-            <select
-              value={filters.sortBy}
-              onChange={(e) => onChange({ ...filters, sortBy: e.target.value as FilterState['sortBy'] })}
-              className="py-2 px-3 text-xs font-semibold bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 rounded-lg text-zinc-800 dark:text-zinc-200 focus:outline-hidden focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100"
-            >
-              <option value="rank">BGG Rank (Top)</option>
-              <option value="rating">BGG Rating (High to Low)</option>
-              <option value="title">Title (A–Z)</option>
-              <option value="playtime">Playtime (Shortest first)</option>
-              <option value="weight">Complexity (Weight)</option>
-              <option value="players">Max Player Count</option>
-            </select>
-          </div>
-
-        </div>
-
-        {/* Row 2: Fast Horizontal Scrollable Quick Chips (Thumb-friendly on mobile) */}
-        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar scroll-smooth py-0.5">
           
           {/* Availability pills */}
           <button
@@ -295,18 +288,28 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                 <ArrowUpDown className="w-3 h-3" />
                 Sort Order:
               </label>
-              <select
-                value={filters.sortBy}
-                onChange={(e) => onChange({ ...filters, sortBy: e.target.value as FilterState['sortBy'] })}
-                className="w-full py-2 px-2.5 text-xs font-medium bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 rounded-lg text-zinc-800 dark:text-zinc-200"
-              >
-                <option value="rank">BGG Rank (Top)</option>
-                <option value="rating">BGG Rating (High to Low)</option>
-                <option value="title">Title (A–Z)</option>
-                <option value="playtime">Playtime (Shortest first)</option>
-                <option value="weight">Complexity (Weight)</option>
-                <option value="players">Max Player Count</option>
-              </select>
+              <div className="flex items-center gap-1.5">
+                <select
+                  value={filters.sortBy}
+                  onChange={(e) => handleSortByChange(e.target.value as FilterState['sortBy'])}
+                  className="flex-1 py-2 px-2.5 text-xs font-medium bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 rounded-lg text-zinc-800 dark:text-zinc-200"
+                >
+                  <option value="rank">BGG Rank</option>
+                  <option value="rating">BGG Rating</option>
+                  <option value="title">Title</option>
+                  <option value="playtime">Playtime</option>
+                  <option value="weight">Complexity (Weight)</option>
+                  <option value="players">Max Player Count</option>
+                </select>
+                <button
+                  type="button"
+                  onClick={toggleSortOrder}
+                  className="px-2.5 py-2 text-xs font-bold bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 rounded-lg text-zinc-700 dark:text-zinc-300 shrink-0"
+                  aria-label={`Sort order: ${filters.sortOrder === 'asc' ? 'Ascending' : 'Descending'}`}
+                >
+                  {filters.sortOrder === 'asc' ? '↑ Asc' : '↓ Desc'}
+                </button>
+              </div>
             </div>
 
             {/* Result count & reset */}

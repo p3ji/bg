@@ -60,6 +60,8 @@ export const Header: React.FC<HeaderProps> = ({
     return name.slice(0, 2).toUpperCase();
   };
 
+  const displayBadgeCount = actionableCount > 0 ? actionableCount : (pendingRequestsCount || waitingCount);
+
   return (
     <header className="border-b border-zinc-200 dark:border-zinc-800 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-md sticky top-0 z-30 shadow-xs pt-safe">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
@@ -71,16 +73,16 @@ export const Header: React.FC<HeaderProps> = ({
               <div 
                 className="relative cursor-pointer"
                 onClick={onOpenNotifications}
-                title={pendingRequestsCount > 0 ? `${pendingRequestsCount} active borrow exchanges` : 'GameShare'}
+                title={displayBadgeCount > 0 ? `${displayBadgeCount} active borrow exchanges` : 'GameShare'}
               >
                 <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 flex items-center justify-center shadow-xs shrink-0">
                   <Dices className="w-4 h-4 sm:w-5 sm:h-5" />
                 </div>
-                {pendingRequestsCount > 0 && (
+                {displayBadgeCount > 0 && (
                   <span className={`z-30 absolute -top-1.5 -right-1.5 flex h-4 min-w-4 px-1 items-center justify-center rounded-full text-[10px] font-bold text-white shadow-md ring-2 ring-white dark:ring-zinc-950 ${
                     actionableCount > 0 ? 'bg-rose-600 animate-pulse' : 'bg-indigo-600'
                   }`}>
-                    {pendingRequestsCount}
+                    {displayBadgeCount}
                   </span>
                 )}
               </div>
@@ -172,11 +174,11 @@ export const Header: React.FC<HeaderProps> = ({
               title="Borrow Exchanges & Notifications"
             >
               <Bell className="w-4 h-4" />
-              {pendingRequestsCount > 0 && (
+              {displayBadgeCount > 0 && (
                 <span className={`z-30 absolute -top-1.5 -right-1.5 flex h-4 min-w-4 px-1 items-center justify-center rounded-full text-[10px] font-bold text-white shadow-md ring-2 ring-white dark:ring-zinc-950 ${
                   actionableCount > 0 ? 'bg-rose-600 animate-pulse' : 'bg-indigo-600'
                 }`}>
-                  {pendingRequestsCount}
+                  {displayBadgeCount}
                 </span>
               )}
             </button>

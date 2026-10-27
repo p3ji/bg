@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { Game, BorrowRequest, ViewMode, FilterState } from '@/types';
+import { Game, BorrowRequest, ViewMode, FilterState, SheetRowGame } from '@/types';
 import { 
   getInitialGames, 
   saveGames, 
@@ -9,7 +9,6 @@ import {
   saveRequests, 
   getInitialFriends, 
   saveFriends,
-  resetToSeedData,
   getActiveHousehold,
   saveActiveHousehold
 } from '@/lib/storage';
@@ -24,7 +23,6 @@ import {
   saveHouseholdsToCloud,
   seedCloudDatabaseIfNeeded
 } from '@/lib/firebase';
-import { DEFAULT_FRIENDS } from '@/data/friends';
 import { registerServiceWorker, updateHomeScreenAppBadge, sendLocalSystemNotification } from '@/lib/badgeManager';
 import { Header } from '@/components/Header';
 import { FilterBar } from '@/components/FilterBar';
@@ -33,7 +31,6 @@ import { TableView } from '@/components/TableView';
 import { GameDetailModal } from '@/components/GameDetailModal';
 import { BorrowModal } from '@/components/BorrowModal';
 import { ReturnModal } from '@/components/ReturnModal';
-import { RequestBorrowModal } from '@/components/RequestBorrowModal';
 import { NotificationsModal } from '@/components/NotificationsModal';
 import { BggSyncModal } from '@/components/BggSyncModal';
 import { SettingsModal } from '@/components/SettingsModal';
@@ -42,8 +39,10 @@ import { IdentityModal } from '@/components/IdentityModal';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { HomeNotificationBanner } from '@/components/HomeNotificationBanner';
 import { PwaInstallPrompt } from '@/components/PwaInstallPrompt';
+import { InstallFirstGate } from '@/components/InstallFirstGate';
+import { shouldOfferInstallFirst } from '@/lib/pwa';
 import { normalizeName, getCanonicalName, isSameHousehold } from '@/lib/normalize';
-import { matchesGameSearch, matchesFuzzy } from '@/lib/search';
+import { matchesGameSearch, matchesTitleEntity } from '@/lib/search';
 
 const initialFilters: FilterState = {
   search: '',
@@ -68,10 +67,11 @@ export default function HomePage() {
   // Modals state
   const [selectedGame, setSelectedGame] = useState<Game | null>(null);
   const [borrowingGame, setBorrowingGame] = useState<Game | null>(null);
+  const [pendingBorrowGame, setPendingBorrowGame] = useState<Game | null>(null);
   const [returningGame, setReturningGame] = useState<Game | null>(null);
-  const [requestingGame, setRequestingGame] = useState<Game | null>(null);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isBggSyncOpen, setIsBggSyncOpen] = useState(false);
+  const [bggModalInitialTab, setBggModalInitialTab] = useState<'library' | 'search' | 'sync'>('library');
   const [selectedHouseholdForAdd, setSelectedHouseholdForAdd] = useState<string | undefined>(undefined);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [editingGame, setEditingGame] = useState<Game | null>(null);
@@ -81,9 +81,14 @@ export default function HomePage() {
   const [isIdentityModalOpen, setIsIdentityModalOpen] = useState(false);
   const [isFirstIdentityPrompt, setIsFirstIdentityPrompt] = useState(false);
   const [forceShowInstallGuide, setForceShowInstallGuide] = useState(false);
+  const [showInstallGate, setShowInstallGate] = useState(false);
 
   // Initialize data on mount
   useEffect(() => {
+    if (shouldOfferInstallFirst()) {
+      setShowInstallGate(true);
+    }
+
     const initialGames = getInitialGames();
     const initialRequests = getInitialRequests();
     const initialFriends = getInitialFriends();
@@ -102,19 +107,19 @@ export default function HomePage() {
     registerServiceWorker();
 
     // Auto-seed Firestore on first connect if cloud database is empty
-    seedCloudDatabaseIfNeeded(initialGames, DEFAULT_FRIENDS).catch(() => {});
+    seedCloudDatabaseIfNeeded(initialGames, initialFriends).catch(() => {});
 
     // Real-time Cloud Firestore Subscriptions across all friend devices
     const unsubCloudGames = subscribeToCloudGames((cloudGames) => {
       if (cloudGames && cloudGames.length > 0) {
         setGames(cloudGames);
-        saveGames(cloudGames);
+        saveGames(cloudGames, { emitEvent: false });
       }
     });
 
     const unsubCloudRequests = subscribeToCloudRequests((cloudRequests) => {
       setRequests(cloudRequests);
-      saveRequests(cloudRequests);
+      saveRequests(cloudRequests, { emitEvent: false });
     });
 
     const unsubCloudHouseholds = subscribeToCloudHouseholds((cloudFriends) => {
@@ -164,20 +169,19 @@ export default function HomePage() {
     });
   }, [requests, activeHousehold, friends]);
 
-  // Outgoing requests submitted by this profile that are waiting on friends
-  const myWaitingRequests = useMemo(() => {
-    if (!activeHousehold) return [];
+  const myWaitingRequestsCount = useMemo(() => {
+    if (!activeHousehold) return 0;
     return requests.filter((r) => {
-      const isSelfTest = isSameHousehold(r.holderName, r.requesterName, friends);
-      if (isSelfTest) return false;
-      if (r.status === 'pending') {
-        return isSameHousehold(r.requesterName, activeHousehold, friends);
-      }
-      if (r.status === 'accepted') {
-        return isSameHousehold(r.holderName, activeHousehold, friends);
-      }
-      return false;
-    });
+      const isPendingRequester =
+        r.status === 'pending' &&
+        isSameHousehold(r.requesterName, activeHousehold, friends) &&
+        !isSameHousehold(r.holderName, activeHousehold, friends);
+      const isAcceptedHolder =
+        r.status === 'accepted' &&
+        isSameHousehold(r.holderName, activeHousehold, friends) &&
+        !isSameHousehold(r.requesterName, activeHousehold, friends);
+      return isPendingRequester || isAcceptedHolder;
+    }).length;
   }, [requests, activeHousehold, friends]);
 
   // Badge counter strictly reflects actionable requests requiring YOUR attention (Scenario A)
@@ -202,6 +206,7 @@ export default function HomePage() {
 
   // Filtered & Sorted Games List
   const filteredGames = useMemo(() => {
+    const dir = filters.sortOrder === 'desc' ? -1 : 1;
     return games
       .filter((game) => {
         // Search query with typo and spelling tolerance
@@ -234,60 +239,95 @@ export default function HomePage() {
         if (filters.owner !== 'all' && !isSameHousehold(game.owner, filters.owner, friends)) return false;
 
         // Type / Category
-        if (filters.type !== 'all' && !game.type.toLowerCase().includes(filters.type.toLowerCase())) return false;
+        if (filters.type !== 'all' && !(game.type || '').toLowerCase().includes(filters.type.toLowerCase())) return false;
 
         return true;
       })
       .sort((a, b) => {
         switch (filters.sortBy) {
           case 'rank': {
-            const rA = a.bggRank ?? 999999;
-            const rB = b.bggRank ?? 999999;
-            return rA - rB;
+            const hasRankA = a.bggRank != null && a.bggRank > 0;
+            const hasRankB = b.bggRank != null && b.bggRank > 0;
+            if (!hasRankA && !hasRankB) return a.title.localeCompare(b.title);
+            if (!hasRankA) return 1;
+            if (!hasRankB) return -1;
+            return dir * ((a.bggRank as number) - (b.bggRank as number));
           }
           case 'rating': {
-            const rateA = a.bggRating ?? 0;
-            const rateB = b.bggRating ?? 0;
-            return rateB - rateA;
+            const hasRateA = a.bggRating != null && a.bggRating > 0;
+            const hasRateB = b.bggRating != null && b.bggRating > 0;
+            if (!hasRateA && !hasRateB) return a.title.localeCompare(b.title);
+            if (!hasRateA) return 1;
+            if (!hasRateB) return -1;
+            return dir * ((a.bggRating as number) - (b.bggRating as number));
           }
           case 'playtime': {
-            return (a.minPlaytime || 0) - (b.minPlaytime || 0);
+            const diff = (a.minPlaytime || 0) - (b.minPlaytime || 0);
+            return diff !== 0 ? dir * diff : a.title.localeCompare(b.title);
           }
           case 'weight': {
-            return (b.weight || 0) - (a.weight || 0);
+            const hasW_A = a.weight != null && a.weight > 0;
+            const hasW_B = b.weight != null && b.weight > 0;
+            if (!hasW_A && !hasW_B) return a.title.localeCompare(b.title);
+            if (!hasW_A) return 1;
+            if (!hasW_B) return -1;
+            return dir * ((a.weight as number) - (b.weight as number));
           }
           case 'players': {
-            return (b.maxPlayers || 0) - (a.maxPlayers || 0);
+            const diff = (a.maxPlayers || 0) - (b.maxPlayers || 0);
+            return diff !== 0 ? dir * diff : a.title.localeCompare(b.title);
           }
           case 'title':
           default:
-            return a.title.localeCompare(b.title);
+            return dir * a.title.localeCompare(b.title);
         }
       });
-  }, [games, filters]);
+  }, [games, filters, friends]);
 
   // Inventory stats
   const availableCount = useMemo(() => games.filter((g) => g.status === 'available').length, [games]);
   const borrowedCount = useMemo(() => games.filter((g) => g.status === 'borrowed').length, [games]);
 
   // Action Handlers
-  const handleBorrowConfirm = (gameId: string, borrower: string, returnDate?: string, notes?: string) => {
+  const handleBorrowConfirm = (gameId: string, borrower: string, returnDate?: string) => {
+    const canonicalBorrower = getCanonicalName(borrower, friends);
+    const nowIso = new Date().toISOString();
     const updatedGames = games.map((g) => {
       if (g.id !== gameId) return g;
       return {
         ...g,
         status: 'borrowed' as const,
-        currentBorrower: borrower,
-        borrowDate: new Date().toISOString(),
+        currentBorrower: canonicalBorrower,
+        borrowDate: nowIso,
         expectedReturnDate: returnDate || null,
-        notes: notes ? (g.notes ? `${g.notes} | ${notes}` : notes) : g.notes,
+        borrowRequests: (g.borrowRequests || []).map((r) => {
+          if (isSameHousehold(r.requesterName, canonicalBorrower, friends) && (r.status === 'pending' || r.status === 'accepted')) {
+            return { ...r, status: 'fulfilled' as const, confirmedAt: nowIso };
+          }
+          if (r.status === 'pending') {
+            return { ...r, holderName: canonicalBorrower };
+          }
+          return r;
+        }),
       };
     });
 
-    // Also mark any pending requests by this borrower as fulfilled
+    // Mark requests by this borrower as fulfilled, and update holderName on other pending requests
+    const changedReqs: BorrowRequest[] = [];
     const updatedRequests = requests.map((r) => {
-      if (r.gameId === gameId && r.requesterName.toLowerCase() === borrower.toLowerCase() && (r.status === 'pending' || r.status === 'accepted')) {
-        return { ...r, status: 'fulfilled' as const, confirmedAt: new Date().toISOString() };
+      if (r.gameId !== gameId) return r;
+      if (
+        isSameHousehold(r.requesterName, canonicalBorrower, friends) &&
+        (r.status === 'pending' || r.status === 'accepted')
+      ) {
+        const next: BorrowRequest = { ...r, status: 'fulfilled', confirmedAt: nowIso };
+        changedReqs.push(next);
+        return next;
+      }
+      if (r.status === 'pending' && r.holderName !== canonicalBorrower) {
+        const next: BorrowRequest = { ...r, holderName: canonicalBorrower };
+        changedReqs.push(next);
+        return next;
       }
       return r;
     });
@@ -298,8 +338,21 @@ export default function HomePage() {
     saveRequests(updatedRequests);
 
     const updatedGame = updatedGames.find((g) => g.id === gameId);
-    if (updatedGame) saveGameToCloud(updatedGame);
-    updatedRequests.filter((r) => r.gameId === gameId).forEach((r) => saveRequestToCloud(r));
+    if (updatedGame) {
+      saveGameToCloud(updatedGame);
+      // Synchronize Google Sheets "Borrowed by" column in owner's tab
+      fetch('/api/sheets/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'update_borrow',
+          ownerHousehold: updatedGame.owner,
+          gameTitle: updatedGame.title,
+          borrowerName: canonicalBorrower,
+        }),
+      }).catch(() => {});
+    }
+    changedReqs.forEach((r) => saveRequestToCloud(r));
 
     // Auto-update selectedGame if open
     if (selectedGame?.id === gameId) {
@@ -311,13 +364,34 @@ export default function HomePage() {
     const targetGame = games.find((g) => g.id === gameId);
     if (!targetGame) return;
 
+    const nowIso = new Date().toISOString();
+    const canonicalOwner = getCanonicalName(targetGame.owner, friends);
+
     const newHistoryRecord = {
       id: `hist-${Date.now()}`,
       borrower: targetGame.currentBorrower || 'Friend',
-      borrowDate: targetGame.borrowDate || new Date().toISOString(),
-      returnDate: new Date().toISOString(),
+      borrowDate: targetGame.borrowDate || nowIso,
+      returnDate: nowIso,
       notes: notes || undefined,
     };
+
+    // Fulfill accepted handoffs or owner-return requests, while keeping third-party pending requests active
+    // and updating their holderName to the owner who now holds the game again!
+    const changedReqs: BorrowRequest[] = [];
+    const updatedRequests = requests.map((r) => {
+      if (r.gameId !== gameId) return r;
+      if (r.status === 'accepted' || (r.status === 'pending' && isSameHousehold(r.requesterName, canonicalOwner, friends))) {
+        const next: BorrowRequest = { ...r, status: 'fulfilled', confirmedAt: nowIso };
+        changedReqs.push(next);
+        return next;
+      }
+      if (r.status === 'pending' && r.holderName !== canonicalOwner) {
+        const next: BorrowRequest = { ...r, holderName: canonicalOwner };
+        changedReqs.push(next);
+        return next;
+      }
+      return r;
+    });
 
     const updatedGames = games.map((g) => {
       if (g.id !== gameId) return g;
@@ -328,11 +402,22 @@ export default function HomePage() {
         borrowDate: null,
         expectedReturnDate: null,
         history: [newHistoryRecord, ...(g.history || [])],
+        borrowRequests: (g.borrowRequests || []).map((r) => {
+          if (r.status === 'accepted' || (r.status === 'pending' && isSameHousehold(r.requesterName, canonicalOwner, friends))) {
+            return { ...r, status: 'fulfilled' as const, confirmedAt: nowIso };
+          }
+          if (r.status === 'pending') {
+            return { ...r, holderName: canonicalOwner };
+          }
+          return r;
+        }),
       };
     });
 
     setGames(updatedGames);
     saveGames(updatedGames);
+    setRequests(updatedRequests);
+    saveRequests(updatedRequests);
 
     const updatedGame = updatedGames.find((g) => g.id === gameId);
     if (updatedGame) {
@@ -349,6 +434,8 @@ export default function HomePage() {
         }),
       }).catch(() => {});
     }
+
+    changedReqs.forEach((r) => saveRequestToCloud(r));
 
     if (selectedGame?.id === gameId) {
       setSelectedGame(updatedGames.find((g) => g.id === gameId) || null);
@@ -379,7 +466,16 @@ export default function HomePage() {
       note: notes || undefined,
     };
 
-    const updatedRequests = [newRequest, ...requests];
+    // Replace any existing duplicate pending request from the same requester for this game, keeping other households' requests intact
+    const supersededRequests = requests.filter(
+      (r) => r.gameId === gameId && r.status === 'pending' && isSameHousehold(r.requesterName, canonicalRequester, friends)
+    );
+    supersededRequests.forEach((r) => deleteRequestFromCloud(r.id));
+
+    const filteredExistingRequests = requests.filter(
+      (r) => !(r.gameId === gameId && r.status === 'pending' && isSameHousehold(r.requesterName, canonicalRequester, friends))
+    );
+    const updatedRequests = [newRequest, ...filteredExistingRequests];
     setRequests(updatedRequests);
     saveRequests(updatedRequests);
     saveRequestToCloud(newRequest);
@@ -391,9 +487,12 @@ export default function HomePage() {
 
     const updatedGames = games.map((g) => {
       if (g.id !== gameId) return g;
+      const keptRequests = (g.borrowRequests || []).filter(
+        (r) => !(r.status === 'pending' && isSameHousehold(r.requesterName, canonicalRequester, friends))
+      );
       return {
         ...g,
-        borrowRequests: [newRequest, ...(g.borrowRequests || []).filter((r) => r.status === 'fulfilled' || r.status === 'cancelled')],
+        borrowRequests: [newRequest, ...keptRequests],
       };
     });
 
@@ -425,8 +524,6 @@ export default function HomePage() {
       if (!activeHousehold) {
         setIsFirstIdentityPrompt(false);
         setIsIdentityModalOpen(true);
-      } else {
-        alert(`Only ${req.holderName} can accept this borrow request. Your profile is currently set to ${activeHousehold}.`);
       }
       return;
     }
@@ -476,8 +573,6 @@ export default function HomePage() {
       if (!activeHousehold) {
         setIsFirstIdentityPrompt(false);
         setIsIdentityModalOpen(true);
-      } else {
-        alert(`Only ${req.requesterName} can confirm receipt of this game. Your profile is currently set to ${activeHousehold}.`);
       }
       return;
     }
@@ -495,12 +590,14 @@ export default function HomePage() {
         borrower: targetGame.currentBorrower,
         borrowDate: targetGame.borrowDate || req.requestedAt,
         returnDate: nowIso,
-        notes: `Transferred to ${req.requesterName}`,
+        notes: req.note ? `Transferred to ${req.requesterName} (${req.note})` : `Transferred to ${req.requesterName}`,
       });
     }
 
     const isReturningToOwner = isSameHousehold(req.requesterName, targetGame.owner, friends);
     const canonicalRequester = getCanonicalName(req.requesterName, friends);
+    const canonicalOwner = getCanonicalName(targetGame.owner, friends);
+    const newHolderName = isReturningToOwner ? canonicalOwner : canonicalRequester;
 
     const updatedGame: Game = {
       ...targetGame,
@@ -508,25 +605,40 @@ export default function HomePage() {
       currentBorrower: isReturningToOwner ? null : canonicalRequester,
       borrowDate: isReturningToOwner ? null : nowIso,
       expectedReturnDate: isReturningToOwner ? null : (req.expectedReturnDate || null),
-      notes: req.note ? (targetGame.notes ? `${targetGame.notes} | ${req.note}` : req.note) : targetGame.notes,
       history: historyUpdates,
-      borrowRequests: (targetGame.borrowRequests || []).map((r) =>
-        r.id === requestId ? { ...r, status: 'fulfilled' as const, confirmedAt: nowIso } : r
-      ),
+      borrowRequests: (targetGame.borrowRequests || []).map((r) => {
+        if (r.id === requestId) {
+          return { ...r, status: 'fulfilled' as const, confirmedAt: nowIso };
+        }
+        if (r.status === 'pending') {
+          return { ...r, holderName: newHolderName };
+        }
+        return r;
+      }),
     };
 
     const updatedGames = games.map((g) => (g.id === targetGame.id ? updatedGame : g));
-    const updatedRequests = requests.map((r) =>
-      r.id === requestId ? { ...r, status: 'fulfilled' as const, confirmedAt: nowIso } : r
-    );
+    const changedReqs: BorrowRequest[] = [];
+    const updatedRequests = requests.map((r) => {
+      if (r.id === requestId) {
+        const next: BorrowRequest = { ...r, status: 'fulfilled', confirmedAt: nowIso };
+        changedReqs.push(next);
+        return next;
+      }
+      if (r.gameId === targetGame.id && r.status === 'pending' && r.holderName !== newHolderName) {
+        const next: BorrowRequest = { ...r, holderName: newHolderName };
+        changedReqs.push(next);
+        return next;
+      }
+      return r;
+    });
 
     setGames(updatedGames);
     saveGames(updatedGames);
     setRequests(updatedRequests);
     saveRequests(updatedRequests);
 
-    const updatedReq = updatedRequests.find((r) => r.id === requestId);
-    if (updatedReq) saveRequestToCloud(updatedReq);
+    changedReqs.forEach((r) => saveRequestToCloud(r));
     saveGameToCloud(updatedGame);
 
     // Synchronize Google Sheets "Borrowed by" column in owner's tab
@@ -547,20 +659,18 @@ export default function HomePage() {
   };
 
   const handleDismissRequest = (requestId: string) => {
-    const updatedRequests = requests.map((r) => (r.id === requestId ? { ...r, status: 'cancelled' as const } : r));
+    const req = requests.find((r) => r.id === requestId);
+    const updatedRequests = requests.filter((r) => r.id !== requestId);
     setRequests(updatedRequests);
     saveRequests(updatedRequests);
     deleteRequestFromCloud(requestId);
 
-    const req = requests.find((r) => r.id === requestId);
     if (req) {
       const updatedGames = games.map((g) => {
         if (g.id !== req.gameId) return g;
         return {
           ...g,
-          borrowRequests: (g.borrowRequests || []).map((r) =>
-            r.id === requestId ? { ...r, status: 'cancelled' as const } : r
-          ),
+          borrowRequests: (g.borrowRequests || []).filter((r) => r.id !== requestId),
         };
       });
       setGames(updatedGames);
@@ -576,6 +686,42 @@ export default function HomePage() {
   };
 
   const handleAddGame = (newGameData: Omit<Game, 'id' | 'status' | 'history'>) => {
+    const existingGame = games.find(
+      (g) =>
+        isSameHousehold(g.owner, newGameData.owner, friends) &&
+        matchesTitleEntity(g.title, newGameData.title)
+    );
+
+    if (existingGame) {
+      const mergedGame: Game = {
+        ...existingGame,
+        ...newGameData,
+        id: existingGame.id,
+        status: existingGame.status,
+        currentBorrower: existingGame.currentBorrower,
+        borrowDate: existingGame.borrowDate,
+        expectedReturnDate: existingGame.expectedReturnDate,
+        history: existingGame.history || [],
+        borrowRequests: existingGame.borrowRequests || [],
+      };
+      const updated = games.map((g) => (g.id === existingGame.id ? mergedGame : g));
+      setGames(updated);
+      saveGames(updated);
+      saveGameToCloud(mergedGame);
+
+      fetch('/api/sheets/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'update_game_details',
+          previousOwnerHousehold: existingGame.owner,
+          previousGameTitle: existingGame.title,
+          updatedGame: mergedGame,
+        }),
+      }).catch(() => {});
+      return;
+    }
+
     const newGame: Game = {
       ...newGameData,
       id: `game-${Date.now()}`,
@@ -604,7 +750,17 @@ export default function HomePage() {
   };
 
   const handleBatchImportGames = (importedGames: Omit<Game, 'id' | 'status' | 'history'>[]) => {
-    const createdGames: Game[] = importedGames.map((g, idx) => ({
+    const deduplicated = importedGames.filter(
+      (imp) =>
+        !games.some(
+          (existing) =>
+            isSameHousehold(existing.owner, imp.owner, friends) &&
+            matchesTitleEntity(existing.title, imp.title)
+        )
+    );
+    if (deduplicated.length === 0) return;
+
+    const createdGames: Game[] = deduplicated.map((g, idx) => ({
       ...g,
       id: `game-import-${Date.now()}-${idx}`,
       status: 'available',
@@ -618,39 +774,84 @@ export default function HomePage() {
     setGames(updated);
     saveGames(updated);
     saveGamesBatchToCloud(createdGames);
+
+    const byOwner = new Map<string, Game[]>();
+    for (const g of createdGames) {
+      const list = byOwner.get(g.owner) || [];
+      list.push(g);
+      byOwner.set(g.owner, list);
+    }
+
+    for (const [ownerHousehold, ownerGames] of byOwner.entries()) {
+      fetch('/api/sheets/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'add_games_batch',
+          ownerHousehold,
+          games: ownerGames,
+        }),
+      }).catch(() => {});
+    }
   };
 
   const handleUpdateFriends = (updatedFriends: string[]) => {
     setFriends(updatedFriends);
     saveFriends(updatedFriends);
     saveHouseholdsToCloud(updatedFriends);
-  };
-
-  const handleResetLibrary = () => {
-    const restored = resetToSeedData();
-    setGames(restored);
-    setRequests([]);
-    saveRequests([]);
+    if (activeHousehold && !updatedFriends.some((f) => isSameHousehold(f, activeHousehold, updatedFriends))) {
+      setActiveHousehold(null);
+      saveActiveHousehold('');
+    }
+    if (filters.owner !== 'all' && !updatedFriends.some((f) => isSameHousehold(f, filters.owner, updatedFriends))) {
+      setFilters((prev) => ({ ...prev, owner: 'all' }));
+    }
   };
 
   const handleOpenAddForHousehold = (household: string) => {
     setSelectedHouseholdForAdd(household);
+    setBggModalInitialTab('search');
     setIsBggSyncOpen(true);
   };
 
   const handleOpenGeneralAdd = () => {
-    setSelectedHouseholdForAdd(filters.owner !== 'all' ? filters.owner : undefined);
+    setSelectedHouseholdForAdd(
+      filters.owner !== 'all' ? filters.owner : (activeHousehold || undefined)
+    );
+    setBggModalInitialTab('search');
+    setIsBggSyncOpen(true);
+  };
+
+  const handleOpenMobileSearch = () => {
+    setSelectedHouseholdForAdd(
+      filters.owner !== 'all' ? filters.owner : (activeHousehold || undefined)
+    );
+    setBggModalInitialTab('library');
     setIsBggSyncOpen(true);
   };
 
   const handleSaveEditedGame = (updatedGame: Game) => {
     const prevGame = editingGame;
-    const nextGames = games.map((g) => (g.id === updatedGame.id ? updatedGame : g));
+    let mergedTarget: Game = updatedGame;
+    const nextGames = games.map((g) => {
+      if (g.id !== updatedGame.id) return g;
+      mergedTarget = {
+        ...g,
+        ...updatedGame,
+        status: g.status,
+        currentBorrower: g.currentBorrower,
+        borrowDate: g.borrowDate,
+        expectedReturnDate: g.expectedReturnDate,
+        history: g.history,
+        borrowRequests: g.borrowRequests,
+      };
+      return mergedTarget;
+    });
     setGames(nextGames);
     saveGames(nextGames);
-    saveGameToCloud(updatedGame);
+    saveGameToCloud(mergedTarget);
     if (selectedGame && selectedGame.id === updatedGame.id) {
-      setSelectedGame(updatedGame);
+      setSelectedGame(mergedTarget);
     }
 
     // Two-way sync: push edited game details (name, player range, playtime, notes, type) to Google Sheets
@@ -659,72 +860,144 @@ export default function HomePage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         action: 'update_game_details',
-        previousOwnerHousehold: prevGame?.owner || updatedGame.owner,
-        previousGameTitle: prevGame?.title || updatedGame.title,
-        updatedGame,
+        previousOwnerHousehold: prevGame?.owner || mergedTarget.owner,
+        previousGameTitle: prevGame?.title || mergedTarget.title,
+        updatedGame: mergedTarget,
       }),
     }).catch((err) => console.warn('Failed to sync game details to Google Sheets:', err));
   };
 
-  const handleSyncGamesFromSheets = (sheetGames: any[]) => {
+  const handleSyncGamesFromSheets = (sheetGames: SheetRowGame[], rosterOverride?: string[]) => {
     if (!sheetGames || sheetGames.length === 0) return;
+    const activeFriends = rosterOverride && rosterOverride.length > 0 ? rosterOverride : friends;
     setGames((prevGames) => {
       let changed = false;
+      const matchedSheetIndices = new Set<number>();
+      const changedGamesForCloud: Game[] = [];
+
       const updated = prevGames.map((game) => {
-        const match = sheetGames.find(
-          (sg) =>
-            isSameHousehold(sg.household, game.owner, friends) &&
-            (matchesFuzzy(sg.title, game.title) || normalizeName(sg.title) === normalizeName(game.title))
+        // 1. Try exact normalized title match first within the same household
+        let matchIndex = sheetGames.findIndex(
+          (sg, idx) =>
+            !matchedSheetIndices.has(idx) &&
+            isSameHousehold(sg.household, game.owner, activeFriends) &&
+            normalizeName(sg.title) === normalizeName(game.title)
         );
-        if (!match) return game;
+
+        // 2. Fallback to strict entity title match within the same household
+        if (matchIndex === -1) {
+          matchIndex = sheetGames.findIndex(
+            (sg, idx) =>
+              !matchedSheetIndices.has(idx) &&
+              isSameHousehold(sg.household, game.owner, activeFriends) &&
+              matchesTitleEntity(sg.title, game.title)
+          );
+        }
+
+        if (matchIndex === -1) return game;
+        matchedSheetIndices.add(matchIndex);
+        const match = sheetGames[matchIndex];
 
         let gameChanged = false;
         const newTitle = match.title || game.title;
         const newMinP = match.minPlayers ?? game.minPlayers;
         const newMaxP = match.maxPlayers ?? game.maxPlayers;
         const newType = match.type || game.type;
-        const newPlaytime = match.playtime ?? game.minPlaytime;
+        const newMinPlaytime = match.minPlaytime ?? match.playtime ?? game.minPlaytime;
+        const newMaxPlaytime = match.maxPlaytime ?? Math.max(newMinPlaytime, game.maxPlaytime);
+        const newPlaytimeDisplay =
+          match.playtimeDisplay ||
+          (newMinPlaytime === newMaxPlaytime ? `${newMinPlaytime}m` : `${newMinPlaytime}-${newMaxPlaytime}m`);
         const newNotes = match.notes !== undefined ? match.notes : (game.notes || '');
+        const newBorrower =
+          match.borrowedBy !== undefined
+            ? match.borrowedBy
+              ? getCanonicalName(match.borrowedBy, activeFriends)
+              : null
+            : (game.currentBorrower ?? null);
+        const newStatus: 'available' | 'borrowed' = newBorrower ? 'borrowed' : 'available';
 
         if (
           newTitle !== game.title ||
           newMinP !== game.minPlayers ||
           newMaxP !== game.maxPlayers ||
           newType !== game.type ||
-          newPlaytime !== game.minPlaytime ||
-          newNotes !== (game.notes || '')
+          newMinPlaytime !== game.minPlaytime ||
+          newMaxPlaytime !== game.maxPlaytime ||
+          newPlaytimeDisplay !== game.playtimeDisplay ||
+          newNotes !== (game.notes || '') ||
+          newBorrower !== (game.currentBorrower ?? null) ||
+          newStatus !== game.status
         ) {
           gameChanged = true;
           changed = true;
         }
 
         if (gameChanged) {
-          return {
+          const nextGame: Game = {
             ...game,
             title: newTitle,
             minPlayers: newMinP,
             maxPlayers: newMaxP,
             type: newType,
-            minPlaytime: newPlaytime,
-            maxPlaytime: Math.max(newPlaytime, game.maxPlaytime),
-            playtimeDisplay: match.playtimeDisplay || `${newPlaytime}m`,
+            minPlaytime: newMinPlaytime,
+            maxPlaytime: newMaxPlaytime,
+            playtimeDisplay: newPlaytimeDisplay,
             notes: newNotes,
+            status: newStatus,
+            currentBorrower: newBorrower,
+            borrowDate: newBorrower ? (game.borrowDate || new Date().toISOString()) : null,
           };
+          changedGamesForCloud.push(nextGame);
+          return nextGame;
         }
         return game;
       });
 
+      // Import any newly added rows from Google Sheets that aren't in prevGames yet
+      const newSheetGames: Game[] = [];
+      sheetGames.forEach((sg, idx) => {
+        if (!matchedSheetIndices.has(idx) && sg.title) {
+          changed = true;
+          const borrower = sg.borrowedBy ? getCanonicalName(sg.borrowedBy, activeFriends) : null;
+          const minPlay = sg.minPlaytime ?? sg.playtime ?? 30;
+          const maxPlay = sg.maxPlaytime ?? Math.max(minPlay, 60);
+          const created: Game = {
+            id: `sheet-${Date.now()}-${idx}`,
+            title: sg.title,
+            owner: getCanonicalName(sg.household, activeFriends),
+            minPlayers: sg.minPlayers || 2,
+            maxPlayers: sg.maxPlayers || 4,
+            minPlaytime: minPlay,
+            maxPlaytime: maxPlay,
+            playtimeDisplay: sg.playtimeDisplay || (minPlay === maxPlay ? `${minPlay}m` : `${minPlay}-${maxPlay}m`),
+            type: sg.type || 'Strategy',
+            notes: sg.notes || '',
+            status: borrower ? 'borrowed' : 'available',
+            currentBorrower: borrower,
+            borrowDate: borrower ? new Date().toISOString() : null,
+            expectedReturnDate: null,
+            history: [],
+            borrowRequests: [],
+          };
+          newSheetGames.push(created);
+          changedGamesForCloud.push(created);
+        }
+      });
+
+      const finalGames = newSheetGames.length > 0 ? [...newSheetGames, ...updated] : updated;
+
       if (changed) {
-        saveGames(updated);
-        saveGamesBatchToCloud(updated);
+        saveGames(finalGames);
+        saveGamesBatchToCloud(changedGamesForCloud);
       }
-      return changed ? updated : prevGames;
+      return changed ? finalGames : prevGames;
     });
   };
 
   const handleInitiateBorrow = (game: Game) => {
     if (!activeHousehold) {
-      setBorrowingGame(game);
+      setPendingBorrowGame(game);
       setIsFirstIdentityPrompt(false);
       setIsIdentityModalOpen(true);
       return;
@@ -737,13 +1010,51 @@ export default function HomePage() {
     setActiveHousehold(household);
     setIsIdentityModalOpen(false);
     setIsFirstIdentityPrompt(false);
+    if (pendingBorrowGame) {
+      setBorrowingGame(pendingBorrowGame);
+      setPendingBorrowGame(null);
+    }
   };
+
+  const handleTableSort = (sortBy: FilterState['sortBy']) => {
+    setFilters((prev) => {
+      if (prev.sortBy === sortBy) {
+        return { ...prev, sortOrder: prev.sortOrder === 'asc' ? 'desc' : 'asc' };
+      }
+      const defaultOrder: 'asc' | 'desc' =
+        sortBy === 'rating' || sortBy === 'weight' || sortBy === 'players' ? 'desc' : 'asc';
+      return { ...prev, sortBy, sortOrder: defaultOrder };
+    });
+  };
+
+  // Derive live modal targets from `games` by ID so cloud/request updates reflect immediately
+  const liveSelectedGame = useMemo(
+    () => (selectedGame ? games.find((g) => g.id === selectedGame.id) || selectedGame : null),
+    [games, selectedGame]
+  );
+  const liveBorrowingGame = useMemo(
+    () => (borrowingGame ? games.find((g) => g.id === borrowingGame.id) || borrowingGame : null),
+    [games, borrowingGame]
+  );
+  const liveReturningGame = useMemo(
+    () => (returningGame ? games.find((g) => g.id === returningGame.id) || returningGame : null),
+    [games, returningGame]
+  );
 
   if (!mounted) {
     return (
       <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-zinc-900 dark:border-zinc-100 border-t-transparent rounded-full animate-spin" />
       </div>
+    );
+  }
+
+  // Mobile First-Time Install Gate (Recommended on phones, same as PA Tracker)
+  if (showInstallGate) {
+    return (
+      <InstallFirstGate
+        onContinue={() => setShowInstallGate(false)}
+      />
     );
   }
 
@@ -759,7 +1070,7 @@ export default function HomePage() {
         borrowedCount={borrowedCount}
         pendingRequestsCount={pendingRequestsCount}
         actionableCount={pendingRequestsCount}
-        waitingCount={0}
+        waitingCount={myWaitingRequestsCount}
         activeHousehold={activeHousehold}
         onOpenIdentityModal={() => {
           setIsFirstIdentityPrompt(false);
@@ -813,6 +1124,9 @@ export default function HomePage() {
             requests={requests}
             activeHousehold={filters.owner}
             activeHouseholdUser={activeHousehold}
+            sortBy={filters.sortBy}
+            sortOrder={filters.sortOrder}
+            onSortChange={handleTableSort}
             onSelectGame={setSelectedGame}
             onBorrow={handleInitiateBorrow}
             onReturn={setReturningGame}
@@ -828,9 +1142,10 @@ export default function HomePage() {
 
       {/* Modals */}
       <GameDetailModal
-        game={selectedGame}
+        game={liveSelectedGame}
+        requests={requests}
         activeHousehold={activeHousehold}
-        isOpen={Boolean(selectedGame)}
+        isOpen={Boolean(liveSelectedGame)}
         onClose={() => setSelectedGame(null)}
         onBorrow={handleInitiateBorrow}
         onReturn={setReturningGame}
@@ -841,9 +1156,9 @@ export default function HomePage() {
       />
 
       <BorrowModal
-        game={borrowingGame}
+        game={liveBorrowingGame}
         friends={friends}
-        isOpen={Boolean(borrowingGame)}
+        isOpen={Boolean(liveBorrowingGame)}
         activeHousehold={activeHousehold}
         onClose={() => setBorrowingGame(null)}
         onRequestExchange={handleRequestExchange}
@@ -851,19 +1166,11 @@ export default function HomePage() {
       />
 
       <ReturnModal
-        game={returningGame}
-        isOpen={Boolean(returningGame)}
+        game={liveReturningGame}
+        requests={requests}
+        isOpen={Boolean(liveReturningGame)}
         onClose={() => setReturningGame(null)}
         onConfirm={handleReturnConfirm}
-      />
-
-      <RequestBorrowModal
-        game={requestingGame}
-        friends={friends}
-        isOpen={Boolean(requestingGame)}
-        activeHousehold={activeHousehold}
-        onClose={() => setRequestingGame(null)}
-        onSubmitRequest={(gameId, requester, note) => handleRequestExchange(gameId, requester, undefined, note)}
       />
 
       <NotificationsModal
@@ -880,6 +1187,7 @@ export default function HomePage() {
 
       <BggSyncModal
         isOpen={isBggSyncOpen}
+        games={games}
         friends={friends}
         onClose={() => {
           setIsBggSyncOpen(false);
@@ -887,8 +1195,11 @@ export default function HomePage() {
         }}
         onAddGame={handleAddGame}
         onBatchImportGames={handleBatchImportGames}
+        onSelectGame={setSelectedGame}
+        onBorrow={handleInitiateBorrow}
+        onReturn={setReturningGame}
         initialHousehold={selectedHouseholdForAdd}
-        initialTab={selectedHouseholdForAdd ? 'search' : 'sync'}
+        initialTab={bggModalInitialTab}
       />
 
       <SettingsModal
@@ -914,6 +1225,7 @@ export default function HomePage() {
         onClose={() => {
           setIsIdentityModalOpen(false);
           setIsFirstIdentityPrompt(false);
+          setPendingBorrowGame(null);
         }}
         activeHousehold={activeHousehold}
         onSelectHousehold={handleSelectHousehold}
@@ -933,6 +1245,7 @@ export default function HomePage() {
         onViewModeChange={setViewMode}
         pendingRequestsCount={pendingRequestsCount}
         activeHousehold={activeHousehold}
+        onOpenSearchModal={handleOpenMobileSearch}
         onOpenAddModal={handleOpenGeneralAdd}
         onOpenNotifications={() => setIsNotificationsOpen(true)}
         onOpenIdentityModal={() => {

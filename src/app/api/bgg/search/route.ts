@@ -1,7 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server';
 import seedData from '@/data/seedGames.json';
+import { Game } from '@/types';
 
-async function searchWikidataForBggGames(query: string): Promise<any[]> {
+interface BggSearchItem {
+  bggId?: number | null;
+  title: string;
+  year?: number | null;
+  minPlayers: number;
+  maxPlayers: number;
+  minPlaytime: number;
+  maxPlaytime: number;
+  type?: string;
+  bggRating?: number | null;
+  bggRank?: number | null;
+  weight?: number | null;
+  image?: string | null;
+  thumbnail?: string | null;
+  source: string;
+}
+
+interface WikidataSearchEntity {
+  id: string;
+  label?: string;
+  description?: string;
+}
+
+async function searchWikidataForBggGames(query: string): Promise<BggSearchItem[]> {
   try {
     const searchUrl = `https://www.wikidata.org/w/api.php?action=wbsearchentities&search=${encodeURIComponent(query)}&type=item&language=en&format=json&limit=8`;
     const searchRes = await fetch(searchUrl, {
@@ -13,12 +37,12 @@ async function searchWikidataForBggGames(query: string): Promise<any[]> {
     });
     if (!searchRes.ok) return [];
     const searchData = await searchRes.json();
-    const searchItems: any[] = searchData.search || [];
+    const searchItems: WikidataSearchEntity[] = searchData.search || [];
     if (searchItems.length === 0) return [];
 
     // Filter candidate entities related to board games or games
     const entityIds = searchItems
-      .filter((item: any) => {
+      .filter((item: WikidataSearchEntity) => {
         const desc = (item.description || '').toLowerCase();
         const label = (item.label || '').toLowerCase();
         return (
@@ -29,7 +53,7 @@ async function searchWikidataForBggGames(query: string): Promise<any[]> {
           label.includes(query.toLowerCase())
         );
       })
-      .map((item: any) => item.id)
+      .map((item: WikidataSearchEntity) => item.id)
       .slice(0, 5);
 
     if (entityIds.length === 0) return [];
@@ -77,14 +101,18 @@ async function searchWikidataForBggGames(query: string): Promise<any[]> {
           const item = data.item;
           if (!item) return null;
           const images = item.images || {};
+          const minPlayers = item.minplayers ? parseInt(item.minplayers, 10) || 2 : 2;
+          const maxPlayers = Math.max(minPlayers, item.maxplayers ? parseInt(item.maxplayers, 10) || minPlayers : 4);
+          const minPlaytime = item.minplaytime ? parseInt(item.minplaytime, 10) || 30 : 30;
+          const maxPlaytime = Math.max(minPlaytime, item.maxplaytime ? parseInt(item.maxplaytime, 10) || minPlaytime : 60);
           return {
             bggId,
             title: item.name,
             year: item.yearpublished ? parseInt(item.yearpublished, 10) : undefined,
-            minPlayers: item.minplayers ? parseInt(item.minplayers, 10) : 2,
-            maxPlayers: item.maxplayers ? parseInt(item.maxplayers, 10) : 4,
-            minPlaytime: item.minplaytime ? parseInt(item.minplaytime, 10) : 30,
-            maxPlaytime: item.maxplaytime ? parseInt(item.maxplaytime, 10) : 60,
+            minPlayers,
+            maxPlayers,
+            minPlaytime,
+            maxPlaytime,
             type: 'Board Game',
             image: images.original || item.imageurl || null,
             thumbnail: images.previewthumb || images.thumb || images.square200 || null,
@@ -96,7 +124,7 @@ async function searchWikidataForBggGames(query: string): Promise<any[]> {
       })
     );
 
-    return results.filter(Boolean);
+    return results.filter((r): r is NonNullable<typeof r> => r !== null);
   } catch (err) {
     console.error('Wikidata BGG search error:', err);
     return [];
@@ -106,7 +134,6 @@ async function searchWikidataForBggGames(query: string): Promise<any[]> {
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const rawQuery = searchParams.get('q')?.trim();
-  const token = request.headers.get('x-bgg-token') || process.env.BGG_API_TOKEN;
 
   if (!rawQuery) {
     return NextResponse.json({ results: [] });
@@ -124,6 +151,7 @@ export async function GET(request: NextRequest) {
           'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
           'Accept': 'application/json',
         },
+        signal: AbortSignal.timeout(6000),
         next: { revalidate: 86400 },
       });
 
@@ -132,16 +160,20 @@ export async function GET(request: NextRequest) {
         const item = data.item;
         if (item) {
           const images = item.images || {};
+          const minPlayers = item.minplayers ? parseInt(item.minplayers, 10) || 1 : 1;
+          const maxPlayers = Math.max(minPlayers, item.maxplayers ? parseInt(item.maxplayers, 10) || minPlayers : 4);
+          const minPlaytime = item.minplaytime ? parseInt(item.minplaytime, 10) || 30 : 30;
+          const maxPlaytime = Math.max(minPlaytime, item.maxplaytime ? parseInt(item.maxplaytime, 10) || minPlaytime : 60);
           return NextResponse.json({
             results: [
               {
                 bggId: directId,
                 title: item.name,
                 year: item.yearpublished ? parseInt(item.yearpublished, 10) : undefined,
-                minPlayers: item.minplayers ? parseInt(item.minplayers, 10) : 1,
-                maxPlayers: item.maxplayers ? parseInt(item.maxplayers, 10) : 4,
-                minPlaytime: item.minplaytime ? parseInt(item.minplaytime, 10) : 30,
-                maxPlaytime: item.maxplaytime ? parseInt(item.maxplaytime, 10) : 60,
+                minPlayers,
+                maxPlayers,
+                minPlaytime,
+                maxPlaytime,
                 image: images.original || item.imageurl || null,
                 thumbnail: images.previewthumb || images.thumb || images.square200 || null,
                 source: 'bgg_direct_id',
@@ -156,7 +188,7 @@ export async function GET(request: NextRequest) {
   }
 
   // 2. Search local curated database
-  const localMatches = (seedData as any[])
+  const localMatches: BggSearchItem[] = (seedData as unknown as Game[])
     .filter((g) => g.title.toLowerCase().includes(query) || (g.bggId && String(g.bggId).includes(query)))
     .slice(0, 10)
     .map((g) => ({
@@ -177,7 +209,7 @@ export async function GET(request: NextRequest) {
     }));
 
   // 3. Search online BGG / Wikidata catalog for any title not already in local database
-  let liveResults: any[] = [];
+  let liveResults: BggSearchItem[] = [];
   if (localMatches.length < 3) {
     liveResults = await searchWikidataForBggGames(rawQuery);
   }

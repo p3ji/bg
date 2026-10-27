@@ -4,6 +4,7 @@ import React from 'react';
 import { X, Check, Users, ShieldCheck } from 'lucide-react';
 import { OWNER_GROUPS } from '@/data/friends';
 import { isSameHousehold } from '@/lib/normalize';
+import { useModalA11y } from '@/lib/useModalA11y';
 
 interface IdentityModalProps {
   isOpen: boolean;
@@ -22,6 +23,12 @@ export const IdentityModal: React.FC<IdentityModalProps> = ({
   onSelectHousehold,
   isInitialPrompt = false,
 }) => {
+  useModalA11y(isOpen, () => {
+    if (!isInitialPrompt) {
+      onClose();
+    }
+  });
+
   if (!isOpen) return null;
 
   const availableHouseholds = friends && friends.length > 0 ? friends : OWNER_GROUPS;
@@ -68,7 +75,15 @@ export const IdentityModal: React.FC<IdentityModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/70 backdrop-blur-xs">
+    <div 
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/70 backdrop-blur-xs"
+      onClick={() => {
+        if (!isInitialPrompt) onClose();
+      }}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="identity-modal-title"
+    >
       <div 
         className="bg-white dark:bg-zinc-900 border-t sm:border border-zinc-200 dark:border-zinc-800 rounded-t-2xl sm:rounded-2xl max-w-md w-full shadow-2xl overflow-hidden animate-in slide-in-from-bottom duration-200 sm:zoom-in-95 max-h-[92dvh] flex flex-col pb-safe sm:pb-0"
         onClick={(e) => e.stopPropagation()}
@@ -83,7 +98,7 @@ export const IdentityModal: React.FC<IdentityModalProps> = ({
               <Users className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-zinc-900 dark:text-zinc-100">
+              <h2 id="identity-modal-title" className="text-base font-bold text-zinc-900 dark:text-zinc-100">
                 Who’s using this device?
               </h2>
               <p className="text-xs text-zinc-500">

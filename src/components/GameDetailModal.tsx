@@ -1,8 +1,9 @@
 'use client';
 
 import React from 'react';
-import { Game } from '@/types';
-import { normalizeName, isSameHousehold } from '@/lib/normalize';
+import { Game, BorrowRequest } from '@/types';
+import { isSameHousehold } from '@/lib/normalize';
+import { useModalA11y } from '@/lib/useModalA11y';
 import { GameBoxCover } from './GameBoxCover';
 import { 
   X, 
@@ -16,18 +17,15 @@ import {
   SendHorizontal, 
   History,
   Calendar,
-  CheckCircle2,
-  Sparkles,
   UserCheck,
   Edit3,
   ArrowRightLeft,
-  Check,
-  ShieldCheck,
-  PackageCheck
+  Check
 } from 'lucide-react';
 
 interface GameDetailModalProps {
   game: Game | null;
+  requests?: BorrowRequest[];
   activeHousehold?: string | null;
   isOpen: boolean;
   onClose: () => void;
@@ -41,22 +39,27 @@ interface GameDetailModalProps {
 
 export const GameDetailModal: React.FC<GameDetailModalProps> = ({
   game,
+  requests,
   activeHousehold,
   isOpen,
   onClose,
   onBorrow,
   onReturn,
-  onRequestBorrow,
   onAcceptExchange,
   onConfirmExchange,
   onEdit,
 }) => {
+  useModalA11y(isOpen, onClose);
+
   if (!isOpen || !game) return null;
 
   const isAvailable = game.status === 'available';
-  const activeExchange = (game.borrowRequests || []).find(
-    (r) => r.status === 'pending' || r.status === 'accepted'
-  );
+  const gameRequests = requests
+    ? requests.filter((r) => r.gameId === game.id)
+    : game.borrowRequests || [];
+  const activeExchange =
+    gameRequests.find((r) => r.status === 'accepted') ||
+    gameRequests.find((r) => r.status === 'pending');
 
   const formatDate = (isoStr?: string | null) => {
     if (!isoStr) return '—';
@@ -75,7 +78,7 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
   const calculateDuration = (startIso: string, endIso?: string) => {
     try {
       const start = new Date(startIso).getTime();
-      const end = endIso ? new Date(endIso).getTime() : Date.now();
+      const end = endIso ? new Date(endIso).getTime() : new Date().getTime();
       const days = Math.max(1, Math.round((end - start) / (1000 * 3600 * 24)));
       return `${days} day${days === 1 ? '' : 's'}`;
     } catch {
@@ -88,7 +91,13 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
   const isUserRequester = Boolean(activeExchange && (isSelfTest || (activeHousehold && isSameHousehold(activeHousehold, activeExchange.requesterName))));
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-xs">
+    <div 
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-xs"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="game-detail-modal-title"
+    >
       
       <div 
         className="bg-white dark:bg-zinc-900 border-t sm:border border-zinc-200 dark:border-zinc-800 rounded-t-2xl sm:rounded-2xl max-w-2xl w-full max-h-[92dvh] flex flex-col shadow-2xl overflow-hidden pb-safe sm:pb-0 animate-in slide-in-from-bottom duration-200 sm:zoom-in-95"
@@ -170,7 +179,7 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
             <div className="flex-1 flex flex-col justify-between">
               <div>
                 <div className="flex items-start justify-between gap-2">
-                  <h3 className="text-xl font-bold text-zinc-900 dark:text-zinc-50 leading-tight">
+                  <h3 id="game-detail-modal-title" className="text-xl font-bold text-zinc-900 dark:text-zinc-50 leading-tight">
                     {game.title}
                   </h3>
                   {game.year && (

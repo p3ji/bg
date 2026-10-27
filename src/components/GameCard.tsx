@@ -62,8 +62,17 @@ export const GameCard: React.FC<GameCardProps> = ({
 
   return (
     <div
+      role="button"
+      tabIndex={0}
+      aria-label={`${game.title}, owned by ${game.owner}`}
       onClick={() => onSelectGame(game)}
-      className="group relative aspect-[4/5] w-full rounded-xl overflow-hidden bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 hover:shadow-xl hover:border-zinc-300 dark:hover:border-zinc-600 transition-all duration-200 cursor-pointer select-none"
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onSelectGame(game);
+        }
+      }}
+      className="group relative aspect-[4/5] w-full rounded-xl overflow-hidden bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 hover:shadow-xl hover:border-zinc-300 dark:hover:border-zinc-600 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-indigo-500 transition-all duration-200 cursor-pointer select-none"
     >
       {/* 100% Full-Bleed Box Cover */}
       <GameBoxCover
@@ -79,7 +88,7 @@ export const GameCard: React.FC<GameCardProps> = ({
       />
 
       {/* Deep bottom scrim for crisp text & button contrast over any box art */}
-      <div className="absolute inset-x-0 bottom-0 h-32 sm:h-36 bg-gradient-to-t from-black/95 via-black/75 to-transparent pointer-events-none z-10" />
+      <div className="absolute inset-x-0 bottom-0 h-36 sm:h-40 bg-gradient-to-t from-black/95 via-black/75 to-transparent pointer-events-none z-10" />
 
       {/* Top Row: Floating Status Badge (Left) + BGG Rating & Edit (Right) */}
       <div className="absolute top-2 inset-x-2 sm:top-2.5 sm:inset-x-2.5 z-20 flex items-start justify-between gap-1.5 pointer-events-none">
@@ -141,115 +150,117 @@ export const GameCard: React.FC<GameCardProps> = ({
                 e.stopPropagation();
                 onEdit(game);
               }}
-              className="w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center bg-black/60 hover:bg-indigo-600 text-zinc-200 hover:text-white rounded-md border border-white/10 backdrop-blur-xs opacity-85 sm:opacity-0 sm:group-hover:opacity-100 transition-all"
+              aria-label={`Edit ${game.title} and link BGG cover`}
+              className="w-8 h-8 sm:w-7 sm:h-7 flex items-center justify-center bg-black/60 hover:bg-indigo-600 text-zinc-200 hover:text-white rounded-md border border-white/10 backdrop-blur-xs opacity-90 sm:opacity-0 sm:group-hover:opacity-100 transition-all"
               title="Edit Game & Link BGG Cover"
             >
-              <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+              <Sparkles className="w-3.5 h-3.5" />
             </button>
           )}
         </div>
       </div>
 
-      {/* Bottom Overlay: Title + Specs (Left) & Primary Action (Right) */}
-      <div className="absolute inset-x-0 bottom-0 z-20 p-2.5 sm:p-3 flex items-end justify-between gap-2">
-        <div className="min-w-0 flex-1">
-          <h4
-            className="text-xs sm:text-sm font-bold text-white line-clamp-1 drop-shadow-xs group-hover:text-emerald-300 transition-colors"
-            title={game.title}
-          >
-            {game.title}
-          </h4>
-          <p className="text-[10px] sm:text-[11px] text-zinc-300 font-medium truncate mt-0.5">
+      {/* Bottom Overlay: Full-width wrapping Title stacked above [Specs + Action Buttons] */}
+      <div className="absolute inset-x-0 bottom-0 z-20 p-2.5 sm:p-3 flex flex-col justify-end gap-1">
+        <h4
+          className="w-full text-xs sm:text-sm font-bold text-white leading-tight line-clamp-3 drop-shadow-xs group-hover:text-emerald-300 transition-colors"
+          title={game.title}
+        >
+          {game.title}
+        </h4>
+
+        <div className="flex items-center justify-between gap-2">
+          <p className="min-w-0 flex-1 text-[10px] sm:text-[11px] text-zinc-300 font-medium truncate">
             {playerLabel} • {game.playtimeDisplay}
             {game.type ? ` • ${game.type}` : ''}
           </p>
-        </div>
 
-        {/* Action Buttons */}
-        <div
-          className="flex items-center gap-1 shrink-0"
-          onClick={(e) => e.stopPropagation()}
-        >
-          {activeExchange ? (
-            activeExchange.status === 'pending' ? (
-              <button
-                type="button"
-                onClick={() => {
-                  if (isUserHolder && onAcceptExchange) {
-                    onAcceptExchange(activeExchange.id);
-                  } else {
-                    onSelectGame(game);
-                  }
-                }}
-                disabled={!isUserHolder}
-                className={`min-h-[30px] sm:min-h-[32px] flex items-center justify-center gap-1 px-2.5 py-1 rounded-lg text-[11px] sm:text-xs font-bold shadow-md transition-all ${
-                  isUserHolder
-                    ? 'bg-indigo-600 hover:bg-indigo-500 text-white cursor-pointer active:scale-95'
-                    : 'bg-zinc-900/80 text-zinc-400 border border-white/15 cursor-not-allowed'
-                }`}
-                title={isUserHolder ? 'Holder can accept and execute exchange' : `Only ${activeExchange.holderName} can accept`}
-              >
-                <ArrowRightLeft className="w-3 h-3 shrink-0" />
-                <span className="truncate max-w-[75px] sm:max-w-[95px]">
-                  {isUserHolder ? 'Accept' : `Wait`}
-                </span>
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={() => {
-                  if (isUserRequester && onConfirmExchange) {
-                    onConfirmExchange(activeExchange.id);
-                  } else {
-                    onSelectGame(game);
-                  }
-                }}
-                disabled={!isUserRequester}
-                className={`min-h-[30px] sm:min-h-[32px] flex items-center justify-center gap-1 px-2.5 py-1 rounded-lg text-[11px] sm:text-xs font-bold shadow-md transition-all ${
-                  isUserRequester
-                    ? 'bg-emerald-600 hover:bg-emerald-500 text-white cursor-pointer active:scale-95'
-                    : 'bg-zinc-900/80 text-zinc-400 border border-white/15 cursor-not-allowed'
-                }`}
-                title={isUserRequester ? 'Borrower confirms receipt to complete exchange' : `Only ${activeExchange.requesterName} can confirm receipt`}
-              >
-                <Check className="w-3 h-3 shrink-0" />
-                <span className="truncate max-w-[75px] sm:max-w-[95px]">
-                  {isUserRequester ? 'Confirm' : `Wait`}
-                </span>
-              </button>
-            )
-          ) : isAvailable ? (
-            <button
-              type="button"
-              onClick={() => onBorrow(game)}
-              className="min-h-[30px] sm:min-h-[32px] flex items-center justify-center gap-1 px-2.5 sm:px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-[11px] sm:text-xs font-bold shadow-md transition-colors active:scale-95"
-            >
-              <Hand className="w-3 h-3 shrink-0" />
-              <span>Borrow</span>
-            </button>
-          ) : (
-            <>
-              <button
-                type="button"
-                onClick={() => onReturn(game)}
-                className="min-h-[30px] sm:min-h-[32px] flex items-center justify-center gap-1 px-2 py-1 bg-zinc-800/95 hover:bg-zinc-700 text-white border border-white/15 rounded-lg text-[11px] sm:text-xs font-bold shadow-md transition-colors active:scale-95"
-                title="Mark this game as returned"
-              >
-                <RotateCcw className="w-3 h-3 shrink-0" />
-                <span className="hidden xs:inline">Return</span>
-              </button>
-
+          {/* Action Buttons */}
+          <div
+            className="flex items-center gap-1 shrink-0"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {activeExchange ? (
+              activeExchange.status === 'pending' ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (isUserHolder && onAcceptExchange) {
+                      onAcceptExchange(activeExchange.id);
+                    } else {
+                      onSelectGame(game);
+                    }
+                  }}
+                  disabled={!isUserHolder}
+                  className={`min-h-[28px] sm:min-h-[30px] flex items-center justify-center gap-1 px-2.5 py-1 rounded-lg text-[11px] sm:text-xs font-bold shadow-md transition-all ${
+                    isUserHolder
+                      ? 'bg-indigo-600 hover:bg-indigo-500 text-white cursor-pointer active:scale-95'
+                      : 'bg-zinc-900/80 text-zinc-400 border border-white/15 cursor-not-allowed'
+                  }`}
+                  title={isUserHolder ? 'Holder can accept and execute exchange' : `Only ${activeExchange.holderName} can accept`}
+                >
+                  <ArrowRightLeft className="w-3 h-3 shrink-0" />
+                  <span className="truncate max-w-[75px] sm:max-w-[95px]">
+                    {isUserHolder ? 'Accept' : `Wait`}
+                  </span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (isUserRequester && onConfirmExchange) {
+                      onConfirmExchange(activeExchange.id);
+                    } else {
+                      onSelectGame(game);
+                    }
+                  }}
+                  disabled={!isUserRequester}
+                  className={`min-h-[28px] sm:min-h-[30px] flex items-center justify-center gap-1 px-2.5 py-1 rounded-lg text-[11px] sm:text-xs font-bold shadow-md transition-all ${
+                    isUserRequester
+                      ? 'bg-emerald-600 hover:bg-emerald-500 text-white cursor-pointer active:scale-95'
+                      : 'bg-zinc-900/80 text-zinc-400 border border-white/15 cursor-not-allowed'
+                  }`}
+                  title={isUserRequester ? 'Borrower confirms receipt to complete exchange' : `Only ${activeExchange.requesterName} can confirm receipt`}
+                >
+                  <Check className="w-3 h-3 shrink-0" />
+                  <span className="truncate max-w-[75px] sm:max-w-[95px]">
+                    {isUserRequester ? 'Confirm' : `Wait`}
+                  </span>
+                </button>
+              )
+            ) : isAvailable ? (
               <button
                 type="button"
                 onClick={() => onBorrow(game)}
-                className="min-h-[30px] sm:min-h-[32px] flex items-center justify-center gap-1 px-2 py-1 bg-indigo-600/95 hover:bg-indigo-500 text-white rounded-lg text-[11px] sm:text-xs font-bold shadow-md transition-colors active:scale-95"
-                title="Send borrow request to current holder"
+                className="min-h-[28px] sm:min-h-[30px] flex items-center justify-center gap-1 px-2.5 sm:px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-[11px] sm:text-xs font-bold shadow-md transition-colors active:scale-95"
               >
-                <SendHorizontal className="w-3 h-3 shrink-0" />
-                <span>Req</span>
+                <Hand className="w-3 h-3 shrink-0" />
+                <span>Borrow</span>
               </button>
-            </>
-          )}
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={() => onReturn(game)}
+                  className="min-h-[28px] sm:min-h-[30px] flex items-center justify-center gap-1 px-2 py-1 bg-zinc-800/95 hover:bg-zinc-700 text-white border border-white/15 rounded-lg text-[11px] sm:text-xs font-bold shadow-md transition-colors active:scale-95"
+                  title="Mark this game as returned"
+                >
+                  <RotateCcw className="w-3 h-3 shrink-0" />
+                  <span className="hidden xs:inline">Return</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => onBorrow(game)}
+                  className="min-h-[28px] sm:min-h-[30px] flex items-center justify-center gap-1 px-2 py-1 bg-indigo-600/95 hover:bg-indigo-500 text-white rounded-lg text-[11px] sm:text-xs font-bold shadow-md transition-colors active:scale-95"
+                  title="Send borrow request to current holder"
+                >
+                  <SendHorizontal className="w-3 h-3 shrink-0" />
+                  <span>Req</span>
+                </button>
+              </>
+            )}
+          </div>
         </div>
       </div>
     </div>

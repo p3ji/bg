@@ -1,5 +1,33 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+interface UpstreamBggGame {
+  bgg_id?: number;
+  eng_title?: string;
+  title?: string;
+  year?: number;
+  min_players?: number | string;
+  max_players?: number | string;
+  min_playtime?: number | string;
+  max_playtime?: number | string;
+  subdomains?: {
+    strategygames?: boolean;
+    partygames?: boolean;
+  };
+  bgg_avg?: number;
+  bgg_rank?: number;
+  bgg_weight?: number;
+  thumbnail?: string;
+}
+
+interface UpstreamBggSyncResponse {
+  status?: string;
+  success?: boolean;
+  message?: string;
+  username?: string;
+  avatar?: string;
+  games?: UpstreamBggGame[];
+}
+
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const username = searchParams.get('username')?.trim();
@@ -11,10 +39,10 @@ export async function GET(request: NextRequest) {
   try {
     const targetUrl = `https://www.gdex.co.kr/api_bgg_sync.php?username=${encodeURIComponent(username)}`;
     
-    // Attempt fetch with retry up to 3 times if BGG is preparing the collection
+    // Attempt fetch with retry up to 2 times if BGG is preparing the collection
     let attempts = 0;
-    const maxAttempts = 4;
-    let data: any = null;
+    const maxAttempts = 2;
+    let data: UpstreamBggSyncResponse | null = null;
 
     while (attempts < maxAttempts) {
       const res = await fetch(targetUrl, {
@@ -22,6 +50,7 @@ export async function GET(request: NextRequest) {
           'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
           'Accept': 'application/json'
         },
+        signal: AbortSignal.timeout(4500),
         cache: 'no-store'
       });
 
@@ -29,15 +58,17 @@ export async function GET(request: NextRequest) {
         throw new Error(`Upstream returned HTTP ${res.status}`);
       }
 
-      data = await res.json();
+      data = (await res.json()) as UpstreamBggSyncResponse;
 
-      if (data.status === 'ready' || data.success && data.games) {
+      if (data.status === 'ready' || (data.success && Array.isArray(data.games))) {
         break;
       }
 
       if (data.status === 'processing') {
         attempts++;
-        await new Promise((resolve) => setTimeout(resolve, 2500));
+        if (attempts < maxAttempts) {
+          await new Promise((resolve) => setTimeout(resolve, 1500));
+        }
       } else {
         break;
       }
@@ -50,22 +81,28 @@ export async function GET(request: NextRequest) {
     }
 
     // Format games into our clean schema
-    const formattedGames = (data.games || []).map((g: any, idx: number) => ({
-      bggId: g.bgg_id,
-      title: g.eng_title || g.title,
-      year: g.year,
-      minPlayers: Number(g.min_players) || 1,
-      maxPlayers: Number(g.max_players) || 4,
-      minPlaytime: Number(g.min_playtime) || 30,
-      maxPlaytime: Number(g.max_playtime) || 60,
-      playtimeDisplay: `${g.min_playtime || 30}-${g.max_playtime || 60} min`,
-      type: g.subdomains?.strategygames ? 'Strategy' : (g.subdomains?.partygames ? 'Party' : 'Board Game'),
-      bggRating: g.bgg_avg ? Number(g.bgg_avg.toFixed(1)) : null,
-      bggRank: g.bgg_rank && g.bgg_rank > 0 ? g.bgg_rank : null,
-      weight: g.bgg_weight ? Number(g.bgg_weight.toFixed(2)) : null,
-      thumbnail: g.thumbnail || null,
-      image: g.thumbnail || null,
-    }));
+    const formattedGames = (data.games || []).map((g: UpstreamBggGame) => {
+      const minPlayers = Number(g.min_players) || 1;
+      const maxPlayers = Math.max(minPlayers, Number(g.max_players) || minPlayers);
+      const minPlaytime = Number(g.min_playtime) || 30;
+      const maxPlaytime = Math.max(minPlaytime, Number(g.max_playtime) || minPlaytime);
+      return {
+        bggId: g.bgg_id,
+        title: g.eng_title || g.title,
+        year: g.year,
+        minPlayers,
+        maxPlayers,
+        minPlaytime,
+        maxPlaytime,
+        playtimeDisplay: minPlaytime === maxPlaytime ? `${minPlaytime}m` : `${minPlaytime}-${maxPlaytime}m`,
+        type: g.subdomains?.strategygames ? 'Strategy' : (g.subdomains?.partygames ? 'Party' : 'Board Game'),
+        bggRating: g.bgg_avg ? Number(g.bgg_avg.toFixed(1)) : null,
+        bggRank: g.bgg_rank && g.bgg_rank > 0 ? g.bgg_rank : null,
+        weight: g.bgg_weight ? Number(g.bgg_weight.toFixed(2)) : null,
+        thumbnail: g.thumbnail || null,
+        image: g.thumbnail || null,
+      };
+    });
 
     if (formattedGames.length === 0) {
       return NextResponse.json({
@@ -82,10 +119,11 @@ export async function GET(request: NextRequest) {
       games: formattedGames
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Failed to sync BGG collection';
     console.error('BGG Sync error:', error);
     return NextResponse.json({ 
-      error: error.message || 'Failed to sync BGG collection' 
+      error: message
     }, { status: 500 });
   }
 }

@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { Game } from '@/types';
 import { OWNER_GROUPS, GAME_TYPES } from '@/data/friends';
 import { getCanonicalName, isSameHousehold } from '@/lib/normalize';
+import { useModalA11y } from '@/lib/useModalA11y';
+import Image from 'next/image';
 import { GameBoxCover } from './GameBoxCover';
 import { 
   X, 
@@ -14,9 +16,7 @@ import {
   Check, 
   Loader2, 
   ExternalLink,
-  RefreshCw,
-  Users,
-  Clock
+  RefreshCw
 } from 'lucide-react';
 
 interface EditGameModalProps {
@@ -30,13 +30,16 @@ interface EditGameModalProps {
 interface BggSearchResult {
   bggId: number;
   title: string;
-  year?: number;
+  year?: number | null;
   minPlayers?: number;
   maxPlayers?: number;
   minPlaytime?: number;
   maxPlaytime?: number;
-  image?: string;
-  thumbnail?: string;
+  bggRating?: number | null;
+  bggRank?: number | null;
+  weight?: number | null;
+  image?: string | null;
+  thumbnail?: string | null;
 }
 
 export const EditGameModal: React.FC<EditGameModalProps> = ({
@@ -46,7 +49,10 @@ export const EditGameModal: React.FC<EditGameModalProps> = ({
   onClose,
   onSave,
 }) => {
-  const availableHouseholds = friends && friends.length > 0 ? friends : OWNER_GROUPS;
+  const availableHouseholds = React.useMemo(
+    () => (friends && friends.length > 0 ? friends : OWNER_GROUPS),
+    [friends]
+  );
   const [title, setTitle] = useState('');
   const [owner, setOwner] = useState('');
   const [type, setType] = useState('Strategy');
@@ -60,16 +66,23 @@ export const EditGameModal: React.FC<EditGameModalProps> = ({
   const [image, setImage] = useState('');
   const [thumbnail, setThumbnail] = useState('');
   const [bggId, setBggId] = useState<number | undefined>(undefined);
+  const [bggRating, setBggRating] = useState<number | null | undefined>(undefined);
+  const [bggRank, setBggRank] = useState<number | null | undefined>(undefined);
+  const [weight, setWeight] = useState<number | null | undefined>(undefined);
+  const [year, setYear] = useState<number | null | undefined>(undefined);
   
   // BGG search & lookup state
   const [bggSearchQuery, setBggSearchQuery] = useState('');
   const [isSearchingBgg, setIsSearchingBgg] = useState(false);
+  const [applyingBggId, setApplyingBggId] = useState<number | null>(null);
   const [bggSearchResults, setBggSearchResults] = useState<BggSearchResult[]>([]);
   const [bggSearchError, setBggSearchError] = useState<string | null>(null);
   const [syncBggStats, setSyncBggStats] = useState(true);
 
+  useModalA11y(isOpen, onClose);
+
   useEffect(() => {
-    if (game) {
+    if (isOpen && game) {
       setTitle(game.title || '');
       setOwner(getCanonicalName(game.owner, availableHouseholds) || OWNER_GROUPS[0]);
       setType(game.type || 'Strategy');
@@ -81,11 +94,16 @@ export const EditGameModal: React.FC<EditGameModalProps> = ({
       setImage(game.image || '');
       setThumbnail(game.thumbnail || '');
       setBggId(game.bggId ?? undefined);
+      setBggRating(game.bggRating);
+      setBggRank(game.bggRank);
+      setWeight(game.weight);
+      setYear(game.year);
       setBggSearchQuery(game.bggId ? String(game.bggId) : game.title || '');
       setBggSearchResults([]);
       setBggSearchError(null);
+      setApplyingBggId(null);
     }
-  }, [game, isOpen]);
+  }, [game, isOpen, availableHouseholds]);
 
   if (!isOpen || !game) return null;
 
@@ -123,14 +141,16 @@ export const EditGameModal: React.FC<EditGameModalProps> = ({
       } else {
         setBggSearchError(`No BGG matches found for "${query}". You can also paste the numeric BGG ID directly.`);
       }
-    } catch (err: any) {
-      setBggSearchError(err.message || 'Failed to search BoardGameGeek');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to search BoardGameGeek';
+      setBggSearchError(message);
     } finally {
       setIsSearchingBgg(false);
     }
   };
 
   const handleApplyBggResult = async (result: BggSearchResult) => {
+    setApplyingBggId(result.bggId);
     // If we only have basic info without high-res image, do a quick lookup
     let fullItem = result;
     if (!result.image && result.bggId) {
@@ -138,7 +158,7 @@ export const EditGameModal: React.FC<EditGameModalProps> = ({
         const res = await fetch(`/api/bgg/lookup?id=${result.bggId}`);
         if (res.ok) {
           const data = await res.json();
-          fullItem = data;
+          fullItem = { ...result, ...data };
         }
       } catch (err) {
         console.error('Failed to lookup full BGG item:', err);
@@ -160,25 +180,41 @@ export const EditGameModal: React.FC<EditGameModalProps> = ({
       if (fullItem.maxPlayers) setMaxPlayers(fullItem.maxPlayers);
       if (fullItem.minPlaytime) setMinPlaytime(fullItem.minPlaytime);
       if (fullItem.maxPlaytime) setMaxPlaytime(fullItem.maxPlaytime);
+      if (fullItem.bggRating !== undefined) setBggRating(fullItem.bggRating);
+      if (fullItem.bggRank !== undefined) setBggRank(fullItem.bggRank);
+      if (fullItem.weight !== undefined) setWeight(fullItem.weight);
+      if (fullItem.year !== undefined) setYear(fullItem.year);
     }
 
+    setApplyingBggId(null);
     setBggSearchResults([]);
   };
 
   const handleSave = () => {
+    const minP = Number(minPlayers) || 1;
+    const maxP = Math.max(minP, Number(maxPlayers) || minP);
+    const minT = Number(minPlaytime) || 15;
+    const maxT = Math.max(minT, Number(maxPlaytime) || minT);
+    const playtimeDisplay = minT === maxT ? `${minT}m` : `${minT}-${maxT}m`;
+
     const updatedGame: Game = {
       ...game,
       title: title.trim(),
       owner: getCanonicalName(owner, availableHouseholds),
       type,
-      minPlayers: Number(minPlayers) || 1,
-      maxPlayers: Number(maxPlayers) || 4,
-      minPlaytime: Number(minPlaytime) || 15,
-      maxPlaytime: Number(maxPlaytime) || 60,
+      minPlayers: minP,
+      maxPlayers: maxP,
+      minPlaytime: minT,
+      maxPlaytime: maxT,
+      playtimeDisplay,
       notes: notes.trim(),
       image: image.trim() || null,
       thumbnail: thumbnail.trim() || image.trim() || null,
       bggId: bggId || undefined,
+      bggRating: bggRating !== undefined ? bggRating : game.bggRating,
+      bggRank: bggRank !== undefined ? bggRank : game.bggRank,
+      weight: weight !== undefined ? weight : game.weight,
+      year: year !== undefined ? year : game.year,
     };
 
     onSave(updatedGame);
@@ -186,7 +222,13 @@ export const EditGameModal: React.FC<EditGameModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/70 backdrop-blur-sm">
+    <div 
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/70 backdrop-blur-sm"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="edit-game-modal-title"
+    >
       <div 
         className="bg-white dark:bg-zinc-900 border-t sm:border border-zinc-200 dark:border-zinc-800 rounded-t-2xl sm:rounded-2xl max-w-3xl w-full max-h-[92dvh] flex flex-col shadow-2xl overflow-hidden pb-safe sm:pb-0 animate-in slide-in-from-bottom duration-200 sm:zoom-in-95"
         onClick={(e) => e.stopPropagation()}
@@ -199,7 +241,7 @@ export const EditGameModal: React.FC<EditGameModalProps> = ({
           <div className="flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-indigo-500" />
             <div>
-              <h2 className="text-base sm:text-lg font-bold text-zinc-900 dark:text-zinc-100">
+              <h2 id="edit-game-modal-title" className="text-base sm:text-lg font-bold text-zinc-900 dark:text-zinc-100">
                 Edit Game & Image Cover
               </h2>
               <p className="text-xs text-zinc-500">
@@ -232,7 +274,7 @@ export const EditGameModal: React.FC<EditGameModalProps> = ({
                   type={type}
                   minPlayers={minPlayers}
                   maxPlayers={maxPlayers}
-                  playtimeDisplay={`${minPlaytime}–${maxPlaytime}m`}
+                  playtimeDisplay={minPlaytime === maxPlaytime ? `${minPlaytime}m` : `${minPlaytime}–${maxPlaytime}m`}
                   className="w-full h-full"
                 />
               </div>
@@ -330,11 +372,15 @@ export const EditGameModal: React.FC<EditGameModalProps> = ({
                       >
                         <div className="flex items-center gap-2.5 overflow-hidden">
                           {res.thumbnail ? (
-                            <img
-                              src={res.thumbnail}
-                              alt={res.title}
-                              className="w-9 h-9 object-cover rounded border border-zinc-200 dark:border-zinc-700 shrink-0"
-                            />
+                            <div className="w-9 h-9 relative rounded overflow-hidden border border-zinc-200 dark:border-zinc-700 shrink-0">
+                              <Image
+                                src={res.thumbnail}
+                                alt={res.title}
+                                fill
+                                className="object-cover"
+                                unoptimized
+                              />
+                            </div>
                           ) : (
                             <div className="w-9 h-9 bg-zinc-200 dark:bg-zinc-800 rounded flex items-center justify-center shrink-0">
                               <ImageIcon className="w-4 h-4 text-zinc-400" />
@@ -352,10 +398,12 @@ export const EditGameModal: React.FC<EditGameModalProps> = ({
 
                         <button
                           type="button"
+                          disabled={applyingBggId === res.bggId}
                           onClick={() => handleApplyBggResult(res)}
-                          className="px-2.5 py-1 text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 rounded-md border border-indigo-200 dark:border-indigo-800 shrink-0 transition-colors"
+                          className="px-2.5 py-1 text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 disabled:opacity-50 rounded-md border border-indigo-200 dark:border-indigo-800 shrink-0 transition-colors inline-flex items-center gap-1"
                         >
-                          Link Cover
+                          {applyingBggId === res.bggId && <Loader2 className="w-3 h-3 animate-spin" />}
+                          <span>{applyingBggId === res.bggId ? 'Linking...' : 'Link Cover'}</span>
                         </button>
                       </div>
                     ))}

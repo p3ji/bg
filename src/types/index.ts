@@ -49,6 +49,22 @@ export interface Game {
   borrowRequests?: BorrowRequest[];
 }
 
+export interface SheetRowGame {
+  rowIndex: number; // 1-based row index in spreadsheet
+  tabTitle: string;
+  household: string;
+  title: string;
+  minPlayers: number;
+  maxPlayers: number;
+  type: string;
+  playtime: number;
+  minPlaytime: number;
+  maxPlaytime: number;
+  playtimeDisplay: string;
+  notes: string;
+  borrowedBy: string | null;
+}
+
 export type ViewMode = 'bookshelf' | 'table';
 
 export interface FilterState {

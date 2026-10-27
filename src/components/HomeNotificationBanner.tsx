@@ -12,11 +12,10 @@ import {
   Smartphone,
   Check,
   MessageCircle,
-  Copy,
-  SendHorizontal
+  Copy
 } from 'lucide-react';
 import { requestBadgeNotificationPermission, getNotificationPermissionStatus } from '@/lib/badgeManager';
-import { normalizeName, isSameHousehold } from '@/lib/normalize';
+import { isSameHousehold } from '@/lib/normalize';
 
 interface HomeNotificationBannerProps {
   requests: BorrowRequest[];
@@ -80,7 +79,14 @@ export const HomeNotificationBanner: React.FC<HomeNotificationBannerProps> = ({
     return false;
   });
 
-  if (actionableRequests.length === 0) return null;
+  if (actionableRequests.length === 0 && waitingRequests.length === 0) return null;
+
+  const buildNudgeMessage = (req: BorrowRequest) => {
+    if (req.status === 'pending') {
+      return `Hey ${req.holderName}! ${req.requesterName} requested to borrow "${req.gameTitle}" on GameShare. Tap Accept in the app when you're ready to hand it off! 🎲`;
+    }
+    return `Hey ${req.requesterName}! ${req.holderName} marked "${req.gameTitle}" as handed off on GameShare. Tap Confirm Receipt in the app to complete the transfer! 🎲`;
+  };
 
   return (
     <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-3 sm:pt-4">
@@ -90,13 +96,15 @@ export const HomeNotificationBanner: React.FC<HomeNotificationBannerProps> = ({
         <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-rose-200/60 dark:border-rose-900/60">
           <div className="flex items-center gap-2">
             <span className="relative flex h-3 w-3">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-rose-600" />
+              <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${actionableRequests.length > 0 ? 'bg-rose-400' : 'bg-amber-400'}`} />
+              <span className={`relative inline-flex rounded-full h-3 w-3 ${actionableRequests.length > 0 ? 'bg-rose-600' : 'bg-amber-500'}`} />
             </span>
             <div className="flex items-center gap-1.5">
               <Bell className="w-4 h-4 text-rose-600 dark:text-rose-400" />
               <h3 className="text-xs sm:text-sm font-bold text-zinc-900 dark:text-zinc-100">
-                Action Needed for {activeHousehold}: {actionableRequests.length} Request{actionableRequests.length === 1 ? '' : 's'}
+                {actionableRequests.length > 0
+                  ? `Action Needed for ${activeHousehold}: ${actionableRequests.length} Request${actionableRequests.length === 1 ? '' : 's'}`
+                  : `Outgoing Handshakes for ${activeHousehold}: ${waitingRequests.length} Waiting`}
               </h3>
             </div>
           </div>
@@ -239,6 +247,64 @@ export const HomeNotificationBanner: React.FC<HomeNotificationBannerProps> = ({
             );
           })}
         </div>
+
+        {/* Outgoing Requests Waiting on Friends */}
+        {waitingRequests.length > 0 && (
+          <div className={`${actionableRequests.length > 0 ? 'mt-3 pt-2.5 border-t border-rose-200/50 dark:border-rose-900/50' : 'mt-2.5'} space-y-2`}>
+            {waitingRequests.map((req) => {
+              const targetFriend = req.status === 'pending' ? req.holderName : req.requesterName;
+              const isCopied = copiedId === req.id;
+              return (
+                <div
+                  key={req.id}
+                  className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 p-2.5 bg-white/75 dark:bg-zinc-900/75 rounded-xl border border-amber-200/80 dark:border-amber-900/60"
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-bold text-xs text-zinc-900 dark:text-zinc-100 truncate">
+                        {req.gameTitle}
+                      </span>
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-100/80 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300">
+                        <Clock className="w-2.5 h-2.5" />
+                        {req.status === 'pending'
+                          ? `Waiting for ${req.holderName} to accept`
+                          : `Handed off — waiting for ${req.requesterName} to confirm receipt`}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard.writeText(buildNudgeMessage(req));
+                        setCopiedId(req.id);
+                        setTimeout(() => setCopiedId(null), 2000);
+                      }}
+                      className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 transition-colors"
+                      title={`Copy nudge message for ${targetFriend}`}
+                    >
+                      {isCopied ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
+                      <span>{isCopied ? 'Copied!' : 'Copy Nudge'}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const url = `https://wa.me/?text=${encodeURIComponent(buildNudgeMessage(req))}`;
+                        window.open(url, '_blank');
+                      }}
+                      className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/70 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 transition-colors"
+                      title={`Send WhatsApp nudge to ${targetFriend}`}
+                    >
+                      <MessageCircle className="w-3 h-3" />
+                      <span>WhatsApp {targetFriend.split('&')[0].trim()}</span>
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
 
       </div>
     </div>

@@ -139,16 +139,25 @@ export async function requestBadgeNotificationPermission(): Promise<boolean> {
 export function registerServiceWorker(): void {
   if (typeof window === 'undefined' || !('serviceWorker' in navigator)) return;
 
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').then((reg) => {
-      // Sync badge when service worker activates
-      if (lastBadgeCount > 0 && reg && 'setAppBadge' in reg) {
-        (reg as unknown as { setAppBadge: (c: number) => Promise<void> }).setAppBadge(lastBadgeCount).catch(() => {});
-      }
-    }).catch((err) => {
-      console.debug('ServiceWorker registration error:', err);
-    });
-  });
+  const doRegister = () => {
+    navigator.serviceWorker
+      .register('/sw.js')
+      .then((reg) => {
+        // Sync badge when service worker activates
+        if (lastBadgeCount > 0 && reg && 'setAppBadge' in reg) {
+          (reg as unknown as { setAppBadge: (c: number) => Promise<void> }).setAppBadge(lastBadgeCount).catch(() => {});
+        }
+      })
+      .catch((err) => {
+        console.debug('ServiceWorker registration error:', err);
+      });
+  };
+
+  if (document.readyState === 'complete') {
+    doRegister();
+  } else {
+    window.addEventListener('load', doRegister);
+  }
 }
 
 export async function sendLocalSystemNotification(title: string, body: string, url: string = '/'): Promise<void> {

@@ -3,7 +3,7 @@
 import React from 'react';
 import { Game, BorrowRequest } from '@/types';
 import { GameCard } from './GameCard';
-import { PackageOpen, Sparkles, PlusCircle } from 'lucide-react';
+import { PackageOpen, PlusCircle } from 'lucide-react';
 
 interface BookshelfViewProps {
   games: Game[];
@@ -77,7 +77,9 @@ export const BookshelfView: React.FC<BookshelfViewProps> = ({
         <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 flex items-center justify-center font-bold text-xs sm:text-sm shrink-0">
-              {activeHousehold.split('&').map(n => n.trim()[0]).join('&')}
+              {activeHousehold.includes('&')
+                ? activeHousehold.split('&').map((n) => n.trim()[0]).join('&')
+                : activeHousehold.split(/\s+/).map((n) => n.trim()[0]).filter(Boolean).slice(0, 2).join('')}
             </div>
             <div>
               <h3 className="text-xs sm:text-sm font-bold text-zinc-900 dark:text-zinc-50">

@@ -5,10 +5,10 @@ import { ViewMode } from '@/types';
 import { 
   LayoutGrid, 
   Table as TableIcon, 
-  Plus, 
+  Search, 
+  Plus,
   Bell, 
-  UserCheck, 
-  ArrowRightLeft 
+  UserCheck 
 } from 'lucide-react';
 
 interface MobileBottomNavProps {
@@ -16,6 +16,7 @@ interface MobileBottomNavProps {
   onViewModeChange: (mode: ViewMode) => void;
   pendingRequestsCount: number;
   activeHousehold: string | null;
+  onOpenSearchModal: () => void;
   onOpenAddModal: () => void;
   onOpenNotifications: () => void;
   onOpenIdentityModal: () => void;
@@ -26,55 +27,62 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
   onViewModeChange,
   pendingRequestsCount,
   activeHousehold,
+  onOpenSearchModal,
   onOpenAddModal,
   onOpenNotifications,
   onOpenIdentityModal,
 }) => {
+  const isCovers = viewMode === 'bookshelf';
+
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-md border-t border-zinc-200 dark:border-zinc-800 pb-safe shadow-lg">
       <div className="grid grid-cols-5 h-14 items-center px-1">
         
-        {/* Covers Grid View */}
+        {/* 1. Unified Covers / Table Toggle Button */}
         <button
           type="button"
-          onClick={() => onViewModeChange('bookshelf')}
-          className={`flex flex-col items-center justify-center h-full transition-colors ${
-            viewMode === 'bookshelf'
-              ? 'text-zinc-900 dark:text-zinc-100 font-bold'
-              : 'text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 font-medium'
-          }`}
+          onClick={() => onViewModeChange(isCovers ? 'table' : 'bookshelf')}
+          className="flex flex-col items-center justify-center h-full text-zinc-900 dark:text-zinc-100 font-bold transition-colors active:scale-95"
+          title={isCovers ? 'Switch to Table View' : 'Switch to Covers View'}
         >
-          <LayoutGrid className="w-4 h-4 mb-0.5" />
-          <span className="text-[10px]">Covers</span>
+          {isCovers ? (
+            <>
+              <LayoutGrid className="w-4 h-4 mb-0.5" />
+              <span className="text-[10px]">Covers</span>
+            </>
+          ) : (
+            <>
+              <TableIcon className="w-4 h-4 mb-0.5" />
+              <span className="text-[10px]">Table</span>
+            </>
+          )}
         </button>
 
-        {/* Table View */}
+        {/* 2. Search Button */}
         <button
           type="button"
-          onClick={() => onViewModeChange('table')}
-          className={`flex flex-col items-center justify-center h-full transition-colors ${
-            viewMode === 'table'
-              ? 'text-zinc-900 dark:text-zinc-100 font-bold'
-              : 'text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 font-medium'
-          }`}
+          onClick={onOpenSearchModal}
+          className="flex flex-col items-center justify-center h-full text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 font-medium transition-colors active:scale-95"
+          title="Search games in library"
         >
-          <TableIcon className="w-4 h-4 mb-0.5" />
-          <span className="text-[10px]">Table</span>
+          <Search className="w-4 h-4 mb-0.5" />
+          <span className="text-[10px]">Search</span>
         </button>
 
-        {/* Center Prominent Add Button */}
+        {/* 3. Center Prominent Add (+) Button */}
         <div className="flex items-center justify-center">
           <button
             type="button"
             onClick={onOpenAddModal}
             className="w-10 h-10 rounded-full bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 flex items-center justify-center shadow-md active:scale-95 transition-transform"
-            title="Add game or BGG Sync"
+            title="Add game or Import from BGG"
+            aria-label="Add game or Import from BGG"
           >
             <Plus className="w-5 h-5 stroke-[2.5]" />
           </button>
         </div>
 
-        {/* Activity & Exchanges with Badge */}
+        {/* 4. Activity & Exchanges with Badge */}
         <button
           type="button"
           onClick={onOpenNotifications}
@@ -91,7 +99,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
           <span className="text-[10px]">Activity</span>
         </button>
 
-        {/* Household Identity */}
+        {/* 5. Household Identity */}
         <button
           type="button"
           onClick={onOpenIdentityModal}

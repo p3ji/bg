@@ -1,8 +1,9 @@
 import { google } from 'googleapis';
-import { Game } from '@/types';
-import { DEFAULT_FRIENDS } from '@/data/friends';
+import { Game, SheetRowGame } from '@/types';
 import { normalizeName, isSameHousehold, getCanonicalName } from './normalize';
-import { matchesFuzzy } from './search';
+import { matchesTitleEntity } from './search';
+
+export type { SheetRowGame };
 
 export const DEFAULT_SHEET_ID = '1wtXMkKkA1lq7rxSRAvux9T8vi1Kt8MZUzgsUrNSPWlE';
 
@@ -92,18 +93,78 @@ export function isHouseholdTabName(title: string): boolean {
   return true;
 }
 
-export interface SheetRowGame {
-  rowIndex: number; // 1-based row index in spreadsheet
-  tabTitle: string;
-  household: string;
-  title: string;
-  minPlayers: number;
-  maxPlayers: number;
-  type: string;
+/**
+ * Extracts a borrower household name from a "Lent out to ..." / "Loaned to ..." / "Borrowed by ..."
+ * note in Column F when Column G ("Borrowed by") is empty.
+ */
+export function extractBorrowerFromNotes(notes: string): string | null {
+  if (!notes) return null;
+  const match = notes.match(/(?:lent\s+(?:out\s+)?to|loaned\s+(?:out\s+)?to|borrowed\s+by)\s+([^-–—|()]+)/i);
+  if (match && match[1]) {
+    return getCanonicalName(match[1].trim());
+  }
+  return null;
+}
+
+/**
+ * Strips legacy "Lent out to ..." / "Loaned to ..." / "Borrowed by ..." clauses from Column F notes
+ * so returned games do not resurrect as borrowed on subsequent sheet syncs.
+ */
+export function stripBorrowerFromNotes(notes: string): string {
+  if (!notes) return '';
+  return notes
+    .replace(/(?:^|[\s-–—|()])*(?:lent\s+(?:out\s+)?to|loaned\s+(?:out\s+)?to|borrowed\s+by)\s+[^-–—|()]+[\s)]*/gi, '')
+    .trim();
+}
+
+/**
+ * Parses a sheet Play Time cell (e.g. "30", "30.0", "30-60", "30–60 min", or an Excel date serial)
+ * into clean minPlaytime, maxPlaytime, and playtimeDisplay without double suffixes.
+ */
+export function parseSheetPlaytime(raw: string): {
   playtime: number;
+  minPlaytime: number;
+  maxPlaytime: number;
   playtimeDisplay: string;
-  notes: string;
-  borrowedBy: string | null;
+} {
+  const cleaned = String(raw || '')
+    .trim()
+    .replace(/\s*(?:mins?|minutes?|m)\s*$/i, '')
+    .replace(/^(\d+)\.0$/, '$1')
+    .replace(/[–—]|--+/g, '-')
+    .trim();
+
+  const rangeMatch = cleaned.match(/^(\d+)\s*-\s*(\d+)/);
+  if (rangeMatch) {
+    let min = parseInt(rangeMatch[1], 10) || 30;
+    let max = parseInt(rangeMatch[2], 10) || min;
+    if (min > 10000) min = 10;
+    if (max > 10000) max = 30;
+    if (max < min) max = min;
+    return {
+      playtime: min,
+      minPlaytime: min,
+      maxPlaytime: max,
+      playtimeDisplay: min === max ? `${min}m` : `${min}-${max}m`,
+    };
+  }
+
+  const single = parseInt(cleaned, 10) || 30;
+  if (single > 10000) {
+    return {
+      playtime: 10,
+      minPlaytime: 10,
+      maxPlaytime: 30,
+      playtimeDisplay: '10-30m',
+    };
+  }
+
+  return {
+    playtime: single,
+    minPlaytime: single,
+    maxPlaytime: single,
+    playtimeDisplay: `${single}m`,
+  };
 }
 
 /**
@@ -150,13 +211,16 @@ export async function readAllGamesFromSheets(): Promise<{
         if (!gameTitle) continue;
 
         const minP = parseInt(String(row[1] || '2'), 10) || 2;
-        const maxP = parseInt(String(row[2] || '4'), 10) || Math.max(minP, 4);
+        const maxP = Math.max(minP, parseInt(String(row[2] || '4'), 10) || 4);
         const gameType = String(row[3] || 'Strategy').trim();
         const playtimeStr = String(row[4] || '').trim();
-        const playtime = parseInt(playtimeStr, 10) || 30;
-        const notes = String(row[5] || '').trim();
+        const parsedPlaytime = parseSheetPlaytime(playtimeStr);
+        const rawNotes = String(row[5] || '').trim();
         const rawBorrowedBy = String(row[6] || '').trim();
-        const borrowedBy = rawBorrowedBy ? getCanonicalName(rawBorrowedBy) : null;
+        const borrowedBy = rawBorrowedBy
+          ? getCanonicalName(rawBorrowedBy)
+          : extractBorrowerFromNotes(rawNotes);
+        const notes = stripBorrowerFromNotes(rawNotes);
 
         allGames.push({
           rowIndex: i + 1, // 1-based index in sheet
@@ -166,8 +230,10 @@ export async function readAllGamesFromSheets(): Promise<{
           minPlayers: minP,
           maxPlayers: maxP,
           type: gameType,
-          playtime,
-          playtimeDisplay: playtimeStr ? `${playtimeStr}m` : `${playtime}m`,
+          playtime: parsedPlaytime.playtime,
+          minPlaytime: parsedPlaytime.minPlaytime,
+          maxPlaytime: parsedPlaytime.maxPlaytime,
+          playtimeDisplay: parsedPlaytime.playtimeDisplay,
           notes,
           borrowedBy,
         });
@@ -185,29 +251,32 @@ export async function readAllGamesFromSheets(): Promise<{
   for (const tab of knownTabs) {
     try {
       const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(tab)}`;
-      const res = await fetch(url);
+      const res = await fetch(url, { cache: 'no-store' });
       if (!res.ok) continue;
       const csv = await res.text();
-      const lines = csv.split('\n').filter(Boolean);
+      const lines = csv.split(/\r?\n/).filter(Boolean);
       if (lines.length < 2) continue;
 
       const canonicalHousehold = getCanonicalName(tab.replace(/&/g, ' & '));
       households.push(canonicalHousehold);
 
-      // Parse simple CSV line (respecting quotes)
+      // Parse CSV lines (respecting RFC 4180 quotes and escaped double-quotes)
       for (let i = 1; i < lines.length; i++) {
         const row = parseCsvLine(lines[i]);
         const gameTitle = (row[0] || '').trim();
         if (!gameTitle) continue;
 
         const minP = parseInt(row[1] || '2', 10) || 2;
-        const maxP = parseInt(row[2] || '4', 10) || Math.max(minP, 4);
+        const maxP = Math.max(minP, parseInt(row[2] || '4', 10) || 4);
         const gameType = (row[3] || 'Strategy').trim();
         const playtimeStr = (row[4] || '').trim();
-        const playtime = parseInt(playtimeStr, 10) || 30;
-        const notes = (row[5] || '').trim();
+        const parsedPlaytime = parseSheetPlaytime(playtimeStr);
+        const rawNotes = (row[5] || '').trim();
         const rawBorrowedBy = (row[6] || '').trim();
-        const borrowedBy = rawBorrowedBy ? getCanonicalName(rawBorrowedBy) : null;
+        const borrowedBy = rawBorrowedBy
+          ? getCanonicalName(rawBorrowedBy)
+          : extractBorrowerFromNotes(rawNotes);
+        const notes = stripBorrowerFromNotes(rawNotes);
 
         allGames.push({
           rowIndex: i + 1,
@@ -217,8 +286,10 @@ export async function readAllGamesFromSheets(): Promise<{
           minPlayers: minP,
           maxPlayers: maxP,
           type: gameType,
-          playtime,
-          playtimeDisplay: playtimeStr ? `${playtimeStr}m` : `${playtime}m`,
+          playtime: parsedPlaytime.playtime,
+          minPlaytime: parsedPlaytime.minPlaytime,
+          maxPlaytime: parsedPlaytime.maxPlaytime,
+          playtimeDisplay: parsedPlaytime.playtimeDisplay,
           notes,
           borrowedBy,
         });
@@ -232,13 +303,19 @@ export async function readAllGamesFromSheets(): Promise<{
 }
 
 function parseCsvLine(line: string): string[] {
+  const cleanLine = line.replace(/\r$/, '');
   const result: string[] = [];
   let cur = '';
   let inQuotes = false;
-  for (let i = 0; i < line.length; i++) {
-    const char = line[i];
+  for (let i = 0; i < cleanLine.length; i++) {
+    const char = cleanLine[i];
     if (char === '"') {
-      inQuotes = !inQuotes;
+      if (inQuotes && cleanLine[i + 1] === '"') {
+        cur += '"';
+        i++;
+      } else {
+        inQuotes = !inQuotes;
+      }
     } else if (char === ',' && !inQuotes) {
       result.push(cur.replace(/^"|"$/g, '').trim());
       cur = '';
@@ -315,11 +392,11 @@ export async function updateGameBorrowInSheets(
     }
   }
 
-  // Fallback to fuzzy matching if exact normalized match fails
+  // Fallback to strict entity matching if exact normalized match fails
   if (targetRowIndex === -1) {
     for (let i = 1; i < rows.length; i++) {
       const rowTitle = String(rows[i][0] || '').trim();
-      if (matchesFuzzy(gameTitle, rowTitle)) {
+      if (matchesTitleEntity(gameTitle, rowTitle)) {
         targetRowIndex = i + 1;
         break;
       }
@@ -331,15 +408,28 @@ export async function updateGameBorrowInSheets(
   }
 
   const valueToWrite = borrowerName ? sanitizeCellValue(borrowerName.trim()) : '';
+  const existingNotes = String(rows[targetRowIndex - 1]?.[5] || '').trim();
 
-  await sheets.spreadsheets.values.update({
-    spreadsheetId,
-    range: `${escapeSheetTitle(targetTabTitle)}!G${targetRowIndex}`,
-    valueInputOption: 'RAW',
-    requestBody: {
-      values: [[valueToWrite]],
-    },
-  });
+  if (extractBorrowerFromNotes(existingNotes)) {
+    const cleanedNotes = sanitizeCellValue(stripBorrowerFromNotes(existingNotes));
+    await sheets.spreadsheets.values.update({
+      spreadsheetId,
+      range: `${escapeSheetTitle(targetTabTitle)}!F${targetRowIndex}:G${targetRowIndex}`,
+      valueInputOption: 'RAW',
+      requestBody: {
+        values: [[cleanedNotes, valueToWrite]],
+      },
+    });
+  } else {
+    await sheets.spreadsheets.values.update({
+      spreadsheetId,
+      range: `${escapeSheetTitle(targetTabTitle)}!G${targetRowIndex}`,
+      valueInputOption: 'RAW',
+      requestBody: {
+        values: [[valueToWrite]],
+      },
+    });
+  }
 
   return {
     success: true,
@@ -380,7 +470,7 @@ export async function updateGameDetailsInSheets(
   }
 
   if (!targetTabTitle) {
-    return { success: false, message: `Could not find sheet tab for owner household: ${ownerHousehold}` };
+    return addGameToSheets(updatedGame.owner || ownerHousehold, updatedGame);
   }
 
   // 2. Fetch current rows in that tab
@@ -388,7 +478,7 @@ export async function updateGameDetailsInSheets(
   const res = await sheets.spreadsheets.values.get({ spreadsheetId, range });
   const rows = res.data.values || [];
   if (rows.length < 2) {
-    return { success: false, message: `No game rows found in tab: ${targetTabTitle}` };
+    return addGameToSheets(updatedGame.owner || ownerHousehold, updatedGame);
   }
 
   // 3. Find matching row index (exact normalized match first to avoid prefix collisions)
@@ -413,11 +503,11 @@ export async function updateGameDetailsInSheets(
     }
   }
 
-  // Fallback to fuzzy matching if exact normalized match failed
+  // Fallback to strict entity matching if exact normalized match failed
   if (targetRowIndex === -1) {
     for (let i = 1; i < rows.length; i++) {
       const rowTitle = String(rows[i][0] || '').trim();
-      if (matchesFuzzy(previousGameTitle, rowTitle)) {
+      if (matchesTitleEntity(previousGameTitle, rowTitle)) {
         targetRowIndex = i + 1;
         break;
       }
@@ -427,7 +517,7 @@ export async function updateGameDetailsInSheets(
   if (targetRowIndex === -1 && updatedGame.title) {
     for (let i = 1; i < rows.length; i++) {
       const rowTitle = String(rows[i][0] || '').trim();
-      if (matchesFuzzy(updatedGame.title, rowTitle)) {
+      if (matchesTitleEntity(updatedGame.title, rowTitle)) {
         targetRowIndex = i + 1;
         break;
       }
@@ -435,7 +525,7 @@ export async function updateGameDetailsInSheets(
   }
 
   if (targetRowIndex === -1) {
-    return { success: false, message: `Game "${previousGameTitle}" not found in tab "${targetTabTitle}".` };
+    return addGameToSheets(updatedGame.owner || ownerHousehold, updatedGame);
   }
 
   const existingRow = rows[targetRowIndex - 1] || [];
@@ -460,13 +550,16 @@ export async function updateGameDetailsInSheets(
 
   // Check if owner changed to a different household tab
   if (updatedGame.owner && !isSameHousehold(updatedGame.owner, ownerHousehold)) {
+    const parsedPlay = parseSheetPlaytime(String(playtimeStr));
     await addGameToSheets(updatedGame.owner, {
       ...updatedGame,
       title: newTitle,
       minPlayers: Number(newMin) || 1,
       maxPlayers: Number(newMax) || 4,
       type: newType,
-      minPlaytime: Number(String(playtimeStr).split('-')[0]) || 30,
+      minPlaytime: parsedPlay.minPlaytime,
+      maxPlaytime: parsedPlay.maxPlaytime,
+      playtimeDisplay: parsedPlay.playtimeDisplay,
       notes: newNotes,
       currentBorrower: newBorrowedBy || null,
     });
@@ -554,16 +647,21 @@ export async function addGameToSheets(
 
   if (!targetTabTitle) {
     // If tab doesn't exist, create it first
-    await createHouseholdTabInSheets(ownerHousehold);
-    targetTabTitle = ownerHousehold;
+    const created = await createHouseholdTabInSheets(ownerHousehold);
+    targetTabTitle = created.tabTitle;
   }
+
+  const playtimeCell =
+    game.minPlaytime && game.maxPlaytime && game.minPlaytime !== game.maxPlaytime
+      ? `${game.minPlaytime}-${game.maxPlaytime}`
+      : game.minPlaytime || String(game.playtimeDisplay || '').replace(/m$/i, '');
 
   const newRow = [
     sanitizeCellValue(game.title || ''),
     sanitizeCellValue(game.minPlayers || ''),
     sanitizeCellValue(game.maxPlayers || ''),
     sanitizeCellValue(game.type || 'Strategy'),
-    sanitizeCellValue(game.minPlaytime || ''),
+    sanitizeCellValue(playtimeCell),
     sanitizeCellValue(game.notes || ''),
     sanitizeCellValue(game.currentBorrower || ''),
   ];
@@ -582,14 +680,81 @@ export async function addGameToSheets(
 }
 
 /**
+ * Appends a batch of board games to an owner household's tab in Google Sheets in a single API call
+ */
+export async function addGamesBatchToSheets(
+  ownerHousehold: string,
+  games: Partial<Game>[]
+): Promise<{ success: boolean; message: string }> {
+  if (!games.length) {
+    return { success: true, message: 'No games to add.' };
+  }
+
+  const auth = getGoogleSheetsAuth();
+  if (!auth) {
+    return { success: false, message: 'Service Account not configured.' };
+  }
+
+  const spreadsheetId = getSpreadsheetId();
+  const sheets = google.sheets({ version: 'v4', auth });
+  const meta = await sheets.spreadsheets.get({ spreadsheetId });
+  const sheetTabs = meta.data.sheets || [];
+
+  let targetTabTitle: string | null = null;
+  for (const sheet of sheetTabs) {
+    const title = sheet.properties?.title;
+    if (!title || !isHouseholdTabName(title)) continue;
+    if (isSameHousehold(title.replace(/&/g, ' & '), ownerHousehold)) {
+      targetTabTitle = title;
+      break;
+    }
+  }
+
+  if (!targetTabTitle) {
+    const created = await createHouseholdTabInSheets(ownerHousehold);
+    targetTabTitle = created.tabTitle;
+  }
+
+  const newRows = games.map((game) => {
+    const playtimeCell =
+      game.minPlaytime && game.maxPlaytime && game.minPlaytime !== game.maxPlaytime
+        ? `${game.minPlaytime}-${game.maxPlaytime}`
+        : game.minPlaytime || String(game.playtimeDisplay || '').replace(/m$/i, '');
+
+    return [
+      sanitizeCellValue(game.title || ''),
+      sanitizeCellValue(game.minPlayers || ''),
+      sanitizeCellValue(game.maxPlayers || ''),
+      sanitizeCellValue(game.type || 'Strategy'),
+      sanitizeCellValue(playtimeCell),
+      sanitizeCellValue(game.notes || ''),
+      sanitizeCellValue(game.currentBorrower || ''),
+    ];
+  });
+
+  await sheets.spreadsheets.values.append({
+    spreadsheetId,
+    range: `${escapeSheetTitle(targetTabTitle)}!A:G`,
+    valueInputOption: 'RAW',
+    insertDataOption: 'INSERT_ROWS',
+    requestBody: {
+      values: newRows,
+    },
+  });
+
+  return { success: true, message: `Added ${newRows.length} games to tab "${targetTabTitle}".` };
+}
+
+/**
  * Creates a new household tab in Google Sheets modeled after Template
  */
 export async function createHouseholdTabInSheets(
   householdName: string
-): Promise<{ success: boolean; message: string }> {
+): Promise<{ success: boolean; message: string; tabTitle: string }> {
+  const cleanTabName = householdName.includes('&') ? householdName.replace(/\s*&\s*/g, '&') : householdName;
   const auth = getGoogleSheetsAuth();
   if (!auth) {
-    return { success: false, message: 'Service Account not configured.' };
+    return { success: false, message: 'Service Account not configured.', tabTitle: cleanTabName };
   }
 
   const spreadsheetId = getSpreadsheetId();
@@ -601,14 +766,12 @@ export async function createHouseholdTabInSheets(
   for (const sheet of sheetTabs) {
     const title = sheet.properties?.title;
     if (title && isSameHousehold(title.replace(/&/g, ' & '), householdName)) {
-      return { success: true, message: `Tab "${title}" already exists.` };
+      return { success: true, message: `Tab "${title}" already exists.`, tabTitle: title };
     }
   }
 
   // Find "Template " tab if available
   const templateSheet = sheetTabs.find((s) => s.properties?.title?.toLowerCase().includes('template'));
-
-  const cleanTabName = householdName.includes('&') ? householdName.replace(/\s*&\s*/g, '&') : householdName;
 
   if (templateSheet && templateSheet.properties?.sheetId !== undefined) {
     // Duplicate template sheet
@@ -662,5 +825,5 @@ export async function createHouseholdTabInSheets(
     });
   }
 
-  return { success: true, message: `Created new tab "${cleanTabName}" in Google Sheets.` };
+  return { success: true, message: `Created new tab "${cleanTabName}" in Google Sheets.`, tabTitle: cleanTabName };
 }

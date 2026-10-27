@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { connection } from 'next/server';
 import {
   readAllGamesFromSheets,
   updateGameBorrowInSheets,
   updateGameDetailsInSheets,
   addGameToSheets,
+  addGamesBatchToSheets,
   createHouseholdTabInSheets,
   getSpreadsheetId,
   getGoogleSheetsAuth,
@@ -11,18 +13,17 @@ import {
 
 export async function GET() {
   try {
+    await connection();
+
     const spreadsheetId = getSpreadsheetId();
     const auth = getGoogleSheetsAuth();
     const serviceAccountConfigured = Boolean(auth);
 
     const { households, games } = await readAllGamesFromSheets();
 
-    const clientEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL || null;
-
     return NextResponse.json({
       success: true,
       serviceAccountConfigured,
-      clientEmail,
       spreadsheetId,
       spreadsheetUrl: `https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit`,
       households,
@@ -35,13 +36,18 @@ export async function GET() {
             actionNeeded: 'Add your service account credentials to Vercel and share the spreadsheet with the service account email as Editor.',
           }
         : null,
+    }, {
+      headers: {
+        'Cache-Control': 'no-store, max-age=0',
+      },
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Failed to read Google Sheets';
     console.error('Failed to sync with Google Sheets:', err);
     return NextResponse.json(
       {
         success: false,
-        error: err.message || 'Failed to read Google Sheets',
+        error: message,
       },
       { status: 500 }
     );
@@ -96,6 +102,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(res);
     }
 
+    if (action === 'add_games_batch') {
+      const { ownerHousehold, games } = body;
+      if (!ownerHousehold || !Array.isArray(games)) {
+        return NextResponse.json(
+          { success: false, error: 'Missing ownerHousehold or games array' },
+          { status: 400 }
+        );
+      }
+
+      const res = await addGamesBatchToSheets(ownerHousehold, games);
+      return NextResponse.json(res);
+    }
+
     if (action === 'add_household') {
       const { householdName } = body;
       if (!householdName) {
@@ -110,12 +129,13 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({ success: false, error: `Unknown action: ${action}` }, { status: 400 });
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Failed to execute Google Sheets action';
     console.error('Google Sheets POST action error:', err);
     return NextResponse.json(
       {
         success: false,
-        error: err.message || 'Failed to execute Google Sheets action',
+        error: message,
       },
       { status: 500 }
     );

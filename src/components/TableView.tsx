@@ -1,14 +1,12 @@
 'use client';
 
 import React from 'react';
-import { Game, BorrowRequest } from '@/types';
-import { normalizeName, isSameHousehold } from '@/lib/normalize';
-import { GameBoxCover } from './GameBoxCover';
+import { Game, BorrowRequest, FilterState } from '@/types';
+import { isSameHousehold } from '@/lib/normalize';
 import { 
   Users, 
   Clock, 
   Star, 
-  ExternalLink, 
   RotateCcw, 
   Hand, 
   SendHorizontal, 
@@ -26,6 +24,9 @@ interface TableViewProps {
   requests?: BorrowRequest[];
   activeHousehold?: string;
   activeHouseholdUser?: string | null;
+  sortBy?: FilterState['sortBy'];
+  sortOrder?: FilterState['sortOrder'];
+  onSortChange?: (sortBy: FilterState['sortBy']) => void;
   onSelectGame: (game: Game) => void;
   onBorrow: (game: Game) => void;
   onReturn: (game: Game) => void;
@@ -42,10 +43,12 @@ export const TableView: React.FC<TableViewProps> = ({
   requests,
   activeHousehold,
   activeHouseholdUser,
+  sortBy,
+  sortOrder,
+  onSortChange,
   onSelectGame,
   onBorrow,
   onReturn,
-  onRequestBorrow,
   onAcceptExchange,
   onConfirmExchange,
   onResetFilters,
@@ -64,13 +67,24 @@ export const TableView: React.FC<TableViewProps> = ({
         <p className="text-xs text-zinc-500 mt-1 max-w-sm">
           Try expanding player counts, resetting playtime, or clearing search criteria.
         </p>
-        <button
-          type="button"
-          onClick={onResetFilters}
-          className="mt-4 px-4 py-2 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-xs font-semibold rounded-lg hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors"
-        >
-          Reset All Filters
-        </button>
+        <div className="mt-4 flex items-center gap-2">
+          {activeHousehold && activeHousehold !== 'all' && onAddForHousehold && (
+            <button
+              type="button"
+              onClick={() => onAddForHousehold(activeHousehold)}
+              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg transition-colors shadow-xs"
+            >
+              Add First Game for {activeHousehold}
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={onResetFilters}
+            className="px-4 py-2 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-xs font-semibold rounded-lg hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors"
+          >
+            Reset All Filters
+          </button>
+        </div>
       </div>
     );
   }
@@ -260,13 +274,50 @@ export const TableView: React.FC<TableViewProps> = ({
             {/* Table Header */}
             <thead>
               <tr className="border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950/70 text-[11px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
-                <th className="py-3 px-4">Title</th>
-                <th className="py-3 px-3">BGG Rank</th>
-                <th className="py-3 px-3">Rating</th>
-                <th className="py-3 px-3">Players</th>
-                <th className="py-3 px-3">Playtime</th>
+                {[
+                  { label: 'Title', key: 'title' as const, px: 'px-4' },
+                  { label: 'BGG Rank', key: 'rank' as const, px: 'px-3' },
+                  { label: 'Rating', key: 'rating' as const, px: 'px-3' },
+                  { label: 'Players', key: 'players' as const, px: 'px-3' },
+                  { label: 'Playtime', key: 'playtime' as const, px: 'px-3' },
+                ].map((col) => {
+                  const isActive = sortBy === col.key;
+                  return (
+                    <th key={col.key} className={`py-3 ${col.px}`}>
+                      {onSortChange ? (
+                        <button
+                          type="button"
+                          onClick={() => onSortChange(col.key)}
+                          className={`inline-flex items-center gap-1 uppercase tracking-wider cursor-pointer hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors ${
+                            isActive ? 'text-indigo-600 dark:text-indigo-400 font-extrabold' : ''
+                          }`}
+                        >
+                          <span>{col.label}</span>
+                          {isActive && <span>{sortOrder === 'desc' ? '↓' : '↑'}</span>}
+                        </button>
+                      ) : (
+                        col.label
+                      )}
+                    </th>
+                  );
+                })}
                 <th className="py-3 px-3">Type</th>
-                <th className="py-3 px-3">Weight</th>
+                <th className="py-3 px-3">
+                  {onSortChange ? (
+                    <button
+                      type="button"
+                      onClick={() => onSortChange('weight')}
+                      className={`inline-flex items-center gap-1 uppercase tracking-wider cursor-pointer hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors ${
+                        sortBy === 'weight' ? 'text-indigo-600 dark:text-indigo-400 font-extrabold' : ''
+                      }`}
+                    >
+                      <span>Weight</span>
+                      {sortBy === 'weight' && <span>{sortOrder === 'desc' ? '↓' : '↑'}</span>}
+                    </button>
+                  ) : (
+                    'Weight'
+                  )}
+                </th>
                 <th className="py-3 px-3">Status</th>
                 <th className="py-3 px-4 text-right">Actions</th>
               </tr>

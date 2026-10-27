@@ -9,7 +9,6 @@ import {
   User, 
   Check, 
   CheckCircle2, 
-  ArrowRight,
   MessageCircle, 
   Smartphone, 
   Copy,
@@ -19,7 +18,8 @@ import {
   Bell
 } from 'lucide-react';
 import { requestBadgeNotificationPermission, getNotificationPermissionStatus } from '@/lib/badgeManager';
-import { normalizeName, isSameHousehold } from '@/lib/normalize';
+import { isSameHousehold } from '@/lib/normalize';
+import { useModalA11y } from '@/lib/useModalA11y';
 
 interface BorrowModalProps {
   game: Game | null;
@@ -49,6 +49,8 @@ export const BorrowModal: React.FC<BorrowModalProps> = ({
   const [copied, setCopied] = useState(false);
   const [permissionStatus, setPermissionStatus] = useState<string>('default');
 
+  useModalA11y(isOpen, onClose);
+
   // Group that currently holds the game
   const currentHolder = game
     ? (game.status === 'borrowed' && game.currentBorrower ? game.currentBorrower : game.owner)
@@ -57,7 +59,7 @@ export const BorrowModal: React.FC<BorrowModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       setPermissionStatus(getNotificationPermissionStatus());
-      if (activeHousehold) {
+      if (activeHousehold && !isSameHousehold(activeHousehold, currentHolder, friends)) {
         setBorrower(activeHousehold);
       } else {
         setBorrower('');
@@ -69,7 +71,7 @@ export const BorrowModal: React.FC<BorrowModalProps> = ({
       setSubmittedRequester('');
       setCopied(false);
     }
-  }, [isOpen, activeHousehold]);
+  }, [isOpen, activeHousehold, currentHolder, friends]);
 
   if (!isOpen || !game) return null;
 
@@ -115,7 +117,13 @@ export const BorrowModal: React.FC<BorrowModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-xs">
+    <div 
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-xs"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="borrow-modal-title"
+    >
       <div 
         className="w-full max-w-md bg-white dark:bg-zinc-900 border-t sm:border border-zinc-200 dark:border-zinc-800 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden max-h-[92dvh] flex flex-col pb-safe sm:pb-0 animate-in slide-in-from-bottom duration-200 sm:zoom-in-95"
         onClick={(e) => e.stopPropagation()}
@@ -130,7 +138,7 @@ export const BorrowModal: React.FC<BorrowModalProps> = ({
               <SendHorizontal className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-50">
+              <h3 id="borrow-modal-title" className="text-sm font-bold text-zinc-900 dark:text-zinc-50">
                 Borrow Game & Exchange
               </h3>
               <p className="text-xs text-zinc-500 font-medium">
