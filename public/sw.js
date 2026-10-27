@@ -1,10 +1,15 @@
-// GameShare Service Worker - Home Screen App Badging
+// GameShare Service Worker - Home Screen App Badging & PWA installability
 self.addEventListener('install', () => {
   self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(self.clients.claim());
+});
+
+// Pass-through fetch event listener to guarantee PWA installability criteria across Chromium browsers
+self.addEventListener('fetch', () => {
+  // Pass-through
 });
 
 // App Badging handler from clients
