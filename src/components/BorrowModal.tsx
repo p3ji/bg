@@ -221,9 +221,9 @@ export const BorrowModal: React.FC<BorrowModalProps> = ({
               <button
                 type="button"
                 onClick={onClose}
-                className="w-full py-2 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 rounded-lg text-xs font-semibold hover:bg-zinc-800 transition-colors"
+                className="w-full py-2.5 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 rounded-lg text-xs font-semibold hover:bg-zinc-800 transition-colors shadow-xs"
               >
-                Done
+                Done • View on Home Screen
               </button>
             </div>
           </div>

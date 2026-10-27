@@ -47,6 +47,11 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'active' | 'completed'>('active');
 
+  const normalizeName = (name?: string | null) => {
+    if (!name) return '';
+    return name.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]/g, '');
+  };
+
   if (!isOpen) return null;
 
   const activeRequests = requests.filter((r) => r.status === 'pending' || r.status === 'accepted');
@@ -163,8 +168,9 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
                 const isPendingHolder = req.status === 'pending';
                 const isAwaitingRequester = req.status === 'accepted';
 
-                const isCurrentUserHolder = activeHousehold && activeHousehold.toLowerCase() === req.holderName.toLowerCase();
-                const isCurrentUserRequester = activeHousehold && activeHousehold.toLowerCase() === req.requesterName.toLowerCase();
+                const isSelfTest = Boolean(normalizeName(req.holderName) === normalizeName(req.requesterName));
+                const isCurrentUserHolder = Boolean(isSelfTest || !activeHousehold || normalizeName(activeHousehold) === normalizeName(req.holderName));
+                const isCurrentUserRequester = Boolean(isSelfTest || !activeHousehold || normalizeName(activeHousehold) === normalizeName(req.requesterName));
 
                 return (
                   <div

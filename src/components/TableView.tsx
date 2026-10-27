@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Game } from '@/types';
+import { Game, BorrowRequest } from '@/types';
 import { GameBoxCover } from './GameBoxCover';
 import { 
   Users, 
@@ -22,6 +22,7 @@ import {
 
 interface TableViewProps {
   games: Game[];
+  requests?: BorrowRequest[];
   activeHousehold?: string;
   activeHouseholdUser?: string | null;
   onSelectGame: (game: Game) => void;
@@ -37,6 +38,7 @@ interface TableViewProps {
 
 export const TableView: React.FC<TableViewProps> = ({
   games,
+  requests,
   activeHousehold,
   activeHouseholdUser,
   onSelectGame,
@@ -49,6 +51,11 @@ export const TableView: React.FC<TableViewProps> = ({
   onAddForHousehold,
   onEdit,
 }) => {
+  const normalizeName = (name?: string | null) => {
+    if (!name) return '';
+    return name.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]/g, '');
+  };
+
   if (games.length === 0) {
     return (
       <div className="py-20 text-center flex flex-col items-center justify-center px-4">
@@ -110,12 +117,17 @@ export const TableView: React.FC<TableViewProps> = ({
       <div className="sm:hidden space-y-2">
         {games.map((game) => {
           const isAvailable = game.status === 'available';
-          const activeExchange = (game.borrowRequests || []).find(
-            (r) => r.status === 'pending' || r.status === 'accepted'
-          );
+          const activeExchange =
+            (requests || []).find(
+              (r) => r.gameId === game.id && (r.status === 'pending' || r.status === 'accepted')
+            ) ||
+            (game.borrowRequests || []).find(
+              (r) => r.status === 'pending' || r.status === 'accepted'
+            );
 
-          const isUserHolder = activeHouseholdUser && activeExchange && activeHouseholdUser.toLowerCase() === activeExchange.holderName.toLowerCase();
-          const isUserRequester = activeHouseholdUser && activeExchange && activeHouseholdUser.toLowerCase() === activeExchange.requesterName.toLowerCase();
+          const isSelfTest = Boolean(activeExchange && normalizeName(activeExchange.holderName) === normalizeName(activeExchange.requesterName));
+          const isUserHolder = Boolean(activeExchange && (isSelfTest || !activeHouseholdUser || normalizeName(activeHouseholdUser) === normalizeName(activeExchange.holderName)));
+          const isUserRequester = Boolean(activeExchange && (isSelfTest || !activeHouseholdUser || normalizeName(activeHouseholdUser) === normalizeName(activeExchange.requesterName)));
 
           return (
             <div
@@ -256,12 +268,17 @@ export const TableView: React.FC<TableViewProps> = ({
             <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
               {games.map((game) => {
                 const isAvailable = game.status === 'available';
-                const activeExchange = (game.borrowRequests || []).find(
-                  (r) => r.status === 'pending' || r.status === 'accepted'
-                );
+                const activeExchange =
+                  (requests || []).find(
+                    (r) => r.gameId === game.id && (r.status === 'pending' || r.status === 'accepted')
+                  ) ||
+                  (game.borrowRequests || []).find(
+                    (r) => r.status === 'pending' || r.status === 'accepted'
+                  );
 
-                const isUserHolder = activeHouseholdUser && activeExchange && activeHouseholdUser.toLowerCase() === activeExchange.holderName.toLowerCase();
-                const isUserRequester = activeHouseholdUser && activeExchange && activeHouseholdUser.toLowerCase() === activeExchange.requesterName.toLowerCase();
+                const isSelfTest = Boolean(activeExchange && normalizeName(activeExchange.holderName) === normalizeName(activeExchange.requesterName));
+                const isUserHolder = Boolean(activeExchange && (isSelfTest || !activeHouseholdUser || normalizeName(activeHouseholdUser) === normalizeName(activeExchange.holderName)));
+                const isUserRequester = Boolean(activeExchange && (isSelfTest || !activeHouseholdUser || normalizeName(activeHouseholdUser) === normalizeName(activeExchange.requesterName)));
 
                 return (
                   <tr 

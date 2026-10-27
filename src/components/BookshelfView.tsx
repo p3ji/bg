@@ -1,12 +1,13 @@
 'use client';
 
 import React from 'react';
-import { Game } from '@/types';
+import { Game, BorrowRequest } from '@/types';
 import { GameCard } from './GameCard';
 import { PackageOpen, Sparkles, PlusCircle } from 'lucide-react';
 
 interface BookshelfViewProps {
   games: Game[];
+  requests?: BorrowRequest[];
   activeHousehold?: string;
   activeHouseholdUser?: string | null;
   onSelectGame: (game: Game) => void;
@@ -22,6 +23,7 @@ interface BookshelfViewProps {
 
 export const BookshelfView: React.FC<BookshelfViewProps> = ({
   games,
+  requests,
   activeHousehold,
   activeHouseholdUser,
   onSelectGame,
@@ -104,6 +106,7 @@ export const BookshelfView: React.FC<BookshelfViewProps> = ({
           <GameCard
             key={game.id}
             game={game}
+            requests={requests}
             activeHousehold={activeHouseholdUser}
             onSelectGame={onSelectGame}
             onBorrow={onBorrow}

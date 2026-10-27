@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Game } from '@/types';
+import { Game, BorrowRequest } from '@/types';
 import { GameBoxCover } from './GameBoxCover';
 import { 
   Users, 
@@ -20,6 +20,7 @@ import {
 
 interface GameCardProps {
   game: Game;
+  requests?: BorrowRequest[];
   activeHousehold?: string | null;
   onSelectGame: (game: Game) => void;
   onBorrow: (game: Game) => void;
@@ -32,6 +33,7 @@ interface GameCardProps {
 
 export const GameCard: React.FC<GameCardProps> = ({
   game,
+  requests,
   activeHousehold,
   onSelectGame,
   onBorrow,
@@ -44,9 +46,13 @@ export const GameCard: React.FC<GameCardProps> = ({
   const isAvailable = game.status === 'available';
 
   // Find any active exchange (pending holder acceptance or accepted awaiting confirmation)
-  const activeExchange = (game.borrowRequests || []).find(
-    (r) => r.status === 'pending' || r.status === 'accepted'
-  );
+  const activeExchange =
+    (requests || []).find(
+      (r) => r.gameId === game.id && (r.status === 'pending' || r.status === 'accepted')
+    ) ||
+    (game.borrowRequests || []).find(
+      (r) => r.status === 'pending' || r.status === 'accepted'
+    );
 
   const formatBorrowDate = (isoStr?: string | null) => {
     if (!isoStr) return '';
@@ -58,8 +64,14 @@ export const GameCard: React.FC<GameCardProps> = ({
     }
   };
 
-  const isUserHolder = activeHousehold && activeExchange && activeHousehold.toLowerCase() === activeExchange.holderName.toLowerCase();
-  const isUserRequester = activeHousehold && activeExchange && activeHousehold.toLowerCase() === activeExchange.requesterName.toLowerCase();
+  const normalizeName = (name?: string | null) => {
+    if (!name) return '';
+    return name.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]/g, '');
+  };
+
+  const isSelfTest = Boolean(activeExchange && normalizeName(activeExchange.holderName) === normalizeName(activeExchange.requesterName));
+  const isUserHolder = Boolean(activeExchange && (isSelfTest || !activeHousehold || normalizeName(activeHousehold) === normalizeName(activeExchange.holderName)));
+  const isUserRequester = Boolean(activeExchange && (isSelfTest || !activeHousehold || normalizeName(activeHousehold) === normalizeName(activeExchange.requesterName)));
 
   return (
     <div className="group flex flex-col bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden hover:shadow-lg hover:border-zinc-300 dark:hover:border-zinc-700 transition-all duration-200">

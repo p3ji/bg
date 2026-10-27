@@ -73,7 +73,7 @@ export const Header: React.FC<HeaderProps> = ({
                   <Dices className="w-4 h-4 sm:w-5 sm:h-5" />
                 </div>
                 {pendingRequestsCount > 0 && (
-                  <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 px-1 items-center justify-center rounded-full bg-rose-600 text-[10px] font-bold text-white shadow-md ring-2 ring-white dark:ring-zinc-950 animate-pulse">
+                  <span className="z-30 absolute -top-1.5 -right-1.5 flex h-4 min-w-4 px-1 items-center justify-center rounded-full bg-rose-600 text-[10px] font-bold text-white shadow-md ring-2 ring-white dark:ring-zinc-950 animate-pulse">
                     {pendingRequestsCount}
                   </span>
                 )}
@@ -167,7 +167,7 @@ export const Header: React.FC<HeaderProps> = ({
             >
               <Bell className="w-4 h-4" />
               {pendingRequestsCount > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 px-1 items-center justify-center rounded-full bg-rose-600 text-[10px] font-bold text-white shadow-md ring-2 ring-white dark:ring-zinc-950 animate-pulse">
+                <span className="z-30 absolute -top-1.5 -right-1.5 flex h-4 min-w-4 px-1 items-center justify-center rounded-full bg-rose-600 text-[10px] font-bold text-white shadow-md ring-2 ring-white dark:ring-zinc-950 animate-pulse">
                   {pendingRequestsCount}
                 </span>
               )}

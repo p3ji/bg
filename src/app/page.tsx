@@ -27,6 +27,7 @@ import { SettingsModal } from '@/components/SettingsModal';
 import { EditGameModal } from '@/components/EditGameModal';
 import { IdentityModal } from '@/components/IdentityModal';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
+import { HomeNotificationBanner } from '@/components/HomeNotificationBanner';
 
 const initialFilters: FilterState = {
   search: '',
@@ -336,6 +337,11 @@ export default function HomePage() {
     setRequests(updatedRequests);
     saveRequests(updatedRequests);
 
+    // Prompt for Web Notification & App Badge permission if not yet requested
+    if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission().catch(() => {});
+    }
+
     const updatedGames = games.map((g) => {
       if (g.id !== gameId) return g;
       return {
@@ -565,11 +571,21 @@ export default function HomePage() {
         onAddForHousehold={handleOpenAddForHousehold}
       />
 
+      {/* Prominent Home Screen Notification & Handshake Banner */}
+      <HomeNotificationBanner
+        requests={requests}
+        activeHousehold={activeHousehold}
+        onAcceptExchange={handleAcceptExchange}
+        onConfirmExchange={handleConfirmExchange}
+        onOpenNotifications={() => setIsNotificationsOpen(true)}
+      />
+
       {/* Main Content Area */}
       <main className="flex-1">
         {viewMode === 'bookshelf' ? (
           <BookshelfView
             games={filteredGames}
+            requests={requests}
             activeHousehold={filters.owner}
             activeHouseholdUser={activeHousehold}
             onSelectGame={setSelectedGame}
@@ -585,6 +601,7 @@ export default function HomePage() {
         ) : (
           <TableView
             games={filteredGames}
+            requests={requests}
             activeHousehold={filters.owner}
             activeHouseholdUser={activeHousehold}
             onSelectGame={setSelectedGame}
