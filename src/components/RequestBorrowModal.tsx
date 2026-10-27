@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Game } from '@/types';
 import { 
   X, 
@@ -17,6 +17,7 @@ interface RequestBorrowModalProps {
   game: Game | null;
   friends: string[];
   isOpen: boolean;
+  activeHousehold?: string | null;
   onClose: () => void;
   onSubmitRequest: (gameId: string, requester: string, note?: string) => void;
 }
@@ -25,6 +26,7 @@ export const RequestBorrowModal: React.FC<RequestBorrowModalProps> = ({
   game,
   friends,
   isOpen,
+  activeHousehold,
   onClose,
   onSubmitRequest,
 }) => {
@@ -33,6 +35,19 @@ export const RequestBorrowModal: React.FC<RequestBorrowModalProps> = ({
   const [note, setNote] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      if (activeHousehold && activeHousehold !== game?.currentBorrower) {
+        setRequester(activeHousehold);
+      } else {
+        setRequester('');
+      }
+      setCustomName('');
+      setNote('');
+      setIsSubmitted(false);
+    }
+  }, [isOpen, activeHousehold, game]);
 
   if (!isOpen || !game) return null;
 

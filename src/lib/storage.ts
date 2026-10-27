@@ -6,6 +6,22 @@ const GAMES_STORAGE_KEY = 'bg_share_games_v5';
 const REQUESTS_STORAGE_KEY = 'bg_share_requests_v3';
 const FRIENDS_STORAGE_KEY = 'bg_share_households_v1';
 const BGG_TOKEN_KEY = 'bg_share_bgg_token_v1';
+const ACTIVE_HOUSEHOLD_KEY = 'bg_active_user_household_v1';
+
+export function getActiveHousehold(): string | null {
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem(ACTIVE_HOUSEHOLD_KEY);
+}
+
+export function saveActiveHousehold(household: string | null): void {
+  if (typeof window === 'undefined') return;
+  if (!household) {
+    localStorage.removeItem(ACTIVE_HOUSEHOLD_KEY);
+  } else {
+    localStorage.setItem(ACTIVE_HOUSEHOLD_KEY, household);
+  }
+  window.dispatchEvent(new Event('bg_identity_updated'));
+}
 
 export function getInitialGames(): Game[] {
   const seedList = seedData as unknown as Game[];

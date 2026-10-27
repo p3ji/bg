@@ -10,7 +10,8 @@ import {
   Settings, 
   Dices,
   CheckCircle2,
-  Clock
+  Clock,
+  User
 } from 'lucide-react';
 
 interface HeaderProps {
@@ -20,6 +21,8 @@ interface HeaderProps {
   availableCount: number;
   borrowedCount: number;
   pendingRequestsCount: number;
+  activeHousehold: string | null;
+  onOpenIdentityModal: () => void;
   onOpenNotifications: () => void;
   onOpenAddModal: () => void;
   onOpenSettings: () => void;
@@ -32,19 +35,29 @@ export const Header: React.FC<HeaderProps> = ({
   availableCount,
   borrowedCount,
   pendingRequestsCount,
+  activeHousehold,
+  onOpenIdentityModal,
   onOpenNotifications,
   onOpenAddModal,
   onOpenSettings,
 }) => {
+  const getInitials = (name: string) => {
+    return name
+      .split('&')
+      .map((part) => part.trim()[0])
+      .filter(Boolean)
+      .join('&');
+  };
+
   return (
     <header className="border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 sticky top-0 z-30 shadow-xs">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 gap-4">
+        <div className="flex items-center justify-between h-16 gap-3">
           
           {/* Logo & Inventory Counts */}
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-4 sm:gap-6">
             <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-lg bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 flex items-center justify-center shadow-xs">
+              <div className="w-9 h-9 rounded-lg bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 flex items-center justify-center shadow-xs shrink-0">
                 <Dices className="w-5 h-5" />
               </div>
               <div>
@@ -58,7 +71,7 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
 
             {/* Quick Stats Pill */}
-            <div className="hidden md:flex items-center gap-2 bg-zinc-100 dark:bg-zinc-900 px-3 py-1.5 rounded-md text-xs font-medium text-zinc-600 dark:text-zinc-300">
+            <div className="hidden lg:flex items-center gap-2 bg-zinc-100 dark:bg-zinc-900 px-3 py-1.5 rounded-md text-xs font-medium text-zinc-600 dark:text-zinc-300">
               <span className="text-zinc-900 dark:text-zinc-100 font-bold">{totalGames}</span> games
               <span className="text-zinc-400">•</span>
               <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
@@ -74,14 +87,34 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
 
           {/* Right Toolbar Controls */}
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-1.5 sm:gap-2.5">
             
+            {/* 1-Tap Household Profile Switcher */}
+            <button
+              type="button"
+              onClick={onOpenIdentityModal}
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-lg border transition-all ${
+                activeHousehold
+                  ? 'bg-indigo-50 dark:bg-indigo-950/40 border-indigo-200 dark:border-indigo-900 text-indigo-900 dark:text-indigo-200 hover:bg-indigo-100 dark:hover:bg-indigo-900/60'
+                  : 'bg-zinc-100 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200'
+              }`}
+              title="Change your active household profile"
+            >
+              <div className="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[10px] font-bold shrink-0">
+                {activeHousehold ? getInitials(activeHousehold) : <User className="w-3 h-3" />}
+              </div>
+              <span className="truncate max-w-[110px] sm:max-w-[140px]">
+                {activeHousehold || 'Who are you?'}
+              </span>
+              <span className="text-[10px] opacity-60">▾</span>
+            </button>
+
             {/* View Toggle */}
             <div className="flex items-center bg-zinc-100 dark:bg-zinc-900 p-1 rounded-lg border border-zinc-200 dark:border-zinc-800">
               <button
                 type="button"
                 onClick={() => onViewModeChange('bookshelf')}
-                className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-md transition-all ${
+                className={`flex items-center gap-1.5 px-2 sm:px-2.5 py-1 text-xs font-semibold rounded-md transition-all ${
                   viewMode === 'bookshelf'
                     ? 'bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 shadow-xs'
                     : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
@@ -95,7 +128,7 @@ export const Header: React.FC<HeaderProps> = ({
               <button
                 type="button"
                 onClick={() => onViewModeChange('table')}
-                className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-md transition-all ${
+                className={`flex items-center gap-1.5 px-2 sm:px-2.5 py-1 text-xs font-semibold rounded-md transition-all ${
                   viewMode === 'table'
                     ? 'bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 shadow-xs'
                     : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
@@ -111,7 +144,7 @@ export const Header: React.FC<HeaderProps> = ({
             <button
               type="button"
               onClick={onOpenNotifications}
-              className="relative p-2 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 transition-colors"
+              className="relative p-2 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 transition-colors shrink-0"
               title="Borrow Requests & Activity"
             >
               <Bell className="w-4 h-4" />
@@ -126,18 +159,18 @@ export const Header: React.FC<HeaderProps> = ({
             <button
               type="button"
               onClick={onOpenAddModal}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-900 dark:bg-zinc-100 hover:bg-zinc-800 dark:hover:bg-zinc-200 text-white dark:text-zinc-900 text-xs font-semibold rounded-lg shadow-xs transition-colors"
+              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 bg-zinc-900 dark:bg-zinc-100 hover:bg-zinc-800 dark:hover:bg-zinc-200 text-white dark:text-zinc-900 text-xs font-semibold rounded-lg shadow-xs transition-colors shrink-0"
             >
               <PlusCircle className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">BGG Sync / Add</span>
-              <span className="sm:hidden">Add</span>
+              <span className="hidden md:inline">BGG Sync / Add</span>
+              <span className="md:hidden">Add</span>
             </button>
 
             {/* Settings */}
             <button
               type="button"
               onClick={onOpenSettings}
-              className="p-2 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-900 rounded-lg transition-colors"
+              className="p-2 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-900 rounded-lg transition-colors shrink-0"
               title="Library & Friend Settings"
             >
               <Settings className="w-4 h-4" />

@@ -9,7 +9,9 @@ import {
   saveRequests, 
   getInitialFriends, 
   saveFriends,
-  resetToSeedData
+  resetToSeedData,
+  getActiveHousehold,
+  saveActiveHousehold
 } from '@/lib/storage';
 import { Header } from '@/components/Header';
 import { FilterBar } from '@/components/FilterBar';
@@ -23,6 +25,7 @@ import { NotificationsModal } from '@/components/NotificationsModal';
 import { BggSyncModal } from '@/components/BggSyncModal';
 import { SettingsModal } from '@/components/SettingsModal';
 import { EditGameModal } from '@/components/EditGameModal';
+import { IdentityModal } from '@/components/IdentityModal';
 
 const initialFilters: FilterState = {
   search: '',
@@ -55,25 +58,40 @@ export default function HomePage() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [editingGame, setEditingGame] = useState<Game | null>(null);
 
+  // 1-Tap Household Identity
+  const [activeHousehold, setActiveHousehold] = useState<string | null>(null);
+  const [isIdentityModalOpen, setIsIdentityModalOpen] = useState(false);
+  const [isFirstIdentityPrompt, setIsFirstIdentityPrompt] = useState(false);
+
   // Initialize data on mount
   useEffect(() => {
     setGames(getInitialGames());
     setRequests(getInitialRequests());
     setFriends(getInitialFriends());
+
+    const savedIdentity = getActiveHousehold();
+    setActiveHousehold(savedIdentity);
+    if (!savedIdentity) {
+      setIsFirstIdentityPrompt(true);
+      setIsIdentityModalOpen(true);
+    }
     setMounted(true);
 
     const handleGamesUpdate = () => setGames(getInitialGames());
     const handleRequestsUpdate = () => setRequests(getInitialRequests());
     const handleFriendsUpdate = () => setFriends(getInitialFriends());
+    const handleIdentityUpdate = () => setActiveHousehold(getActiveHousehold());
 
     window.addEventListener('bg_games_updated', handleGamesUpdate);
     window.addEventListener('bg_requests_updated', handleRequestsUpdate);
     window.addEventListener('bg_friends_updated', handleFriendsUpdate);
+    window.addEventListener('bg_identity_updated', handleIdentityUpdate);
 
     return () => {
       window.removeEventListener('bg_games_updated', handleGamesUpdate);
       window.removeEventListener('bg_requests_updated', handleRequestsUpdate);
       window.removeEventListener('bg_friends_updated', handleFriendsUpdate);
+      window.removeEventListener('bg_identity_updated', handleIdentityUpdate);
     };
   }, []);
 
@@ -350,6 +368,13 @@ export default function HomePage() {
     }
   };
 
+  const handleSelectHousehold = (household: string) => {
+    saveActiveHousehold(household);
+    setActiveHousehold(household);
+    setIsIdentityModalOpen(false);
+    setIsFirstIdentityPrompt(false);
+  };
+
   if (!mounted) {
     return (
       <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex items-center justify-center">
@@ -369,6 +394,11 @@ export default function HomePage() {
         availableCount={availableCount}
         borrowedCount={borrowedCount}
         pendingRequestsCount={pendingRequestsCount}
+        activeHousehold={activeHousehold}
+        onOpenIdentityModal={() => {
+          setIsFirstIdentityPrompt(false);
+          setIsIdentityModalOpen(true);
+        }}
         onOpenNotifications={() => setIsNotificationsOpen(true)}
         onOpenAddModal={handleOpenGeneralAdd}
         onOpenSettings={() => setIsSettingsOpen(true)}
@@ -427,6 +457,7 @@ export default function HomePage() {
         game={borrowingGame}
         friends={friends}
         isOpen={Boolean(borrowingGame)}
+        activeHousehold={activeHousehold}
         onClose={() => setBorrowingGame(null)}
         onConfirm={handleBorrowConfirm}
       />
@@ -442,6 +473,7 @@ export default function HomePage() {
         game={requestingGame}
         friends={friends}
         isOpen={Boolean(requestingGame)}
+        activeHousehold={activeHousehold}
         onClose={() => setRequestingGame(null)}
         onSubmitRequest={handleRequestBorrowSubmit}
       />
@@ -481,6 +513,17 @@ export default function HomePage() {
         isOpen={Boolean(editingGame)}
         onClose={() => setEditingGame(null)}
         onSave={handleSaveEditedGame}
+      />
+
+      <IdentityModal
+        isOpen={isIdentityModalOpen}
+        onClose={() => {
+          setIsIdentityModalOpen(false);
+          setIsFirstIdentityPrompt(false);
+        }}
+        activeHousehold={activeHousehold}
+        onSelectHousehold={handleSelectHousehold}
+        isInitialPrompt={isFirstIdentityPrompt}
       />
 
     </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Game } from '@/types';
 import { X, Hand, Calendar, User, Clock, Check } from 'lucide-react';
 
@@ -8,6 +8,7 @@ interface BorrowModalProps {
   game: Game | null;
   friends: string[];
   isOpen: boolean;
+  activeHousehold?: string | null;
   onClose: () => void;
   onConfirm: (gameId: string, borrower: string, returnDate?: string, notes?: string) => void;
 }
@@ -16,6 +17,7 @@ export const BorrowModal: React.FC<BorrowModalProps> = ({
   game,
   friends,
   isOpen,
+  activeHousehold,
   onClose,
   onConfirm,
 }) => {
@@ -23,6 +25,19 @@ export const BorrowModal: React.FC<BorrowModalProps> = ({
   const [customName, setCustomName] = useState('');
   const [returnDate, setReturnDate] = useState('');
   const [notes, setNotes] = useState('');
+
+  useEffect(() => {
+    if (isOpen) {
+      if (activeHousehold && activeHousehold !== game?.owner) {
+        setBorrower(activeHousehold);
+      } else {
+        setBorrower('');
+      }
+      setCustomName('');
+      setReturnDate('');
+      setNotes('');
+    }
+  }, [isOpen, activeHousehold, game]);
 
   if (!isOpen || !game) return null;
 
