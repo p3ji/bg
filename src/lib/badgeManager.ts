@@ -115,13 +115,18 @@ export async function requestBadgeNotificationPermission(): Promise<boolean> {
     return false;
   }
   try {
-    if (Notification.permission === 'granted') {
-      await updateHomeScreenAppBadge(lastBadgeCount);
-      return true;
+    let perm = Notification.permission;
+    if (perm !== 'granted') {
+      perm = await Notification.requestPermission();
     }
-    const permission = await Notification.requestPermission();
-    if (permission === 'granted') {
+    if (perm === 'granted') {
       await updateHomeScreenAppBadge(lastBadgeCount);
+      if (lastBadgeCount > 0) {
+        await sendLocalSystemNotification(
+          `🎲 GameShare: Action Needed (${lastBadgeCount})`,
+          `You have ${lastBadgeCount} borrow request awaiting your hand-off confirmation.`
+        );
+      }
       return true;
     }
     return false;
@@ -154,13 +159,15 @@ export async function sendLocalSystemNotification(title: string, body: string, u
     if ('serviceWorker' in navigator) {
       const reg = await navigator.serviceWorker.ready;
       if (reg && reg.showNotification) {
-        await reg.showNotification(title, {
+        const notifOptions: NotificationOptions & { renotify?: boolean } = {
           body,
           icon: '/icon-192.png',
           badge: '/icon-192.png',
-          tag: 'gameshare-request',
+          tag: 'gameshare-borrow-action',
+          renotify: true,
           data: { url },
-        });
+        };
+        await reg.showNotification(title, notifOptions as NotificationOptions);
         return;
       }
     }
@@ -168,7 +175,7 @@ export async function sendLocalSystemNotification(title: string, body: string, u
       body,
       icon: '/icon-192.png',
       badge: '/icon-192.png',
-      tag: 'gameshare-request',
+      tag: 'gameshare-borrow-action',
     });
   } catch (err) {
     console.debug('Failed to display system notification:', err);

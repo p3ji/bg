@@ -34,6 +34,11 @@ self.addEventListener('message', (event) => {
     if (self.registration && 'clearAppBadge' in self.registration) {
       self.registration.clearAppBadge().catch(() => {});
     }
+    if (self.registration && self.registration.getNotifications) {
+      self.registration.getNotifications().then((notifs) => {
+        notifs.forEach((n) => n.close());
+      }).catch(() => {});
+    }
   }
 });
 
