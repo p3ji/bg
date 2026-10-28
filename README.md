@@ -47,3 +47,40 @@ The app is built with standard Next.js (App Router) and can be deployed with one
 ```bash
 npx vercel
 ```
+
+## Saving and synchronization
+
+GameShare remains password-free. Lending actions commit the game and its affected
+requests in one Firestore transaction. Only one handoff can be accepted per game;
+receipt confirmation checks the current holder and request state again. Forms wait
+for the shared save and preserve their input if it fails. Saving requires a connection.
+
+Firestore is authoritative for existing loans. Catalog imports and metadata edits
+preserve current custody, loan history, and requests. Sheets imports can initialize
+loan state for newly imported games, but do not overwrite an existing loan.
+
+Google Sheets is synchronized after the shared save. Failed updates remain in a
+local retry queue; use **Retry Sheets sync**, reconnect, or reopen the app to retry.
+Retries read the latest committed game rather than replaying an old borrower.
+The device holding a pending queue must reconnect for its updates to be retried.
+
+The cover-image proxy accepts only approved HTTPS providers, connects to a validated
+public IPv4 address, rejects redirects, and limits responses to 10 MB of raster image
+data. Custom images may still load directly in the browser; proxy fallback is
+restricted to the providers listed in `src/lib/imageProxy.ts`.
+
+## Regression checks
+
+```bash
+npm run test:unit
+npm run lint
+npx tsc --noEmit
+npm run build
+PLAYWRIGHT_PORT=3101 npx playwright test tests/persistence.spec.ts --project='Desktop Chrome' --project='Mobile Chrome (Android)'
+```
+
+The persistence browser tests block external/API traffic and never modify the shared
+Firebase or Sheets data. Domain tests cover competing handoffs, stale confirmations,
+return transitions, and duplicate requests. They do not replace a Firestore emulator
+or staging integration test of multi-device transactions. Existing open tabs should
+be refreshed after deployment to use the transactional lending code.

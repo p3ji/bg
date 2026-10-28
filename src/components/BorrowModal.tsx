@@ -27,8 +27,8 @@ interface BorrowModalProps {
   isOpen: boolean;
   activeHousehold?: string | null;
   onClose: () => void;
-  onRequestExchange: (gameId: string, requester: string, returnDate?: string, notes?: string) => void;
-  onDirectBorrow?: (gameId: string, borrower: string, returnDate?: string, notes?: string) => void;
+  onRequestExchange: (gameId: string, requester: string, returnDate?: string, notes?: string) => Promise<boolean>;
+  onDirectBorrow?: (gameId: string, borrower: string, returnDate?: string, notes?: string) => Promise<boolean>;
 }
 
 export const BorrowModal: React.FC<BorrowModalProps> = ({
@@ -83,18 +83,18 @@ export const BorrowModal: React.FC<BorrowModalProps> = ({
     setReturnDate(target.toISOString().split('T')[0]);
   };
 
-  const handleSubmitRequest = (e: React.FormEvent) => {
+  const handleSubmitRequest = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!effectiveRequester) return;
 
-    onRequestExchange(game.id, effectiveRequester, returnDate || undefined, notes || undefined);
+    if (!await onRequestExchange(game.id, effectiveRequester, returnDate || undefined, notes || undefined)) return;
     setSubmittedRequester(effectiveRequester);
     setIsSubmitted(true);
   };
 
-  const handleDirectLend = () => {
+  const handleDirectLend = async () => {
     if (!effectiveRequester || !onDirectBorrow) return;
-    onDirectBorrow(game.id, effectiveRequester, returnDate || undefined, notes || undefined);
+    if (!await onDirectBorrow(game.id, effectiveRequester, returnDate || undefined, notes || undefined)) return;
     onClose();
   };
 

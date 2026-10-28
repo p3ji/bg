@@ -18,8 +18,7 @@ import {
   subscribeToCloudHouseholds,
   saveGameToCloud,
   saveGamesBatchToCloud,
-  saveRequestToCloud,
-  deleteRequestFromCloud,
+  commitLendingAction,
   saveHouseholdsToCloud,
   seedCloudDatabaseIfNeeded
 } from '@/lib/firebase';
@@ -42,6 +41,8 @@ import { PwaInstallPrompt } from '@/components/PwaInstallPrompt';
 import { InstallFirstGate } from '@/components/InstallFirstGate';
 import { shouldOfferInstallFirst } from '@/lib/pwa';
 import { normalizeName, getCanonicalName, isSameHousehold } from '@/lib/normalize';
+import { currentHolder, type LendingAction } from '@/lib/lending';
+import { queueSheetJob, flushSheetJobs, sheetSyncStatus } from '@/lib/sheetsSync';
 import { matchesGameSearch, matchesTitleEntity } from '@/lib/search';
 
 const initialFilters: FilterState = {
@@ -288,525 +289,116 @@ export default function HomePage() {
   const availableCount = useMemo(() => games.filter((g) => g.status === 'available').length, [games]);
   const borrowedCount = useMemo(() => games.filter((g) => g.status === 'borrowed').length, [games]);
 
-  // Action Handlers
+  const [saving, setSaving] = useState(false);
+  const saveInFlight = useRef(false);
+  const [saveError, setSaveError] = useState('');
+  const [sheetStatus, setSheetStatus] = useState({ count: 0, error: '' });
+  const performSave = async (operation: () => Promise<void>): Promise<boolean> => {
+    if (saveInFlight.current) return false;
+    saveInFlight.current = true;
+    setSaving(true);
+    setSaveError('');
+    try {
+      if (!navigator.onLine) throw new Error("You are offline. Reconnect before saving.");
+      await operation();
+      return true;
+    } catch (error) {
+      setSaveError(error instanceof Error ? error.message : 'Could not save. Please try again.');
+      return false;
+    } finally {
+      saveInFlight.current = false;
+      setSaving(false);
+    }
+  };
+
+  useEffect(() => {
+    const update = () => setSheetStatus(sheetSyncStatus());
+    const retry = () => { void flushSheetJobs(); };
+    window.addEventListener('bg_sheet_sync', update);
+    window.addEventListener('online', retry);
+    update();
+    retry();
+    return () => {
+      window.removeEventListener('bg_sheet_sync', update);
+      window.removeEventListener('online', retry);
+    };
+  }, []);
+
+  const syncGameToSheets = (game: Game, previous = game) => {
+    queueSheetJob({ id: game.id, gameId: game.id, previousOwner: previous.owner, previousTitle: previous.title });
+    void flushSheetJobs();
+  };
+
+  const saveLending = (gameId: string, action: LendingAction) => performSave(async () => {
+    const updated = await commitLendingAction(gameId, action, friends);
+    // Firestore subscriptions deliver the authoritative game and requests to every device.
+    setSelectedGame(previous => previous?.id === gameId ? updated : previous);
+    if (['borrow', 'return', 'confirm'].includes(action.type)) syncGameToSheets(updated);
+  });
+
   const handleBorrowConfirm = (gameId: string, borrower: string, returnDate?: string) => {
-    const canonicalBorrower = getCanonicalName(borrower, friends);
-    const nowIso = new Date().toISOString();
-    const updatedGames = games.map((g) => {
-      if (g.id !== gameId) return g;
-      return {
-        ...g,
-        status: 'borrowed' as const,
-        currentBorrower: canonicalBorrower,
-        borrowDate: nowIso,
-        expectedReturnDate: returnDate || null,
-        borrowRequests: (g.borrowRequests || []).map((r) => {
-          if (isSameHousehold(r.requesterName, canonicalBorrower, friends) && (r.status === 'pending' || r.status === 'accepted')) {
-            return { ...r, status: 'fulfilled' as const, confirmedAt: nowIso };
-          }
-          if (r.status === 'pending') {
-            return { ...r, holderName: canonicalBorrower };
-          }
-          return r;
-        }),
-      };
-    });
-
-    // Mark requests by this borrower as fulfilled, and update holderName on other pending requests
-    const changedReqs: BorrowRequest[] = [];
-    const updatedRequests = requests.map((r) => {
-      if (r.gameId !== gameId) return r;
-      if (
-        isSameHousehold(r.requesterName, canonicalBorrower, friends) &&
-        (r.status === 'pending' || r.status === 'accepted')
-      ) {
-        const next: BorrowRequest = { ...r, status: 'fulfilled', confirmedAt: nowIso };
-        changedReqs.push(next);
-        return next;
-      }
-      if (r.status === 'pending' && r.holderName !== canonicalBorrower) {
-        const next: BorrowRequest = { ...r, holderName: canonicalBorrower };
-        changedReqs.push(next);
-        return next;
-      }
-      return r;
-    });
-
-    setGames(updatedGames);
-    saveGames(updatedGames);
-    setRequests(updatedRequests);
-    saveRequests(updatedRequests);
-
-    const updatedGame = updatedGames.find((g) => g.id === gameId);
-    if (updatedGame) {
-      saveGameToCloud(updatedGame);
-      // Synchronize Google Sheets "Borrowed by" column in owner's tab
-      fetch('/api/sheets/sync', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'update_borrow',
-          ownerHousehold: updatedGame.owner,
-          gameTitle: updatedGame.title,
-          borrowerName: canonicalBorrower,
-        }),
-      }).catch(() => {});
-    }
-    changedReqs.forEach((r) => saveRequestToCloud(r));
-
-    // Auto-update selectedGame if open
-    if (selectedGame?.id === gameId) {
-      setSelectedGame(updatedGames.find((g) => g.id === gameId) || null);
-    }
+    const game = games.find(g => g.id === gameId);
+    if (!game) return Promise.resolve(false);
+    return saveLending(gameId, { type: 'borrow', borrower, returnDate, expectedHolder: currentHolder(game) });
   };
-
   const handleReturnConfirm = (gameId: string, notes?: string) => {
-    const targetGame = games.find((g) => g.id === gameId);
-    if (!targetGame) return;
-
-    const nowIso = new Date().toISOString();
-    const canonicalOwner = getCanonicalName(targetGame.owner, friends);
-
-    const newHistoryRecord = {
-      id: `hist-${Date.now()}`,
-      borrower: targetGame.currentBorrower || 'Friend',
-      borrowDate: targetGame.borrowDate || nowIso,
-      returnDate: nowIso,
-      notes: notes || undefined,
-    };
-
-    // Fulfill accepted handoffs or owner-return requests, while keeping third-party pending requests active
-    // and updating their holderName to the owner who now holds the game again!
-    const changedReqs: BorrowRequest[] = [];
-    const updatedRequests = requests.map((r) => {
-      if (r.gameId !== gameId) return r;
-      if (r.status === 'accepted' || (r.status === 'pending' && isSameHousehold(r.requesterName, canonicalOwner, friends))) {
-        const next: BorrowRequest = { ...r, status: 'fulfilled', confirmedAt: nowIso };
-        changedReqs.push(next);
-        return next;
-      }
-      if (r.status === 'pending' && r.holderName !== canonicalOwner) {
-        const next: BorrowRequest = { ...r, holderName: canonicalOwner };
-        changedReqs.push(next);
-        return next;
-      }
-      return r;
-    });
-
-    const updatedGames = games.map((g) => {
-      if (g.id !== gameId) return g;
-      return {
-        ...g,
-        status: 'available' as const,
-        currentBorrower: null,
-        borrowDate: null,
-        expectedReturnDate: null,
-        history: [newHistoryRecord, ...(g.history || [])],
-        borrowRequests: (g.borrowRequests || []).map((r) => {
-          if (r.status === 'accepted' || (r.status === 'pending' && isSameHousehold(r.requesterName, canonicalOwner, friends))) {
-            return { ...r, status: 'fulfilled' as const, confirmedAt: nowIso };
-          }
-          if (r.status === 'pending') {
-            return { ...r, holderName: canonicalOwner };
-          }
-          return r;
-        }),
-      };
-    });
-
-    setGames(updatedGames);
-    saveGames(updatedGames);
-    setRequests(updatedRequests);
-    saveRequests(updatedRequests);
-
-    const updatedGame = updatedGames.find((g) => g.id === gameId);
-    if (updatedGame) {
-      saveGameToCloud(updatedGame);
-      // Synchronize Google Sheets "Borrowed by" column in owner's tab (cleared)
-      fetch('/api/sheets/sync', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'update_borrow',
-          ownerHousehold: targetGame.owner,
-          gameTitle: targetGame.title,
-          borrowerName: null,
-        }),
-      }).catch(() => {});
-    }
-
-    changedReqs.forEach((r) => saveRequestToCloud(r));
-
-    if (selectedGame?.id === gameId) {
-      setSelectedGame(updatedGames.find((g) => g.id === gameId) || null);
-    }
+    const game = games.find(g => g.id === gameId);
+    if (!game) return Promise.resolve(false);
+    return saveLending(gameId, { type: 'return', notes, expectedHolder: currentHolder(game) });
   };
-
-  // Step 1: Send Borrow Request to the group that currently has it
   const handleRequestExchange = (gameId: string, requester: string, returnDate?: string, notes?: string) => {
-    const targetGame = games.find((g) => g.id === gameId);
-    if (!targetGame) return;
-
-    const currentHolder = (targetGame.status === 'borrowed' && targetGame.currentBorrower)
-      ? targetGame.currentBorrower
-      : targetGame.owner;
-
-    const canonicalRequester = getCanonicalName(requester, friends);
-    const canonicalHolder = getCanonicalName(currentHolder, friends);
-
-    const newRequest: BorrowRequest = {
-      id: `req-${Date.now()}`,
-      gameId: targetGame.id,
-      gameTitle: targetGame.title,
-      requesterName: canonicalRequester,
-      holderName: canonicalHolder,
-      requestedAt: new Date().toISOString(),
-      status: 'pending',
-      expectedReturnDate: returnDate || undefined,
-      note: notes || undefined,
-    };
-
-    // Replace any existing duplicate pending request from the same requester for this game, keeping other households' requests intact
-    const supersededRequests = requests.filter(
-      (r) => r.gameId === gameId && r.status === 'pending' && isSameHousehold(r.requesterName, canonicalRequester, friends)
-    );
-    supersededRequests.forEach((r) => deleteRequestFromCloud(r.id));
-
-    const filteredExistingRequests = requests.filter(
-      (r) => !(r.gameId === gameId && r.status === 'pending' && isSameHousehold(r.requesterName, canonicalRequester, friends))
-    );
-    const updatedRequests = [newRequest, ...filteredExistingRequests];
-    setRequests(updatedRequests);
-    saveRequests(updatedRequests);
-    saveRequestToCloud(newRequest);
-
-    // Prompt for Web Notification & App Badge permission if not yet requested
-    if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
-      Notification.requestPermission().catch(() => {});
-    }
-
-    const updatedGames = games.map((g) => {
-      if (g.id !== gameId) return g;
-      const keptRequests = (g.borrowRequests || []).filter(
-        (r) => !(r.status === 'pending' && isSameHousehold(r.requesterName, canonicalRequester, friends))
-      );
-      return {
-        ...g,
-        borrowRequests: [newRequest, ...keptRequests],
-      };
-    });
-
-    setGames(updatedGames);
-    saveGames(updatedGames);
-
-    const updatedGame = updatedGames.find((g) => g.id === gameId);
-    if (updatedGame) {
-      saveGameToCloud(updatedGame);
-    }
-
-    if (selectedGame?.id === gameId) {
-      setSelectedGame(updatedGames.find((g) => g.id === gameId) || null);
-    }
+    const game = games.find(g => g.id === gameId);
+    if (!game) return Promise.resolve(false);
+    return saveLending(gameId, { type: 'request', request: {
+      id: `req-${crypto.randomUUID()}`, gameId, gameTitle: game.title,
+      requesterName: getCanonicalName(requester, friends), holderName: currentHolder(game),
+      requestedAt: new Date().toISOString(), status: 'pending', expectedReturnDate: returnDate, note: notes,
+    } });
   };
-
-  // Step 2: Holder accepts & executes the exchange
-  const handleAcceptExchange = (requestId: string) => {
-    const req = requests.find((r) => r.id === requestId);
-    if (!req) return;
-
-    // Strict profile authorization check: Only the current holder can accept
-    const isSelfTest = isSameHousehold(req.holderName, req.requesterName, friends);
-    const isAuthorized = Boolean(
-      isSelfTest || (activeHousehold && isSameHousehold(activeHousehold, req.holderName, friends))
-    );
-
-    if (!isAuthorized) {
-      if (!activeHousehold) {
-        setIsFirstIdentityPrompt(false);
-        setIsIdentityModalOpen(true);
-      }
-      return;
-    }
-
-    const nowIso = new Date().toISOString();
-    const updatedRequests = requests.map((r) =>
-      r.id === requestId ? { ...r, status: 'accepted' as const, acceptedAt: nowIso } : r
-    );
-    setRequests(updatedRequests);
-    saveRequests(updatedRequests);
-
-    const updatedReq = updatedRequests.find((r) => r.id === requestId);
-    if (updatedReq) saveRequestToCloud(updatedReq);
-
-    const updatedGames = games.map((g) => {
-      if (g.id !== req.gameId) return g;
-      return {
-        ...g,
-        borrowRequests: (g.borrowRequests || []).map((r) =>
-          r.id === requestId ? { ...r, status: 'accepted' as const, acceptedAt: nowIso } : r
-        ),
-      };
-    });
-    setGames(updatedGames);
-    saveGames(updatedGames);
-
-    const updatedGame = updatedGames.find((g) => g.id === req.gameId);
-    if (updatedGame) saveGameToCloud(updatedGame);
-
-    if (selectedGame?.id === req.gameId) {
-      setSelectedGame(updatedGames.find((g) => g.id === req.gameId) || null);
-    }
+  const requestAction = (requestId: string, type: 'accept' | 'confirm' | 'dismiss') => {
+    const request = requests.find(r => r.id === requestId);
+    if (!request) return Promise.resolve(false);
+    return saveLending(request.gameId, { type, requestId, actor: activeHousehold });
   };
+  const handleAcceptExchange = (id: string) => requestAction(id, 'accept');
+  const handleConfirmExchange = (id: string) => requestAction(id, 'confirm');
+  const handleDismissRequest = (id: string) => requestAction(id, 'dismiss');
 
-  // Step 3: Requester confirms receipt -> exchange is complete and marked with new holder!
-  const handleConfirmExchange = (requestId: string) => {
-    const req = requests.find((r) => r.id === requestId);
-    if (!req) return;
+  const handleAddGame = (data: Omit<Game, 'id' | 'status' | 'history'>) => performSave(async () => {
+    const existing = games.find(g => isSameHousehold(g.owner, data.owner, friends) && matchesTitleEntity(g.title, data.title));
+    const game: Game = { ...data, id: existing?.id || `game-${crypto.randomUUID()}`,
+      status: existing?.status || 'available', history: existing?.history || [],
+      currentBorrower: existing?.currentBorrower || null, borrowRequests: existing?.borrowRequests || [] };
+    await saveGameToCloud(game);
+    syncGameToSheets(game, existing || game);
+  });
 
-    // Strict profile authorization check: Only the requester can confirm receipt
-    const isSelfTest = isSameHousehold(req.holderName, req.requesterName, friends);
-    const isAuthorized = Boolean(
-      isSelfTest || (activeHousehold && isSameHousehold(activeHousehold, req.requesterName, friends))
-    );
-
-    if (!isAuthorized) {
-      if (!activeHousehold) {
-        setIsFirstIdentityPrompt(false);
-        setIsIdentityModalOpen(true);
-      }
-      return;
+  const handleBatchImportGames = (imported: Omit<Game, 'id' | 'status' | 'history'>[]) => performSave(async () => {
+    const created: Game[] = [];
+    for (const data of imported) {
+      if ([...games, ...created].some(g => isSameHousehold(g.owner, data.owner, friends) && matchesTitleEntity(g.title, data.title))) continue;
+      created.push({ ...data, id: `game-${crypto.randomUUID()}`, status: 'available', history: [], borrowRequests: [] });
     }
+    if (!created.length) return;
+    await saveGamesBatchToCloud(created);
+    for (const game of created) queueSheetJob({ id: game.id, gameId: game.id, previousOwner: game.owner, previousTitle: game.title });
+    void flushSheetJobs();
+  });
 
-    const targetGame = games.find((g) => g.id === req.gameId);
-    if (!targetGame) return;
-
-    const nowIso = new Date().toISOString();
-    const historyUpdates = [...(targetGame.history || [])];
-
-    // If the game was previously with another borrower, close out that loan record
-    if (targetGame.status === 'borrowed' && targetGame.currentBorrower) {
-      historyUpdates.unshift({
-        id: `hist-${Date.now()}`,
-        borrower: targetGame.currentBorrower,
-        borrowDate: targetGame.borrowDate || req.requestedAt,
-        returnDate: nowIso,
-        notes: req.note ? `Transferred to ${req.requesterName} (${req.note})` : `Transferred to ${req.requesterName}`,
-      });
+  const handleUpdateFriends = (updatedFriends: string[]) => performSave(async () => {
+    await saveHouseholdsToCloud(updatedFriends);
+    for (const household of updatedFriends.filter(f => !friends.includes(f))) {
+      queueSheetJob({ id: `household:${household}`, household });
     }
-
-    const isReturningToOwner = isSameHousehold(req.requesterName, targetGame.owner, friends);
-    const canonicalRequester = getCanonicalName(req.requesterName, friends);
-    const canonicalOwner = getCanonicalName(targetGame.owner, friends);
-    const newHolderName = isReturningToOwner ? canonicalOwner : canonicalRequester;
-
-    const updatedGame: Game = {
-      ...targetGame,
-      status: isReturningToOwner ? 'available' : ('borrowed' as const),
-      currentBorrower: isReturningToOwner ? null : canonicalRequester,
-      borrowDate: isReturningToOwner ? null : nowIso,
-      expectedReturnDate: isReturningToOwner ? null : (req.expectedReturnDate || null),
-      history: historyUpdates,
-      borrowRequests: (targetGame.borrowRequests || []).map((r) => {
-        if (r.id === requestId) {
-          return { ...r, status: 'fulfilled' as const, confirmedAt: nowIso };
-        }
-        if (r.status === 'pending') {
-          return { ...r, holderName: newHolderName };
-        }
-        return r;
-      }),
-    };
-
-    const updatedGames = games.map((g) => (g.id === targetGame.id ? updatedGame : g));
-    const changedReqs: BorrowRequest[] = [];
-    const updatedRequests = requests.map((r) => {
-      if (r.id === requestId) {
-        const next: BorrowRequest = { ...r, status: 'fulfilled', confirmedAt: nowIso };
-        changedReqs.push(next);
-        return next;
-      }
-      if (r.gameId === targetGame.id && r.status === 'pending' && r.holderName !== newHolderName) {
-        const next: BorrowRequest = { ...r, holderName: newHolderName };
-        changedReqs.push(next);
-        return next;
-      }
-      return r;
-    });
-
-    setGames(updatedGames);
-    saveGames(updatedGames);
-    setRequests(updatedRequests);
-    saveRequests(updatedRequests);
-
-    changedReqs.forEach((r) => saveRequestToCloud(r));
-    saveGameToCloud(updatedGame);
-
-    // Synchronize Google Sheets "Borrowed by" column in owner's tab
-    fetch('/api/sheets/sync', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'update_borrow',
-        ownerHousehold: targetGame.owner,
-        gameTitle: targetGame.title,
-        borrowerName: isReturningToOwner ? null : req.requesterName,
-      }),
-    }).catch(() => {});
-
-    if (selectedGame?.id === targetGame.id) {
-      setSelectedGame(updatedGame);
-    }
-  };
-
-  const handleDismissRequest = (requestId: string) => {
-    const req = requests.find((r) => r.id === requestId);
-    const updatedRequests = requests.filter((r) => r.id !== requestId);
-    setRequests(updatedRequests);
-    saveRequests(updatedRequests);
-    deleteRequestFromCloud(requestId);
-
-    if (req) {
-      const updatedGames = games.map((g) => {
-        if (g.id !== req.gameId) return g;
-        return {
-          ...g,
-          borrowRequests: (g.borrowRequests || []).filter((r) => r.id !== requestId),
-        };
-      });
-      setGames(updatedGames);
-      saveGames(updatedGames);
-
-      const updatedGame = updatedGames.find((g) => g.id === req.gameId);
-      if (updatedGame) saveGameToCloud(updatedGame);
-
-      if (selectedGame?.id === req.gameId) {
-        setSelectedGame(updatedGames.find((g) => g.id === req.gameId) || null);
-      }
-    }
-  };
-
-  const handleAddGame = (newGameData: Omit<Game, 'id' | 'status' | 'history'>) => {
-    const existingGame = games.find(
-      (g) =>
-        isSameHousehold(g.owner, newGameData.owner, friends) &&
-        matchesTitleEntity(g.title, newGameData.title)
-    );
-
-    if (existingGame) {
-      const mergedGame: Game = {
-        ...existingGame,
-        ...newGameData,
-        id: existingGame.id,
-        status: existingGame.status,
-        currentBorrower: existingGame.currentBorrower,
-        borrowDate: existingGame.borrowDate,
-        expectedReturnDate: existingGame.expectedReturnDate,
-        history: existingGame.history || [],
-        borrowRequests: existingGame.borrowRequests || [],
-      };
-      const updated = games.map((g) => (g.id === existingGame.id ? mergedGame : g));
-      setGames(updated);
-      saveGames(updated);
-      saveGameToCloud(mergedGame);
-
-      fetch('/api/sheets/sync', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'update_game_details',
-          previousOwnerHousehold: existingGame.owner,
-          previousGameTitle: existingGame.title,
-          updatedGame: mergedGame,
-        }),
-      }).catch(() => {});
-      return;
-    }
-
-    const newGame: Game = {
-      ...newGameData,
-      id: `game-${Date.now()}`,
-      status: 'available',
-      currentBorrower: null,
-      borrowDate: null,
-      expectedReturnDate: null,
-      history: [],
-      borrowRequests: [],
-    };
-    const updated = [newGame, ...games];
-    setGames(updated);
-    saveGames(updated);
-    saveGameToCloud(newGame);
-
-    // Synchronize Google Sheets by appending new game row
-    fetch('/api/sheets/sync', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'add_game',
-        ownerHousehold: newGame.owner,
-        game: newGame,
-      }),
-    }).catch(() => {});
-  };
-
-  const handleBatchImportGames = (importedGames: Omit<Game, 'id' | 'status' | 'history'>[]) => {
-    const deduplicated = importedGames.filter(
-      (imp) =>
-        !games.some(
-          (existing) =>
-            isSameHousehold(existing.owner, imp.owner, friends) &&
-            matchesTitleEntity(existing.title, imp.title)
-        )
-    );
-    if (deduplicated.length === 0) return;
-
-    const createdGames: Game[] = deduplicated.map((g, idx) => ({
-      ...g,
-      id: `game-import-${Date.now()}-${idx}`,
-      status: 'available',
-      currentBorrower: null,
-      borrowDate: null,
-      expectedReturnDate: null,
-      history: [],
-      borrowRequests: [],
-    }));
-    const updated = [...createdGames, ...games];
-    setGames(updated);
-    saveGames(updated);
-    saveGamesBatchToCloud(createdGames);
-
-    const byOwner = new Map<string, Game[]>();
-    for (const g of createdGames) {
-      const list = byOwner.get(g.owner) || [];
-      list.push(g);
-      byOwner.set(g.owner, list);
-    }
-
-    for (const [ownerHousehold, ownerGames] of byOwner.entries()) {
-      fetch('/api/sheets/sync', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'add_games_batch',
-          ownerHousehold,
-          games: ownerGames,
-        }),
-      }).catch(() => {});
-    }
-  };
-
-  const handleUpdateFriends = (updatedFriends: string[]) => {
-    setFriends(updatedFriends);
-    saveFriends(updatedFriends);
-    saveHouseholdsToCloud(updatedFriends);
-    if (activeHousehold && !updatedFriends.some((f) => isSameHousehold(f, activeHousehold, updatedFriends))) {
+    void flushSheetJobs();
+    if (activeHousehold && !updatedFriends.some(f => isSameHousehold(f, activeHousehold, updatedFriends))) {
       setActiveHousehold(null);
       saveActiveHousehold('');
     }
-    if (filters.owner !== 'all' && !updatedFriends.some((f) => isSameHousehold(f, filters.owner, updatedFriends))) {
-      setFilters((prev) => ({ ...prev, owner: 'all' }));
+    if (filters.owner !== 'all' && !updatedFriends.some(f => isSameHousehold(f, filters.owner, updatedFriends))) {
+      setFilters(previous => ({ ...previous, owner: 'all' }));
     }
-  };
+  });
 
   const handleOpenAddForHousehold = (household: string) => {
     setSelectedHouseholdForAdd(household);
@@ -830,170 +422,119 @@ export default function HomePage() {
     setIsBggSyncOpen(true);
   };
 
-  const handleSaveEditedGame = (updatedGame: Game) => {
-    const prevGame = editingGame;
-    let mergedTarget: Game = updatedGame;
-    const nextGames = games.map((g) => {
-      if (g.id !== updatedGame.id) return g;
-      mergedTarget = {
-        ...g,
-        ...updatedGame,
-        status: g.status,
-        currentBorrower: g.currentBorrower,
-        borrowDate: g.borrowDate,
-        expectedReturnDate: g.expectedReturnDate,
-        history: g.history,
-        borrowRequests: g.borrowRequests,
-      };
-      return mergedTarget;
-    });
-    setGames(nextGames);
-    saveGames(nextGames);
-    saveGameToCloud(mergedTarget);
-    if (selectedGame && selectedGame.id === updatedGame.id) {
-      setSelectedGame(mergedTarget);
-    }
+  const handleSaveEditedGame = (updatedGame: Game) => performSave(async () => {
+    await saveGameToCloud(updatedGame);
+    syncGameToSheets(updatedGame, editingGame || updatedGame);
+  });
 
-    // Two-way sync: push edited game details (name, player range, playtime, notes, type) to Google Sheets
-    fetch('/api/sheets/sync', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'update_game_details',
-        previousOwnerHousehold: prevGame?.owner || mergedTarget.owner,
-        previousGameTitle: prevGame?.title || mergedTarget.title,
-        updatedGame: mergedTarget,
-      }),
-    }).catch((err) => console.warn('Failed to sync game details to Google Sheets:', err));
-  };
-
-  const handleSyncGamesFromSheets = (sheetGames: SheetRowGame[], rosterOverride?: string[]) => {
+  const handleSyncGamesFromSheets = (sheetGames: SheetRowGame[], rosterOverride?: string[]) => performSave(async () => {
     if (!sheetGames || sheetGames.length === 0) return;
     const activeFriends = rosterOverride && rosterOverride.length > 0 ? rosterOverride : friends;
-    setGames((prevGames) => {
-      let changed = false;
-      const matchedSheetIndices = new Set<number>();
-      const changedGamesForCloud: Game[] = [];
+    const prevGames = games;
+    let changed = false;
+    const matchedSheetIndices = new Set<number>();
+    const changedGamesForCloud: Game[] = [];
 
-      const updated = prevGames.map((game) => {
-        // 1. Try exact normalized title match first within the same household
-        let matchIndex = sheetGames.findIndex(
+    prevGames.forEach((game) => {
+      // 1. Try exact normalized title match first within the same household
+      let matchIndex = sheetGames.findIndex(
+        (sg, idx) =>
+          !matchedSheetIndices.has(idx) &&
+          isSameHousehold(sg.household, game.owner, activeFriends) &&
+          normalizeName(sg.title) === normalizeName(game.title)
+      );
+
+      // 2. Fallback to strict entity title match within the same household
+      if (matchIndex === -1) {
+        matchIndex = sheetGames.findIndex(
           (sg, idx) =>
             !matchedSheetIndices.has(idx) &&
             isSameHousehold(sg.household, game.owner, activeFriends) &&
-            normalizeName(sg.title) === normalizeName(game.title)
+            matchesTitleEntity(sg.title, game.title)
         );
-
-        // 2. Fallback to strict entity title match within the same household
-        if (matchIndex === -1) {
-          matchIndex = sheetGames.findIndex(
-            (sg, idx) =>
-              !matchedSheetIndices.has(idx) &&
-              isSameHousehold(sg.household, game.owner, activeFriends) &&
-              matchesTitleEntity(sg.title, game.title)
-          );
-        }
-
-        if (matchIndex === -1) return game;
-        matchedSheetIndices.add(matchIndex);
-        const match = sheetGames[matchIndex];
-
-        let gameChanged = false;
-        const newTitle = match.title || game.title;
-        const newMinP = match.minPlayers ?? game.minPlayers;
-        const newMaxP = match.maxPlayers ?? game.maxPlayers;
-        const newType = match.type || game.type;
-        const newMinPlaytime = match.minPlaytime ?? match.playtime ?? game.minPlaytime;
-        const newMaxPlaytime = match.maxPlaytime ?? Math.max(newMinPlaytime, game.maxPlaytime);
-        const newPlaytimeDisplay =
-          match.playtimeDisplay ||
-          (newMinPlaytime === newMaxPlaytime ? `${newMinPlaytime}m` : `${newMinPlaytime}-${newMaxPlaytime}m`);
-        const newNotes = match.notes !== undefined ? match.notes : (game.notes || '');
-        const newBorrower =
-          match.borrowedBy !== undefined
-            ? match.borrowedBy
-              ? getCanonicalName(match.borrowedBy, activeFriends)
-              : null
-            : (game.currentBorrower ?? null);
-        const newStatus: 'available' | 'borrowed' = newBorrower ? 'borrowed' : 'available';
-
-        if (
-          newTitle !== game.title ||
-          newMinP !== game.minPlayers ||
-          newMaxP !== game.maxPlayers ||
-          newType !== game.type ||
-          newMinPlaytime !== game.minPlaytime ||
-          newMaxPlaytime !== game.maxPlaytime ||
-          newPlaytimeDisplay !== game.playtimeDisplay ||
-          newNotes !== (game.notes || '') ||
-          newBorrower !== (game.currentBorrower ?? null) ||
-          newStatus !== game.status
-        ) {
-          gameChanged = true;
-          changed = true;
-        }
-
-        if (gameChanged) {
-          const nextGame: Game = {
-            ...game,
-            title: newTitle,
-            minPlayers: newMinP,
-            maxPlayers: newMaxP,
-            type: newType,
-            minPlaytime: newMinPlaytime,
-            maxPlaytime: newMaxPlaytime,
-            playtimeDisplay: newPlaytimeDisplay,
-            notes: newNotes,
-            status: newStatus,
-            currentBorrower: newBorrower,
-            borrowDate: newBorrower ? (game.borrowDate || new Date().toISOString()) : null,
-          };
-          changedGamesForCloud.push(nextGame);
-          return nextGame;
-        }
-        return game;
-      });
-
-      // Import any newly added rows from Google Sheets that aren't in prevGames yet
-      const newSheetGames: Game[] = [];
-      sheetGames.forEach((sg, idx) => {
-        if (!matchedSheetIndices.has(idx) && sg.title) {
-          changed = true;
-          const borrower = sg.borrowedBy ? getCanonicalName(sg.borrowedBy, activeFriends) : null;
-          const minPlay = sg.minPlaytime ?? sg.playtime ?? 30;
-          const maxPlay = sg.maxPlaytime ?? Math.max(minPlay, 60);
-          const created: Game = {
-            id: `sheet-${Date.now()}-${idx}`,
-            title: sg.title,
-            owner: getCanonicalName(sg.household, activeFriends),
-            minPlayers: sg.minPlayers || 2,
-            maxPlayers: sg.maxPlayers || 4,
-            minPlaytime: minPlay,
-            maxPlaytime: maxPlay,
-            playtimeDisplay: sg.playtimeDisplay || (minPlay === maxPlay ? `${minPlay}m` : `${minPlay}-${maxPlay}m`),
-            type: sg.type || 'Strategy',
-            notes: sg.notes || '',
-            status: borrower ? 'borrowed' : 'available',
-            currentBorrower: borrower,
-            borrowDate: borrower ? new Date().toISOString() : null,
-            expectedReturnDate: null,
-            history: [],
-            borrowRequests: [],
-          };
-          newSheetGames.push(created);
-          changedGamesForCloud.push(created);
-        }
-      });
-
-      const finalGames = newSheetGames.length > 0 ? [...newSheetGames, ...updated] : updated;
-
-      if (changed) {
-        saveGames(finalGames);
-        saveGamesBatchToCloud(changedGamesForCloud);
       }
-      return changed ? finalGames : prevGames;
+
+      if (matchIndex === -1) return game;
+      matchedSheetIndices.add(matchIndex);
+      const match = sheetGames[matchIndex];
+
+      let gameChanged = false;
+      const newTitle = match.title || game.title;
+      const newMinP = match.minPlayers ?? game.minPlayers;
+      const newMaxP = match.maxPlayers ?? game.maxPlayers;
+      const newType = match.type || game.type;
+      const newMinPlaytime = match.minPlaytime ?? match.playtime ?? game.minPlaytime;
+      const newMaxPlaytime = match.maxPlaytime ?? Math.max(newMinPlaytime, game.maxPlaytime);
+      const newPlaytimeDisplay =
+        match.playtimeDisplay ||
+        (newMinPlaytime === newMaxPlaytime ? `${newMinPlaytime}m` : `${newMinPlaytime}-${newMaxPlaytime}m`);
+      const newNotes = match.notes !== undefined ? match.notes : (game.notes || '');
+
+      if (
+        newTitle !== game.title ||
+        newMinP !== game.minPlayers ||
+        newMaxP !== game.maxPlayers ||
+        newType !== game.type ||
+        newMinPlaytime !== game.minPlaytime ||
+        newMaxPlaytime !== game.maxPlaytime ||
+        newPlaytimeDisplay !== game.playtimeDisplay ||
+        newNotes !== (game.notes || '')
+      ) {
+        gameChanged = true;
+        changed = true;
+      }
+
+      if (gameChanged) {
+        const nextGame: Game = {
+          ...game,
+          title: newTitle,
+          minPlayers: newMinP,
+          maxPlayers: newMaxP,
+          type: newType,
+          minPlaytime: newMinPlaytime,
+          maxPlaytime: newMaxPlaytime,
+          playtimeDisplay: newPlaytimeDisplay,
+          notes: newNotes,
+        };
+        changedGamesForCloud.push(nextGame);
+        return nextGame;
+      }
+      return game;
     });
-  };
+
+    // Import any newly added rows from Google Sheets that aren't in prevGames yet
+
+    sheetGames.forEach((sg, idx) => {
+      if (!matchedSheetIndices.has(idx) && sg.title) {
+        changed = true;
+        const borrower = sg.borrowedBy ? getCanonicalName(sg.borrowedBy, activeFriends) : null;
+        const minPlay = sg.minPlaytime ?? sg.playtime ?? 30;
+        const maxPlay = sg.maxPlaytime ?? Math.max(minPlay, 60);
+        const created: Game = {
+          id: `sheet-${crypto.randomUUID()}`,
+          title: sg.title,
+          owner: getCanonicalName(sg.household, activeFriends),
+          minPlayers: sg.minPlayers || 2,
+          maxPlayers: sg.maxPlayers || 4,
+          minPlaytime: minPlay,
+          maxPlaytime: maxPlay,
+          playtimeDisplay: sg.playtimeDisplay || (minPlay === maxPlay ? `${minPlay}m` : `${minPlay}-${maxPlay}m`),
+          type: sg.type || 'Strategy',
+          notes: sg.notes || '',
+          status: borrower ? 'borrowed' : 'available',
+          currentBorrower: borrower,
+          borrowDate: borrower ? new Date().toISOString() : null,
+          expectedReturnDate: null,
+          history: [],
+          borrowRequests: [],
+        };
+
+        changedGamesForCloud.push(created);
+      }
+    });
+
+    if (changed) await saveGamesBatchToCloud(changedGamesForCloud);
+  });
 
   const handleInitiateBorrow = (game: Game) => {
     if (!activeHousehold) {
@@ -1061,6 +602,17 @@ export default function HomePage() {
   return (
     <div className="min-h-screen flex flex-col bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 antialiased selection:bg-zinc-900 selection:text-white">
       
+      {saving && <div role="status" aria-live="polite" className="fixed inset-0 z-[100] bg-black/30 flex items-center justify-center">
+        <p className="rounded-xl bg-white text-zinc-900 p-5 shadow-xl">Saving to the shared library…</p>
+      </div>}
+      {saveError && <div role="alert" className="fixed top-3 left-3 right-3 z-[110] rounded-xl bg-red-50 text-red-950 border border-red-300 p-4 shadow-lg">
+        <p>Could not save: {saveError} Please try the action again.</p>
+        <button type="button" className="mt-2 underline font-semibold" onClick={() => setSaveError('')}>Dismiss</button>
+      </div>}
+      {sheetStatus.count > 0 && <div role="status" className="fixed bottom-20 left-3 right-3 z-[90] rounded-xl bg-amber-50 text-amber-950 border border-amber-300 p-3 shadow-lg">
+        <p>Saved to the shared library. {sheetStatus.count} Google Sheets update(s) pending.{sheetStatus.error ? ` ${sheetStatus.error}` : ''}</p>
+        <button type="button" className="underline font-semibold" onClick={() => { void flushSheetJobs(); }}>Retry Sheets sync</button>
+      </div>}
       {/* Top Header */}
       <Header
         viewMode={viewMode}

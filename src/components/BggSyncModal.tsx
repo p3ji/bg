@@ -26,8 +26,8 @@ interface BggSyncModalProps {
   games?: Game[];
   friends?: string[];
   onClose: () => void;
-  onAddGame: (game: Omit<Game, 'id' | 'status' | 'history'>) => void;
-  onBatchImportGames: (games: Omit<Game, 'id' | 'status' | 'history'>[]) => void;
+  onAddGame: (game: Omit<Game, 'id' | 'status' | 'history'>) => Promise<boolean>;
+  onBatchImportGames: (games: Omit<Game, 'id' | 'status' | 'history'>[]) => Promise<boolean>;
   onSelectGame?: (game: Game) => void;
   onBorrow?: (game: Game) => void;
   onReturn?: (game: Game) => void;
@@ -195,7 +195,7 @@ export const BggSyncModal: React.FC<BggSyncModalProps> = ({
     setSelectedToImport(next);
   };
 
-  const handleConfirmBatchImport = () => {
+  const handleConfirmBatchImport = async () => {
     const toImport = syncedGames
       .filter((_, idx) => selectedToImport.has(idx))
       .map((g) => {
@@ -224,7 +224,7 @@ export const BggSyncModal: React.FC<BggSyncModalProps> = ({
       });
 
     if (toImport.length > 0) {
-      onBatchImportGames(toImport);
+      if (!await onBatchImportGames(toImport)) return;
       onClose();
     }
   };
@@ -234,12 +234,12 @@ export const BggSyncModal: React.FC<BggSyncModalProps> = ({
     await runBggSearchQuery(searchQuery);
   };
 
-  const handleAddSearchResult = (result: BggGameCandidate) => {
+  const handleAddSearchResult = async (result: BggGameCandidate) => {
     const minP = result.minPlayers || 2;
     const maxP = Math.max(minP, result.maxPlayers || 4);
     const minT = result.minPlaytime || 30;
     const maxT = Math.max(minT, result.maxPlaytime || 60);
-    onAddGame({
+    const saved = await onAddGame({
       title: result.title,
       owner: searchOwner,
       minPlayers: minP,
@@ -256,13 +256,14 @@ export const BggSyncModal: React.FC<BggSyncModalProps> = ({
       image: result.image || result.thumbnail || null,
       thumbnail: result.thumbnail || result.image || null,
     });
+    if (!saved) return;
     setSearchAddedIds((prev) => new Set(prev).add(String(result.bggId || result.title)));
   };
 
-  const handleAddCustomGame = () => {
+  const handleAddCustomGame = async () => {
     const title = searchQuery.trim();
     if (!title) return;
-    onAddGame({
+    const saved = await onAddGame({
       title,
       owner: searchOwner,
       minPlayers: 2,
@@ -279,6 +280,7 @@ export const BggSyncModal: React.FC<BggSyncModalProps> = ({
       image: null,
       thumbnail: null,
     });
+    if (!saved) return;
     setSearchAddedIds((prev) => new Set(prev).add(title));
   };
 

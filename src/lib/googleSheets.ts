@@ -651,6 +651,13 @@ export async function addGameToSheets(
     targetTabTitle = created.tabTitle;
   }
 
+  const existing = await sheets.spreadsheets.values.get({
+    spreadsheetId, range: `${escapeSheetTitle(targetTabTitle)}!A:G`,
+  });
+  const alreadyPresent = (existing.data.values || []).slice(1).some(row =>
+    normalizeName(String(row[0] || '')) === normalizeName(game.title || ''));
+  if (alreadyPresent) return updateGameDetailsInSheets(ownerHousehold, game.title || '', game);
+
   const playtimeCell =
     game.minPlaytime && game.maxPlaytime && game.minPlaytime !== game.maxPlaytime
       ? `${game.minPlaytime}-${game.maxPlaytime}`

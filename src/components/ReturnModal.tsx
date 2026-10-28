@@ -11,7 +11,7 @@ interface ReturnModalProps {
   requests?: BorrowRequest[];
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: (gameId: string, notes?: string) => void;
+  onConfirm: (gameId: string, notes?: string) => Promise<boolean>;
 }
 
 export const ReturnModal: React.FC<ReturnModalProps> = ({
@@ -40,9 +40,9 @@ export const ReturnModal: React.FC<ReturnModalProps> = ({
     (r) => r.status === 'pending' && !isSameHousehold(r.requesterName, game.owner)
   );
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onConfirm(game.id, returnNotes || undefined);
+    if (!await onConfirm(game.id, returnNotes || undefined)) return;
     onClose();
   };
 

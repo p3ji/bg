@@ -7,3 +7,11 @@ This version has breaking changes — APIs, conventions, and file structure may 
 This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
 
 <!-- END:nextjs-agent-rules -->
+
+## Live deployment
+
+- Production URL: https://bg-ten-psi.vercel.app
+- Hosting: Vercel project `bg` in `peji-projects`, connected to `p3ji/bg` on GitHub.
+- Deploy: commit the intended changes on `main`, then run `git push origin main`.
+- Verify the new commit's Vercel status and fetch the production URL after it succeeds.
+- `public/sw.js` is pass-through and does not cache assets; no service-worker cache version bump is needed. Existing open tabs should refresh after a release.

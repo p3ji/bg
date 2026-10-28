@@ -4,15 +4,16 @@ import {
   collection, 
   doc, 
   setDoc, 
-  deleteDoc, 
   onSnapshot, 
-  writeBatch,
+  runTransaction,
+  where,
   getDocs,
   query,
   limit,
   Firestore
 } from 'firebase/firestore';
 import { Game, BorrowRequest } from '@/types';
+import { transitionLending, type LendingAction } from './lending';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyA7_8foS0xla3ws795dPkbSUhYG5gaBNXo",
@@ -100,8 +101,8 @@ function clampGameForFirestore(game: Game): Record<string, unknown> {
     description: game.description ? String(game.description).slice(0, 10000) : null,
     year,
     notes: typeof game.notes === 'string' ? game.notes.slice(0, 2000) : '',
-    history: Array.isArray(game.history) ? game.history.slice(-200) : [],
-    borrowRequests: Array.isArray(game.borrowRequests) ? game.borrowRequests.slice(-200) : [],
+    history: Array.isArray(game.history) ? game.history.slice(0, 200) : [],
+    borrowRequests: Array.isArray(game.borrowRequests) ? game.borrowRequests.slice(0, 200) : [],
   };
 
   return sanitizeForFirestore(clamped);
@@ -173,34 +174,57 @@ export function subscribeToCloudHouseholds(callback: (friends: string[]) => void
 /**
  * Save or update a single game in Cloud Firestore
  */
+// Metadata edits must never restore an old borrower, history, or request snapshot.
 export async function saveGameToCloud(game: Game): Promise<void> {
-  try {
-    const gameDoc = doc(db, COLLECTIONS.GAMES, game.id);
-    await setDoc(gameDoc, clampGameForFirestore(game), { merge: true });
-  } catch (err) {
-    console.error('Failed to save game to Firestore:', err);
-  }
+  await saveGamesBatchToCloud([game]);
 }
 
-/**
- * Batch save games (e.g. during initial seed or bulk import)
- */
 export async function saveGamesBatchToCloud(games: Game[]): Promise<void> {
-  try {
-    // Firestore batches are limited to 500 writes
-    const CHUNK_SIZE = 400;
-    for (let i = 0; i < games.length; i += CHUNK_SIZE) {
-      const chunk = games.slice(i, i + CHUNK_SIZE);
-      const batch = writeBatch(db);
-      for (const game of chunk) {
-        const gameDoc = doc(db, COLLECTIONS.GAMES, game.id);
-        batch.set(gameDoc, clampGameForFirestore(game), { merge: true });
+  if (games.length > 400) throw new Error('Import at most 400 games at a time.');
+  await runTransaction(db, async transaction => {
+    const refs = games.map(game => doc(db, COLLECTIONS.GAMES, game.id));
+    const snapshots = await Promise.all(refs.map(ref => transaction.get(ref)));
+    games.forEach((game, index) => {
+      const existing = snapshots[index].exists() ? snapshots[index].data() as Game : null;
+      const safe = existing ? { ...game, status: existing.status, currentBorrower: existing.currentBorrower,
+        borrowDate: existing.borrowDate, expectedReturnDate: existing.expectedReturnDate,
+        history: existing.history, borrowRequests: existing.borrowRequests } : game;
+      transaction.set(refs[index], clampGameForFirestore(safe));
+    });
+  });
+}
+
+/** The game document serializes every lending operation, including request creation. */
+export async function commitLendingAction(gameId: string, action: LendingAction, friends: string[]): Promise<Game> {
+  // Include legacy standalone requests. New requests also appear on the game document,
+  // so a concurrent creation changes the transaction's read version and forces a retry.
+  const legacy = await getDocs(query(collection(db, COLLECTIONS.REQUESTS), where('gameId', '==', gameId)));
+  const now = new Date().toISOString();
+  return runTransaction(db, async transaction => {
+    const gameRef = doc(db, COLLECTIONS.GAMES, gameId);
+    const snapshot = await transaction.get(gameRef);
+    if (!snapshot.exists()) throw new Error('This game is not available in the shared library yet. Please reconnect and try again.');
+    const game = snapshot.data() as Game;
+    const ids = new Set([
+      ...legacy.docs.filter(d => ['pending', 'accepted'].includes(d.data().status)).map(d => d.id),
+      ...(game.borrowRequests || []).map(r => r.id),
+      ...('requestId' in action ? [action.requestId] : []),
+    ]);
+    if (ids.size > 400) throw new Error('Too many requests for one update. Please clear completed requests.');
+    const refs = [...ids].map(id => doc(db, COLLECTIONS.REQUESTS, id));
+    const snapshots = await Promise.all(refs.map(ref => transaction.get(ref)));
+    const requests = snapshots.filter(s => s.exists()).map(s => s.data() as BorrowRequest);
+    const updated = transitionLending(game, requests, action, friends, now);
+    transaction.set(gameRef, clampGameForFirestore(updated));
+    for (const request of updated.borrowRequests || []) {
+      const previous = requests.find(r => r.id === request.id);
+      if (JSON.stringify(previous) !== JSON.stringify(request)) {
+        transaction.set(doc(db, COLLECTIONS.REQUESTS, request.id), clampRequestForFirestore(request));
       }
-      await batch.commit();
     }
-  } catch (err) {
-    console.error('Failed to batch save games to Firestore:', err);
-  }
+    if (action.type === 'dismiss') transaction.delete(doc(db, COLLECTIONS.REQUESTS, action.requestId));
+    return updated;
+  });
 }
 
 /**
@@ -228,30 +252,6 @@ function clampRequestForFirestore(req: BorrowRequest): Record<string, unknown> {
 }
 
 /**
- * Save or update a borrow request in Cloud Firestore
- */
-export async function saveRequestToCloud(req: BorrowRequest): Promise<void> {
-  try {
-    const reqDoc = doc(db, COLLECTIONS.REQUESTS, req.id);
-    await setDoc(reqDoc, clampRequestForFirestore(req), { merge: true });
-  } catch (err) {
-    console.error('Failed to save request to Firestore:', err);
-  }
-}
-
-/**
- * Delete a borrow request from Cloud Firestore
- */
-export async function deleteRequestFromCloud(requestId: string): Promise<void> {
-  try {
-    const reqDoc = doc(db, COLLECTIONS.REQUESTS, requestId);
-    await deleteDoc(reqDoc);
-  } catch (err) {
-    console.error('Failed to delete request from Firestore:', err);
-  }
-}
-
-/**
  * Save household roster to Cloud Firestore
  */
 export async function saveHouseholdsToCloud(friends: string[]): Promise<void> {
@@ -260,6 +260,7 @@ export async function saveHouseholdsToCloud(friends: string[]): Promise<void> {
     await setDoc(rosterDoc, { friends, updatedAt: new Date().toISOString() });
   } catch (err) {
     console.error('Failed to save households to Firestore:', err);
+    throw err;
   }
 }
 

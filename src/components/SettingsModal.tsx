@@ -25,8 +25,8 @@ interface SettingsModalProps {
   friends: string[];
   isOpen: boolean;
   onClose: () => void;
-  onUpdateFriends: (friends: string[]) => void;
-  onSyncGames?: (sheetGames: SheetRowGame[], rosterOverride?: string[]) => void;
+  onUpdateFriends: (friends: string[]) => Promise<boolean>;
+  onSyncGames?: (sheetGames: SheetRowGame[], rosterOverride?: string[]) => Promise<boolean>;
   onTriggerInstallGuide?: () => void;
 }
 
@@ -85,7 +85,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       const res = await fetch('/api/sheets/sync');
       const data = await res.json();
 
-      if (data.success) {
+      if (res.ok && data.success) {
         let updatedRoster = friends;
         if (Array.isArray(data.households) && data.households.length > 0) {
           const newHouseholds = data.households.filter(
@@ -93,17 +93,17 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           );
           if (newHouseholds.length > 0) {
             updatedRoster = [...friends, ...newHouseholds];
-            onUpdateFriends(updatedRoster);
+            if (!await onUpdateFriends(updatedRoster)) throw new Error("Could not save the household roster.");
           }
         }
 
         if (Array.isArray(data.games) && data.games.length > 0 && onSyncGames) {
-          onSyncGames(data.games, updatedRoster);
+          if (!await onSyncGames(data.games, updatedRoster)) throw new Error("Could not save the imported games.");
         }
 
         setSyncStatusText(
           data.serviceAccountConfigured
-            ? `Google Sheets synced! (${data.totalGames} games across ${data.households.length} households)`
+            ? `Google Sheets catalog synced! (${data.totalGames} games across ${data.households.length} households). Existing loans remain tracked in GameShare.`
             : `Spreadsheet connected (${data.totalGames} games). Add Service Account for full 2-way write access.`
         );
       } else {
@@ -126,29 +126,22 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     }
   };
 
-  const handleAddFriend = (e: React.FormEvent) => {
+  const handleAddFriend = async (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = newFriend.trim();
     if (!trimmed || friends.some((f) => isSameHousehold(f, trimmed, friends))) return;
-    onUpdateFriends([...friends, trimmed]);
+    if (!await onUpdateFriends([...friends, trimmed])) return;
     setNewFriend('');
-
-    // Trigger tab creation in Google Sheets
-    fetch('/api/sheets/sync', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'add_household', householdName: trimmed }),
-    }).catch(() => {});
   };
 
-  const handleConfirmRemoveHousehold = (e: React.FormEvent) => {
+  const handleConfirmRemoveHousehold = async (e: React.FormEvent) => {
     e.preventDefault();
     if (adminPassword !== 'admin') {
       setAdminError('Incorrect password. "admin" is required to remove households.');
       return;
     }
     if (householdToRemove) {
-      onUpdateFriends(friends.filter((f) => !isSameHousehold(f, householdToRemove, friends)));
+      if (!await onUpdateFriends(friends.filter((f) => !isSameHousehold(f, householdToRemove, friends)))) return;
     }
     setHouseholdToRemove(null);
     setAdminPassword('');

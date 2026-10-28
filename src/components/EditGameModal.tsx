@@ -24,7 +24,7 @@ interface EditGameModalProps {
   friends?: string[];
   isOpen: boolean;
   onClose: () => void;
-  onSave: (updatedGame: Game) => void;
+  onSave: (updatedGame: Game) => Promise<boolean>;
 }
 
 interface BggSearchResult {
@@ -190,7 +190,7 @@ export const EditGameModal: React.FC<EditGameModalProps> = ({
     setBggSearchResults([]);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const minP = Number(minPlayers) || 1;
     const maxP = Math.max(minP, Number(maxPlayers) || minP);
     const minT = Number(minPlaytime) || 15;
@@ -217,7 +217,7 @@ export const EditGameModal: React.FC<EditGameModalProps> = ({
       year: year !== undefined ? year : game.year,
     };
 
-    onSave(updatedGame);
+    if (!await onSave(updatedGame)) return;
     onClose();
   };
 
