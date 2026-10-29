@@ -84,3 +84,14 @@ Firebase or Sheets data. Domain tests cover competing handoffs, stale confirmati
 return transitions, and duplicate requests. They do not replace a Firestore emulator
 or staging integration test of multi-device transactions. Existing open tabs should
 be refreshed after deployment to use the transactional lending code.
+
+## Direct collection links
+
+Link visitors directly to a household collection with `?owner=`. For example:
+
+https://gamemenu.peji.ca/?owner=Angel%20%26%20Peter
+
+These links apply the household filter and skip the initial install and identity
+prompts, including the install banner. They do not select or change the visitor's
+identity. Visitors can change filters normally; borrowing asks for identity when
+needed. Encode the owner name in links (`&` must be `%26`).

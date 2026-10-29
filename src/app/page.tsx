@@ -83,10 +83,17 @@ export default function HomePage() {
   const [isFirstIdentityPrompt, setIsFirstIdentityPrompt] = useState(false);
   const [forceShowInstallGuide, setForceShowInstallGuide] = useState(false);
   const [showInstallGate, setShowInstallGate] = useState(false);
+  const [isCollectionLink, setIsCollectionLink] = useState(false);
 
   // Initialize data on mount
   useEffect(() => {
-    if (shouldOfferInstallFirst()) {
+    const linkedOwner = new URLSearchParams(window.location.search).get('owner')?.trim();
+    const collectionLink = Boolean(linkedOwner);
+    setIsCollectionLink(collectionLink);
+    if (linkedOwner) {
+      setFilters(previous => ({ ...previous, owner: getCanonicalName(linkedOwner) }));
+    }
+    if (!collectionLink && shouldOfferInstallFirst()) {
       setShowInstallGate(true);
     }
 
@@ -100,7 +107,7 @@ export default function HomePage() {
 
     const savedIdentity = getActiveHousehold();
     setActiveHousehold(savedIdentity);
-    if (!savedIdentity) {
+    if (!savedIdentity && !collectionLink) {
       setIsFirstIdentityPrompt(true);
       setIsIdentityModalOpen(true);
     }
@@ -786,7 +793,7 @@ export default function HomePage() {
 
       {/* Floating PWA Install Prompt & Installation Guide */}
       <PwaInstallPrompt
-        canShowBanner={mounted && !isIdentityModalOpen}
+        canShowBanner={mounted && !isIdentityModalOpen && !isCollectionLink}
         forceShowInstructions={forceShowInstallGuide}
         onCloseInstructions={() => setForceShowInstallGuide(false)}
       />

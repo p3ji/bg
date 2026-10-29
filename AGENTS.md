@@ -10,7 +10,9 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 ## Live deployment
 
-- Production URL: https://bg-ten-psi.vercel.app
+- Production URL: https://gamemenu.peji.ca
+- Previous URL: https://bg-ten-psi.vercel.app redirects (307) to the production URL.
+- Cloudflare DNS: `gamemenu` CNAME → `9592bd8036d4e992.vercel-dns-017.com`, DNS-only as required by Vercel. Hosting remains on Vercel.
 - Hosting: Vercel project `bg` in `peji-projects`, connected to `p3ji/bg` on GitHub.
 - Deploy: commit the intended changes on `main`, then run `git push origin main`.
 - Verify the new commit's Vercel status and fetch the production URL after it succeeds.
